@@ -1,4 +1,5 @@
 export interface TimelineItem {
+  id: string;
   done?: boolean;
   position: number;
   title: string;

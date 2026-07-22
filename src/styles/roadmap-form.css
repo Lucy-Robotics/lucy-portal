@@ -1,0 +1,82 @@
+.roadmap-form-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.roadmap-form-content {
+  background-color: var(--color-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.roadmap-form-content h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.roadmap-form-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.roadmap-form-content label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.roadmap-form-content input[type="text"],
+.roadmap-form-content input[type="number"],
+.roadmap-form-content textarea {
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-bg-comp);
+  color: var(--color-text);
+}
+
+.roadmap-form-content input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  align-self: flex-start;
+}
+
+.form-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.form-buttons button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.form-buttons button[type="submit"] {
+  background-color: var(--color-primary);
+  color: rgb(0, 0, 0);
+}
+
+.form-buttons button[type="button"] {
+  background-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.admin-controls {
+    display: flex;
+    gap: 10px;
+}
