@@ -117,6 +117,7 @@
   flex: 1;
   position: relative;
   z-index: 2;
+  margin-bottom: 1rem; /* Added for spacing between cards */
 }
 
 .card-body {
@@ -181,6 +182,8 @@
   }
 }
 
-.create-button {
-    align-items: center;
+.create-item-button-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem; /* Spacing between button and roadmap items */
 }

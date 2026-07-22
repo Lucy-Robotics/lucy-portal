@@ -162,8 +162,13 @@ const Roadmap: React.FC = () => {
       <h2>Get a quick overview of our roadmap and see what we have planned for the future.</h2>
       <h2>To see a more detailed roadmap, please visit our <a className="link" target="_blank" href="/https://projects.sentience-robotics.fr/">Open Project</a> boards.</h2>
       {error && <div className="error-message" style={{ color: 'red' }}>{error}</div>}
-      {isAuthenticated && <button className="create-button" onClick={handleCreate}>Create New Item</button>}
+      {isAuthenticated && (
+        <div className="create-item-button-container">
+          <button onClick={handleCreate}>Create New Item</button>
+        </div>
+      )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+
         <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
           <ul className="timeline-list">
             {items.map((item, index) => {
