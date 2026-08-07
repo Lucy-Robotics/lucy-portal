@@ -267,4 +267,31 @@ a.home__highlight:hover {
     .home__features-grid {
         grid-template-columns: 1fr;
     }
+
+    .home {
+        padding: 1.25rem 1rem 2rem;
+        align-items: flex-start;
+    }
+
+    .home__tagline {
+        font-size: clamp(1.25rem, 6vw, 1.75rem);
+    }
+
+    .home__headline {
+        font-size: clamp(1.35rem, 5.5vw, 2rem);
+    }
+
+    .home__actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .home__actions .home__button,
+    .home__actions a {
+        width: 100%;
+    }
+
+    .home__terminal-body {
+        font-size: 0.75rem;
+    }
 }

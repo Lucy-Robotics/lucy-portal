@@ -113,3 +113,22 @@
   font-size: 0.8rem;
   line-height: 1.4;
 }
+
+@media (max-width: 640px) {
+  .tiptap-toolbar {
+    gap: 0.3rem;
+  }
+
+  .tiptap-toolbar button {
+    flex: 1 1 auto;
+    min-height: 2.25rem;
+  }
+
+  .form-buttons {
+    flex-wrap: wrap;
+  }
+
+  .form-buttons button {
+    flex: 1 1 auto;
+  }
+}

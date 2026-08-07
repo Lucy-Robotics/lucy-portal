@@ -258,3 +258,40 @@
     display: none;
   }
 }
+
+@media (max-width: 640px) {
+  .roadmap-page-container {
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  .roadmap-toolbar {
+    justify-content: stretch;
+  }
+
+  .roadmap-create-btn {
+    width: 100%;
+  }
+
+  .sortable-item.timeline-item {
+    flex-wrap: wrap;
+  }
+
+  .sortable-item__content {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .drag-handle {
+    order: -1;
+  }
+
+  .admin-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .admin-controls button {
+    flex: 1 1 calc(50% - 0.5rem);
+  }
+}

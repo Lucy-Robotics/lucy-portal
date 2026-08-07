@@ -251,3 +251,32 @@ a.download__highlight:hover {
         grid-template-columns: 1fr;
     }
 }
+
+@media (max-width: 560px) {
+    .download {
+        padding: 1.25rem 1rem 2rem;
+        align-items: flex-start;
+    }
+
+    .download__content {
+        align-items: stretch;
+        text-align: left;
+    }
+
+    .download__title {
+        text-align: center;
+    }
+
+    .download__subtext,
+    .download__section-title,
+    .download__section-subtext,
+    .download__install-footer {
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .download__terminal-body {
+        font-size: 0.75rem;
+    }
+}

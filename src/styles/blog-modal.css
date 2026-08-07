@@ -25,3 +25,18 @@
   position: relative;
   border: 1px solid #00ff41;
 }
+
+@media (max-width: 640px) {
+  .blog-modal-overlay {
+    padding-top: 1rem;
+    align-items: stretch;
+  }
+
+  .blog-modal-content {
+    width: calc(100% - 1.5rem);
+    max-width: none;
+    max-height: calc(100vh - 2rem);
+    margin: 0 auto;
+    padding: 1rem;
+  }
+}

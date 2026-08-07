@@ -87,3 +87,26 @@
   display: flex;
   gap: 10px;
 }
+
+@media (max-width: 640px) {
+  .roadmap-modal-overlay {
+    padding-top: 1rem;
+    align-items: stretch;
+  }
+
+  .roadmap-modal-content {
+    width: calc(100% - 1.5rem);
+    max-width: none;
+    max-height: calc(100vh - 2rem);
+    margin: 0 auto;
+    padding: 1rem;
+  }
+
+  .roadmap-form .form-buttons {
+    flex-wrap: wrap;
+  }
+
+  .roadmap-form .form-buttons button {
+    flex: 1 1 auto;
+  }
+}

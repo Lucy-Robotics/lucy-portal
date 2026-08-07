@@ -161,3 +161,34 @@
 .back-link:hover {
   text-decoration: underline;
 }
+
+@media (max-width: 640px) {
+  .blog-page-container {
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  .blog-create-btn {
+    width: 100%;
+  }
+
+  .blog-post-item,
+  .blog-post-detail {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .blog-post-detail .title {
+    font-size: 1.5rem;
+  }
+
+  .admin-controls {
+    flex-wrap: wrap;
+  }
+
+  .admin-controls button {
+    flex: 1 1 auto;
+  }
+}
