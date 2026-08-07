@@ -1,0 +1,150 @@
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
+
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'textarea:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+function getFocusable(container: HTMLElement) {
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+  ).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1);
+}
+
+type UseAccessibleDialogOptions = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+export function useAccessibleDialog({ isOpen, onClose }: UseAccessibleDialogOptions) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
+
+    const frame = requestAnimationFrame(() => {
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = getFocusable(dialog);
+      (focusable[0] ?? dialog).focus();
+    });
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused.current?.focus?.();
+    };
+  }, [isOpen]);
+
+  const onKeyDown = useCallback(
+    (event: ReactKeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+
+      const focusable = getFocusable(dialogRef.current);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialogRef.current.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    },
+    [onClose]
+  );
+
+  const onOverlayClick = useCallback(
+    (event: ReactMouseEvent) => {
+      if (event.target === event.currentTarget) {
+        onClose();
+      }
+    },
+    [onClose]
+  );
+
+  return {
+    titleId,
+    dialogRef: dialogRef as RefObject<HTMLDivElement>,
+    overlayProps: {
+      onClick: onOverlayClick,
+      onKeyDown,
+    },
+    dialogProps: {
+      ref: dialogRef,
+      role: 'dialog' as const,
+      'aria-modal': true as const,
+      'aria-labelledby': titleId,
+      tabIndex: -1,
+      onKeyDown,
+    },
+  };
+}
+
+type AccessibleDialogProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+  overlayClassName?: string;
+  contentClassName?: string;
+};
+
+export function AccessibleDialog({
+  isOpen,
+  onClose,
+  title,
+  children,
+  overlayClassName = 'a11y-dialog-overlay',
+  contentClassName = 'a11y-dialog-content',
+}: AccessibleDialogProps) {
+  const { titleId, overlayProps, dialogProps } = useAccessibleDialog({
+    isOpen,
+    onClose,
+  });
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={overlayClassName} {...overlayProps}>
+      <div className={contentClassName} {...dialogProps}>
+        <h2 id={titleId}>{title}</h2>
+        {children}
+      </div>
+    </div>
+  );
+}

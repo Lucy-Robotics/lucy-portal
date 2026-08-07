@@ -17,7 +17,7 @@ const FrontChannelLogout = lazy(() => import("./pages/FrontChannelLogout"));
 const App = () => {
     return (
         <BrowserRouter>
-            <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div role="status" aria-live="polite">Loading...</div>}>
                 <Routes>
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/auth/front-channel-logout" element={<FrontChannelLogout />} />

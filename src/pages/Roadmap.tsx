@@ -3,6 +3,7 @@ import {
   DndContext,
   closestCenter,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -10,6 +11,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
+  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import type { TimelineItem } from '../types/timeline';
@@ -42,6 +44,9 @@ const Roadmap: React.FC = () => {
       activationConstraint: {
         distance: 5,
       },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
@@ -63,32 +68,45 @@ const Roadmap: React.FC = () => {
     fetchItems();
   }, []);
 
+  const persistOrder = async (reorderedItems: TimelineItem[]) => {
+    if (!accessToken) return;
+
+    try {
+      await Promise.all(
+        reorderedItems.map((item) => {
+          const { id, ...rest } = item;
+          return updateRoadmapItem(id, rest, accessToken);
+        })
+      );
+    } catch (err) {
+      setError('Failed to update item positions.');
+      console.error(err);
+      await fetchItems();
+    }
+  };
+
+  const applyReorder = async (reorderedItems: TimelineItem[]) => {
+    const withPositions = reorderedItems.map((item, index) => ({
+      ...item,
+      position: index + 1,
+    }));
+    setItems(withPositions);
+    await persistOrder(withPositions);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = items.findIndex((item) => item.id === active.id);
-      const newIndex = items.findIndex((item) => item.id === over.id);
-      const reorderedItems = arrayMove(items, oldIndex, newIndex).map(
-        (item, index) => ({ ...item, position: index + 1 })
-      );
-      setItems(reorderedItems);
+    if (!over || active.id === over.id) return;
 
-      if (accessToken) {
-        try {
-          await Promise.all(
-            reorderedItems.map((item) => {
-                const { id, ...rest } = item;
-                return updateRoadmapItem(id, rest, accessToken)
-            })
-          );
-        } catch (err) {
-          setError('Failed to update item positions.');
-          console.error(err);
-          // Optionally refetch to revert to server state
-          await fetchItems();
-        }
-      }
-    }
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+    await applyReorder(arrayMove(items, oldIndex, newIndex));
+  };
+
+  const moveItem = async (index: number, direction: -1 | 1) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= items.length) return;
+    await applyReorder(arrayMove(items, index, newIndex));
   };
 
   const handleCreate = () => {
@@ -121,29 +139,29 @@ const Roadmap: React.FC = () => {
     }
   };
 
-    const handleCancelDelete = () => {
-        setItemToDeleteId(null);
-        setIsDeleteModalOpen(false);
-    };
+  const handleCancelDelete = () => {
+    setItemToDeleteId(null);
+    setIsDeleteModalOpen(false);
+  };
 
   const handleSave = async (item: TimelineItem) => {
     if (!accessToken) return;
-    
+
     const { id, ...itemData } = item;
 
     try {
-        if (selectedItem) {
-            await updateRoadmapItem(selectedItem.id, itemData, accessToken);
-        } else {
-            const newPosition = Math.max(...items.map(i => i.position), 0) + 1;
-            await createRoadmapItem({ ...itemData, position: newPosition }, accessToken);
-        }
-        await fetchItems();
-        setIsFormOpen(false);
-        setSelectedItem(null);
+      if (selectedItem) {
+        await updateRoadmapItem(selectedItem.id, itemData, accessToken);
+      } else {
+        const newPosition = Math.max(...items.map((i) => i.position), 0) + 1;
+        await createRoadmapItem({ ...itemData, position: newPosition }, accessToken);
+      }
+      await fetchItems();
+      setIsFormOpen(false);
+      setSelectedItem(null);
     } catch (err) {
-        setError(selectedItem ? 'Failed to update item.' : 'Failed to create item.');
-        console.error(err);
+      setError(selectedItem ? 'Failed to update item.' : 'Failed to create item.');
+      console.error(err);
     }
   };
 
@@ -153,7 +171,11 @@ const Roadmap: React.FC = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="roadmap-page-container" role="status" aria-live="polite">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -186,7 +208,11 @@ const Roadmap: React.FC = () => {
         </p>
       </header>
 
-      {error && <div className="error-message" style={{ color: 'red' }}>{error}</div>}
+      {error && (
+        <div className="error-message" role="alert" style={{ color: 'red' }}>
+          {error}
+        </div>
+      )}
 
       {isAuthenticated && (
         <div className="roadmap-toolbar">
@@ -196,40 +222,62 @@ const Roadmap: React.FC = () => {
         </div>
       )}
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-
-        <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-          <ul className="timeline-list">
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={items.map((i) => i.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <ul className="timeline-list" aria-label="Project roadmap">
             {items.map((item, index) => {
               const isFirst = index === 0;
               const isLast = index === items.length - 1;
               const done = item.done ?? true;
+              const statusLabel = done ? 'Shipped' : 'Soon';
 
               return (
-                <SortableItem key={item.id} id={item.id}>
-                  <li className={`timeline-item ${done ? '' : 'italic'}`}>
-                    <div className="date-label">{done ? 'Shipped' : 'Soon'}</div>
+                <SortableItem
+                  key={item.id}
+                  id={item.id}
+                  disabled={!isAuthenticated}
+                  className={`timeline-item ${done ? '' : 'italic'}`}
+                >
+                    <div className="date-label">{statusLabel}</div>
 
                     <div className="checkbox-container">
-                      <input type="checkbox" checked={done} readOnly className="checkbox" />
-                      <div className={`line-container ${isFirst ? 'justify-end' : ''}`}>
+                      <span
+                        className={`status-marker ${done ? 'status-marker--done' : 'status-marker--soon'}`}
+                        role="img"
+                        aria-label={`Status: ${statusLabel}`}
+                      />
+                      <div
+                        className={`line-container ${isFirst ? 'justify-end' : ''}`}
+                        aria-hidden="true"
+                      >
                         <div
                           className={`line ${isFirst ? 'rounded-t-full' : ''} ${isLast ? 'rounded-b-full' : ''} ${
                             isFirst || isLast ? 'h-half' : 'h-full'
                           }`}
-                        ></div>
+                        />
                       </div>
                     </div>
 
-                    <div className={`card ${isLast ? '' : ''}`}>
+                    <div className="card">
                       <div className="card-body">
                         <div className="card-content">
                           <div className="card-header">
                             <div className="header-left">
-                              <span className={`title ${done ? '' : 'text-secondary italic'}`}>{item.title}</span>
+                              <span
+                                className={`title ${done ? '' : 'text-secondary italic'}`}
+                              >
+                                {item.title}
+                              </span>
                             </div>
                             <div className="header-right">
-                              {(item?.link?.text && item?.link?.href) && (
+                              {item?.link?.text && item?.link?.href && (
                                 <a href={item.link.href} className="link">
                                   [{item.link.text}]
                                 </a>
@@ -239,14 +287,36 @@ const Roadmap: React.FC = () => {
                           <p className="description">{item.description}</p>
                           {isAuthenticated && (
                             <div className="admin-controls">
-                              <button onClick={() => handleEdit(item)}>Edit</button>
-                              <button onClick={() => handleDeleteClick(item.id)}>Delete</button>
+                              <button
+                                type="button"
+                                onClick={() => moveItem(index, -1)}
+                                disabled={isFirst}
+                                aria-label={`Move ${item.title} up`}
+                              >
+                                Move up
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveItem(index, 1)}
+                                disabled={isLast}
+                                aria-label={`Move ${item.title} down`}
+                              >
+                                Move down
+                              </button>
+                              <button type="button" onClick={() => handleEdit(item)}>
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteClick(item.id)}
+                              >
+                                Delete
+                              </button>
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
-                  </li>
                 </SortableItem>
               );
             })}

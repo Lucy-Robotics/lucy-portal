@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { TimelineItem } from '../types/timeline';
+import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import '../styles/roadmap-form.css';
 
 interface RoadmapFormProps {
@@ -19,6 +20,10 @@ const emptyItem = (): TimelineItem => ({
 
 const RoadmapForm: React.FC<RoadmapFormProps> = ({ item, onSave, onClose }) => {
   const [formData, setFormData] = useState<TimelineItem>(item || emptyItem());
+  const { titleId, overlayProps, dialogProps } = useAccessibleDialog({
+    isOpen: true,
+    onClose,
+  });
 
   useEffect(() => {
     setFormData(item || emptyItem());
@@ -51,11 +56,13 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ item, onSave, onClose }) => {
     onSave(formData);
   };
 
+  const title = `${item ? 'Edit' : 'Create'} Roadmap Item`;
+
   return (
-    <div className="roadmap-modal-overlay" onClick={onClose}>
-      <div className="roadmap-modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="roadmap-modal-overlay" {...overlayProps}>
+      <div className="roadmap-modal-content" {...dialogProps}>
         <form className="roadmap-form" onSubmit={handleSubmit}>
-          <h2>{item ? 'Edit' : 'Create'} Roadmap Item</h2>
+          <h2 id={titleId}>{title}</h2>
           <label>
             Title
             <input

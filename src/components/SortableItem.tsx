@@ -3,27 +3,53 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 interface SortableItemProps {
-  id: number;
+  id: string;
   children: React.ReactNode;
+  disabled?: boolean;
+  className?: string;
 }
 
-export function SortableItem(props: SortableItemProps) {
+export function SortableItem({
+  id,
+  children,
+  disabled = false,
+  className = '',
+}: SortableItemProps) {
   const {
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     transition,
-  } = useSortable({ id: props.id });
+    isDragging,
+  } = useSortable({ id, disabled });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? 0.85 : undefined,
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {props.children}
-    </div>
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={`sortable-item ${className}`.trim()}
+    >
+      {!disabled && (
+        <button
+          type="button"
+          className="drag-handle"
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          aria-label="Drag to reorder"
+        >
+          ⋮⋮
+        </button>
+      )}
+      <div className="sortable-item__content">{children}</div>
+    </li>
   );
 }

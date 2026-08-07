@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { useEditor, EditorContent, useEditorState } from '@tiptap/react';
 import type { Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -7,9 +7,17 @@ import '../styles/blog-form.css';
 
 interface BlogFormProps {
   post: BlogPost | null;
+  titleId?: string;
   onSave: (post: BlogPostInput) => void;
   onClose: () => void;
 }
+
+type ToolbarButton = {
+  label: string;
+  pressed: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+};
 
 const TiptapToolbar: React.FC<{ editor: Editor }> = ({ editor }) => {
   const active = useEditorState({
@@ -26,79 +34,94 @@ const TiptapToolbar: React.FC<{ editor: Editor }> = ({ editor }) => {
     }),
   });
 
+  const groups: ToolbarButton[][] = [
+    [
+      {
+        label: 'Bold',
+        pressed: active.bold,
+        onClick: () => editor.chain().focus().toggleBold().run(),
+        children: <b>B</b>,
+      },
+      {
+        label: 'Italic',
+        pressed: active.italic,
+        onClick: () => editor.chain().focus().toggleItalic().run(),
+        children: <i>I</i>,
+      },
+      {
+        label: 'Underline',
+        pressed: active.underline,
+        onClick: () => editor.chain().focus().toggleUnderline().run(),
+        children: <u>U</u>,
+      },
+      {
+        label: 'Strikethrough',
+        pressed: active.strike,
+        onClick: () => editor.chain().focus().toggleStrike().run(),
+        children: 'S',
+      },
+    ],
+    [
+      {
+        label: 'Heading 1',
+        pressed: active.h1,
+        onClick: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+        children: 'H1',
+      },
+      {
+        label: 'Heading 2',
+        pressed: active.h2,
+        onClick: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+        children: 'H2',
+      },
+    ],
+    [
+      {
+        label: 'Bullet list',
+        pressed: active.bulletList,
+        onClick: () => editor.chain().focus().toggleBulletList().run(),
+        children: '• List',
+      },
+      {
+        label: 'Numbered list',
+        pressed: active.orderedList,
+        onClick: () => editor.chain().focus().toggleOrderedList().run(),
+        children: '1. List',
+      },
+    ],
+  ];
+
   return (
     <div className="tiptap-toolbar" role="toolbar" aria-label="Text formatting">
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className={active.bold ? 'is-active' : ''}
-        title="Bold"
-      >
-        <b>B</b>
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={active.italic ? 'is-active' : ''}
-        title="Italic"
-      >
-        <i>I</i>
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
-        className={active.underline ? 'is-active' : ''}
-        title="Underline"
-      >
-        <u>U</u>
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={active.strike ? 'is-active' : ''}
-        title="Strikethrough"
-      >
-        S
-      </button>
-      <span className="toolbar-divider" />
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        className={active.h1 ? 'is-active' : ''}
-        title="Heading 1"
-      >
-        H1
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        className={active.h2 ? 'is-active' : ''}
-        title="Heading 2"
-      >
-        H2
-      </button>
-      <span className="toolbar-divider" />
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={active.bulletList ? 'is-active' : ''}
-        title="Bullet list"
-      >
-        • List
-      </button>
-      <button
-        type="button"
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={active.orderedList ? 'is-active' : ''}
-        title="Numbered list"
-      >
-        1. List
-      </button>
+      {groups.map((group, groupIndex) => (
+        <React.Fragment key={groupIndex}>
+          {groupIndex > 0 ? (
+            <span className="toolbar-divider" aria-hidden="true" />
+          ) : null}
+          {group.map((button) => (
+            <button
+              key={button.label}
+              type="button"
+              onClick={button.onClick}
+              className={button.pressed ? 'is-active' : ''}
+              title={button.label}
+              aria-label={button.label}
+              aria-pressed={button.pressed}
+            >
+              {button.children}
+            </button>
+          ))}
+        </React.Fragment>
+      ))}
     </div>
   );
 };
 
-const BlogForm: React.FC<BlogFormProps> = ({ post, onSave, onClose }) => {
+const BlogForm: React.FC<BlogFormProps> = ({ post, titleId, onSave, onClose }) => {
+  const generatedTitleId = useId();
+  const headingId = titleId ?? generatedTitleId;
+  const bodyLabelId = useId();
+
   const [formData, setFormData] = useState<BlogPostInput>({
     title: post?.title || '',
     body: post?.body || '',
@@ -121,12 +144,11 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, onSave, onClose }) => {
     editorProps: {
       attributes: {
         class: 'tiptap-editor',
+        'aria-labelledby': bodyLabelId,
       },
     },
   });
 
-  // Only reset when the edited post (or editor instance) changes — never sync
-  // body back into TipTap on every keystroke (that resets marks / forces bold).
   useEffect(() => {
     setFormData({
       title: post?.title || '',
@@ -163,7 +185,7 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, onSave, onClose }) => {
   return (
     <div className="blog-form-container">
       <form onSubmit={handleSubmit}>
-        <h2>{post ? 'Edit' : 'Create'} Blog Post</h2>
+        <h2 id={headingId}>{post ? 'Edit' : 'Create'} Blog Post</h2>
         <label>
           Title:
           <input
@@ -175,11 +197,17 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, onSave, onClose }) => {
           />
         </label>
         <div className="body-field">
-          <span className="field-label">Body:</span>
+          <span className="field-label" id={bodyLabelId}>
+            Body:
+          </span>
           <div className="editor-container">
             {editor && <TiptapToolbar editor={editor} />}
             <EditorContent editor={editor} />
           </div>
+          <p className="editor-trust-note">
+            Content is authored by administrators and rendered as HTML on the
+            public blog.
+          </p>
         </div>
         <label>
           Tags (comma-separated):
@@ -192,9 +220,9 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, onSave, onClose }) => {
         </label>
         <div className="form-buttons">
           <button type="submit">Save</button>
-            <button type="button" className="secondary" onClick={onClose}>
-              Cancel
-            </button>
+          <button type="button" className="secondary" onClick={onClose}>
+            Cancel
+          </button>
         </div>
       </form>
     </div>

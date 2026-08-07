@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -8,21 +9,36 @@ interface ConfirmModalProps {
   children: React.ReactNode;
 }
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ isOpen, onClose, onConfirm, title, children }) => {
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  children,
+}) => {
+  const { titleId, overlayProps, dialogProps } = useAccessibleDialog({
+    isOpen,
+    onClose,
+  });
+
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div className="confirm-modal">
-      <div className="confirm-modal-content">
-        <h2>{title}</h2>
+    <div className="confirm-modal" {...overlayProps}>
+      <div className="confirm-modal-content" {...dialogProps}>
+        <h2 id={titleId}>{title}</h2>
         {children}
         <div className="modal-buttons">
           <button type="button" onClick={onClose} className="cancel-button">
             Cancel
           </button>
-          <button type="button" onClick={onConfirm} className="confirm-button-danger">
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="confirm-button-danger"
+          >
             Confirm
           </button>
         </div>

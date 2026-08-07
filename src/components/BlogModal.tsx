@@ -1,6 +1,7 @@
 import React from 'react';
 import type { BlogPost, BlogPostInput } from '../types/blog';
 import BlogForm from './BlogForm';
+import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import '../styles/blog-modal.css';
 
 interface BlogModalProps {
@@ -11,14 +12,24 @@ interface BlogModalProps {
 }
 
 const BlogModal: React.FC<BlogModalProps> = ({ isOpen, post, onSave, onClose }) => {
+  const { titleId, overlayProps, dialogProps } = useAccessibleDialog({
+    isOpen,
+    onClose,
+  });
+
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div className="blog-modal-overlay" onClick={onClose}>
-      <div className="blog-modal-content" onClick={(e) => e.stopPropagation()}>
-        <BlogForm post={post} onSave={onSave} onClose={onClose} />
+    <div className="blog-modal-overlay" {...overlayProps}>
+      <div className="blog-modal-content" {...dialogProps}>
+        <BlogForm
+          post={post}
+          titleId={titleId}
+          onSave={onSave}
+          onClose={onClose}
+        />
       </div>
     </div>
   );

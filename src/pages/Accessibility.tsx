@@ -23,9 +23,9 @@ const pages: PageReport[] = [
       "Decorative icons marked aria-hidden so screen readers hear text, not icon names",
       "Primary CTAs are real links/buttons, keyboard reachable",
       "External-link icons marked decorative",
+      "Skip-to-content link available site-wide",
     ],
     gaps: [
-      "No skip-to-content link yet for keyboard users jumping past the header",
       "Feature grid relies on visual layout; no live region announcements on load",
     ],
   },
@@ -40,6 +40,7 @@ const pages: PageReport[] = [
       "Requirement and platform icons marked aria-hidden",
       "External documentation links open with visible text labels",
       "Install steps presented as readable prose, not icon-only controls",
+      "Skip-to-content link available site-wide",
     ],
     gaps: [
       "Long instruction blocks could use more landmark headings for jump navigation",
@@ -49,38 +50,37 @@ const pages: PageReport[] = [
   {
     name: "Roadmap",
     path: "/roadmap",
-    level: "Partial",
+    level: "Good",
     summary:
-      "Timeline is readable and editable for admins, but some visual-only controls limit semantics.",
+      "Timeline with named status, accessible dialogs, and keyboard reorder alternatives for admins.",
     done: [
       "Page header with title and short description",
-      "Create/edit modal uses a dark overlay, labeled form fields, and Cancel/Save actions",
-      "Delete confirmation uses a dedicated confirm dialog",
-      "Item titles and descriptions are plain text (not icon-only)",
+      "Status shown as labeled markers (Shipped / Soon), not inert checkboxes",
+      "Create/edit and delete dialogs use aria-modal, labelled titles, focus trap, Escape, and restore focus",
+      "Admins can reorder with Move up / Move down buttons as well as drag-and-drop / keyboard DnD",
+      "Drag handle is a dedicated control with an accessible name",
+      "List exposed as a labeled roadmap region; errors use role=\"alert\"",
     ],
     gaps: [
-      "Status checkboxes are read-only visuals, not operable form controls for visitors",
-      "Drag-and-drop reordering is pointer-oriented; no alternate keyboard reorder yet",
-      "Modals do not yet trap focus or expose aria-modal / labelled dialog roles",
+      "Pointer drag remains available; some users may still prefer only the button controls",
     ],
   },
   {
     name: "Blog",
     path: "/blog",
-    level: "Partial",
+    level: "Good",
     summary:
-      "Post list supports search and linked titles; admin editing uses a labeled TipTap toolbar.",
+      "Post list with labeled search, linked titles, and an accessible admin editor dialog.",
     done: [
       "Search field has an aria-label",
       "Post titles are links to the full article",
       "List shows a short text snippet instead of dumping full HTML",
-      "Rich-text toolbar uses role=\"toolbar\" and an accessible name",
-      "Create/edit and delete flows use modal dialogs with explicit Save/Cancel/Confirm",
+      "Rich-text toolbar uses role=\"toolbar\", button aria-labels, and aria-pressed states",
+      "Create/edit and delete dialogs trap focus, support Escape, and restore focus",
+      "Editor notes that body HTML is admin-authored content",
     ],
     gaps: [
-      "Editor bubble/toolbar buttons lack individual aria-pressed states beyond CSS",
-      "Modal focus management (trap, return focus, Escape) is not fully wired",
-      "Post body HTML from TipTap is trusted admin content; no sanitizer UI messaging",
+      "Heading structure inside post bodies still depends on what admins write in TipTap",
     ],
   },
   {
@@ -112,6 +112,29 @@ const pages: PageReport[] = [
     ],
     gaps: ["Could announce the error with a polite live region on entry"],
   },
+  {
+    name: "Accessibility report",
+    path: "/accessibility",
+    level: "Good",
+    summary: "This page: structured headings, linked page names, and clear ratings.",
+    done: [
+      "Semantic sections with labelled headings",
+      "Per-page cards with summaries and lists",
+      "Links to the pages being reviewed",
+    ],
+    gaps: [],
+  },
+  {
+    name: "Mentions légales",
+    path: "/legal",
+    level: "Good",
+    summary: "French legal notices with clear headings and contact links.",
+    done: [
+      "Section headings for each legal topic",
+      "Accessible links to email, CNIL, and the accessibility report",
+    ],
+    gaps: [],
+  },
 ];
 
 const siteWide = {
@@ -119,16 +142,17 @@ const siteWide = {
     "Document language set to English (`lang=\"en\"`)",
     "Responsive viewport meta for mobile layouts",
     "Shared layout uses semantic `<header>`, `<main>`, and `<footer>`",
+    "Skip-to-content link targets the main landmark",
     "Header navigation uses real links; Download / Live Demo are labeled buttons/links",
     "Footer column groups use aria-label; social icons have aria-label text",
     "Decorative SVG icons generally marked aria-hidden",
     "High-contrast accent (#00ff41) on dark backgrounds for key actions and borders",
     "Admin sign-in moved to the footer so casual visitors are not interrupted",
+    "Route loading fallback announces with role=\"status\" / aria-live",
+    "Shared accessible dialog pattern (focus trap, Escape, aria-modal, labelled title)",
   ],
   gaps: [
-    "No site-wide skip link",
-    "Focus outlines follow browser defaults in places; not yet a unified :focus-visible system",
-    "Lazy-loaded routes show a plain “Loading…” fallback without a live region",
+    "Focus outlines follow browser defaults in places; not yet a unified :focus-visible system everywhere",
     "Full WCAG 2.2 AA audit (automated + manual) has not been published yet",
   ],
 };
@@ -209,11 +233,15 @@ const Accessibility = () => {
                 </div>
                 <div>
                   <h4>Known gaps</h4>
-                  <ul>
-                    {page.gaps.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
+                  {page.gaps.length > 0 ? (
+                    <ul>
+                      {page.gaps.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="a11y-card__summary">No major gaps noted.</p>
+                  )}
                 </div>
               </div>
             </article>
