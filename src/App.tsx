@@ -6,6 +6,10 @@ import MainLayout from "./layouts/MainLayout";
 const Home = lazy(() => import("./pages/Home"));
 const Download = lazy(() => import("./pages/Download"));
 const Roadmap = lazy(() => import("./pages/Roadmap"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPostDetail = lazy(() => import("./pages/BlogPostDetail"));
+const Accessibility = lazy(() => import("./pages/Accessibility"));
+const Legal = lazy(() => import("./pages/Legal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const FrontChannelLogout = lazy(() => import("./pages/FrontChannelLogout"));
@@ -22,6 +26,10 @@ const App = () => {
                         <Route path="/" element={<Home />} />
                         <Route path="/download" element={<Download />} />
                         <Route path="/roadmap" element={<Roadmap />} />
+                        <Route path="/blog" element={<Blog />} />
+                        <Route path="/blog/:id" element={<BlogPostDetail />} />
+                        <Route path="/accessibility" element={<Accessibility />} />
+                        <Route path="/legal" element={<Legal />} />
                         <Route path="*" element={<NotFound />} />
                     </Route>
                 </Routes>

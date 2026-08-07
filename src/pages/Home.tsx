@@ -103,7 +103,7 @@ const Home = () => {
 
                 <p className="home__headline">
                     <span className="home__headline-highlight">
-                        Simalated and controled
+                        Simulated and controled
                     </span>
                     <br />
                     <span className="home__headline-sub">from you browser</span>

@@ -158,15 +158,44 @@ const Roadmap: React.FC = () => {
 
   return (
     <div className="roadmap-page-container">
-      <h1>Roadmap</h1>
-      <h2>Get a quick overview of our roadmap and see what we have planned for the future.</h2>
-      <h2>To see a more detailed roadmap, please visit our <a className="link" target="_blank" href="/https://projects.sentience-robotics.fr/">Open Project</a> boards.</h2>
+      {isFormOpen && (
+        <RoadmapForm item={selectedItem} onSave={handleSave} onClose={handleCloseForm} />
+      )}
+      <ConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Confirm Deletion"
+      >
+        <p>Are you sure you want to delete this item?</p>
+      </ConfirmModal>
+
+      <header className="roadmap-page-header">
+        <h1 className="roadmap-page-title">Roadmap</h1>
+        <p className="roadmap-page-subtitle">
+          A quick overview of what we have planned. For more detail, visit our{' '}
+          <a
+            className="link"
+            target="_blank"
+            rel="noreferrer"
+            href="https://projects.sentience-robotics.fr/"
+          >
+            Open Project
+          </a>{' '}
+          boards.
+        </p>
+      </header>
+
       {error && <div className="error-message" style={{ color: 'red' }}>{error}</div>}
+
       {isAuthenticated && (
-        <div className="create-item-button-container">
-          <button onClick={handleCreate}>Create New Item</button>
+        <div className="roadmap-toolbar">
+          <button type="button" className="roadmap-create-btn" onClick={handleCreate}>
+            Create item
+          </button>
         </div>
       )}
+
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
 
         <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
@@ -224,15 +253,6 @@ const Roadmap: React.FC = () => {
           </ul>
         </SortableContext>
       </DndContext>
-      {isFormOpen && <RoadmapForm item={selectedItem} onSave={handleSave} onClose={handleCloseForm} />}
-        <ConfirmModal
-            isOpen={isDeleteModalOpen}
-            onClose={handleCancelDelete}
-            onConfirm={handleConfirmDelete}
-            title="Confirm Deletion"
-        >
-            <p>Are you sure you want to delete this item?</p>
-        </ConfirmModal>
     </div>
   );
 };

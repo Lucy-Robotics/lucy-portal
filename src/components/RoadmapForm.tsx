@@ -8,22 +8,20 @@ interface RoadmapFormProps {
   onClose: () => void;
 }
 
+const emptyItem = (): TimelineItem => ({
+  id: '',
+  position: 0,
+  title: '',
+  description: '',
+  done: false,
+  link: { href: '', text: '' },
+});
+
 const RoadmapForm: React.FC<RoadmapFormProps> = ({ item, onSave, onClose }) => {
-  const [formData, setFormData] = useState<TimelineItem>(
-    item || {
-      id: '',
-      position: 0,
-      title: '',
-      description: '',
-      done: false,
-      link: { href: '', text: '' },
-    }
-  );
+  const [formData, setFormData] = useState<TimelineItem>(item || emptyItem());
 
   useEffect(() => {
-    if (item) {
-      setFormData(item);
-    }
+    setFormData(item || emptyItem());
   }, [item]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -35,7 +33,11 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ item, onSave, onClose }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      link: { ...prev.link, [name]: value },
+      link: {
+        href: prev.link?.href ?? '',
+        text: prev.link?.text ?? '',
+        [name]: value,
+      },
     }));
   };
 
@@ -50,12 +52,12 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ item, onSave, onClose }) => {
   };
 
   return (
-    <div className="roadmap-form-modal">
-      <div className="roadmap-form-content">
-        <form onSubmit={handleSubmit}>
+    <div className="roadmap-modal-overlay" onClick={onClose}>
+      <div className="roadmap-modal-content" onClick={(e) => e.stopPropagation()}>
+        <form className="roadmap-form" onSubmit={handleSubmit}>
           <h2>{item ? 'Edit' : 'Create'} Roadmap Item</h2>
           <label>
-            Title:
+            Title
             <input
               type="text"
               name="title"
@@ -65,17 +67,17 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ item, onSave, onClose }) => {
             />
           </label>
           <label>
-            Description:
+            Description
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
+              rows={5}
               required
             />
           </label>
-
           <label>
-            Link URL:
+            Link URL
             <input
               type="text"
               name="href"
@@ -84,7 +86,7 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ item, onSave, onClose }) => {
             />
           </label>
           <label>
-            Link Text:
+            Link Text
             <input
               type="text"
               name="text"
@@ -92,18 +94,18 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ item, onSave, onClose }) => {
               onChange={handleLinkChange}
             />
           </label>
-          <label>
-            Done:
+          <label className="checkbox-label">
             <input
               type="checkbox"
               name="done"
-              checked={formData.done}
+              checked={!!formData.done}
               onChange={handleCheckboxChange}
             />
+            Mark as done
           </label>
           <div className="form-buttons">
             <button type="submit">Save</button>
-            <button type="button" onClick={onClose}>
+            <button type="button" className="secondary" onClick={onClose}>
               Cancel
             </button>
           </div>

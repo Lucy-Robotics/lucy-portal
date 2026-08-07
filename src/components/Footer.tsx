@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
 import { FaGithub, FaLinkedin, FaDiscord } from "react-icons/fa";
+import { useAuth } from "../providers/AuthProvider.tsx";
 
 type FooterProps = {
     children?: ReactNode;
@@ -43,6 +44,14 @@ const columns: { title: string; links: FooterLink[] }[] = [
                 text: "Releases",
                 href: EXTERNAL_LINKS.GITHUB_RELEASES,
                 external: true,
+            },
+            {
+                text: "Accessibility",
+                href: "/accessibility",
+            },
+            {
+                text: "Mentions légales",
+                href: "/legal",
             },
         ],
     },
@@ -106,6 +115,7 @@ function ExternalIcon() {
 
 export default function Footer({ children }: FooterProps) {
     const year = new Date().getFullYear();
+    const { isAuthenticated, isLoading, displayName, login, logout } = useAuth();
 
     return (
         <footer className="footer">
@@ -160,23 +170,56 @@ export default function Footer({ children }: FooterProps) {
                             3D models under CC BY-NC 4.0 (Gael Langevin).
                         </p>
 
-                        <div className="footer__socials">
-                            {socials.map((social) => {
-                                const Icon = social.icon;
-
-                                return (
-                                    <a
-                                        key={social.label}
-                                        href={social.href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        aria-label={social.label}
-                                        title={social.label}
+                        <div className="footer__bottom-right">
+                            <div className="footer__admin">
+                                {isAuthenticated ? (
+                                    <>
+                                        {displayName ? (
+                                            <span
+                                                className="footer__admin-user"
+                                                title={displayName}
+                                            >
+                                                {displayName}
+                                            </span>
+                                        ) : null}
+                                        <button
+                                            type="button"
+                                            className="footer__admin-button"
+                                            onClick={logout}
+                                        >
+                                            Sign out
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        className="footer__admin-button"
+                                        onClick={login}
+                                        disabled={isLoading}
                                     >
-                                        <Icon />
-                                    </a>
-                                );
-                            })}
+                                        {isLoading ? "Loading..." : "Admin sign in"}
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="footer__socials">
+                                {socials.map((social) => {
+                                    const Icon = social.icon;
+
+                                    return (
+                                        <a
+                                            key={social.label}
+                                            href={social.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={social.label}
+                                            title={social.label}
+                                        >
+                                            <Icon />
+                                        </a>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 </>

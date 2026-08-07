@@ -1,0 +1,119 @@
+.legal-page {
+  padding: 2rem 1.5rem 3rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.legal-page__header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border, #3f3f3f);
+}
+
+.legal-page__title {
+  margin: 0;
+  color: var(--color-highlight, #00ff41);
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+}
+
+.legal-page__subtitle {
+  margin: 0.75rem 0 0;
+  max-width: 42rem;
+  color: var(--color-text-sec, #b7b7b7);
+  font-size: var(--font-size-caption, 1rem);
+  line-height: 1.5;
+}
+
+.legal-section {
+  margin-bottom: 1.75rem;
+}
+
+.legal-section > h2 {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-pri, #fff);
+  font-size: 1.25rem;
+}
+
+.legal-card {
+  border: 1px solid #00ff41;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  background-color: var(--color-bg-comp, #141414);
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.12);
+  color: var(--color-text-pri, #fff);
+  line-height: 1.6;
+}
+
+.legal-card p {
+  margin: 0 0 0.85rem;
+  color: var(--color-text-sec, #b7b7b7);
+}
+
+.legal-card p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-card a {
+  color: #00ff41;
+}
+
+.legal-card a:hover {
+  text-decoration: underline;
+}
+
+.legal-card ul {
+  margin: 0 0 0.85rem;
+  padding-left: 1.2rem;
+  color: var(--color-text-sec, #b7b7b7);
+}
+
+.legal-card li + li {
+  margin-top: 0.4rem;
+}
+
+.legal-card strong {
+  color: var(--color-text-pri, #fff);
+  font-weight: 600;
+}
+
+.legal-blank {
+  margin: 0;
+  color: var(--color-text-sec, #b7b7b7);
+  line-height: 2;
+  white-space: pre-line;
+}
+
+.legal-dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.legal-dl div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr;
+  gap: 0.5rem 1rem;
+}
+
+.legal-dl dt {
+  margin: 0;
+  color: var(--color-highlight, #00ff41);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.legal-dl dd {
+  margin: 0;
+  color: var(--color-text-sec, #b7b7b7);
+}
+
+@media (max-width: 600px) {
+  .legal-dl div {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}

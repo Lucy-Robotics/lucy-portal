@@ -1,5 +1,6 @@
 import { env } from "../config/env.ts";
 import type { TimelineItem } from "../types/timeline.ts";
+import type { BlogPost, BlogPostInput } from "../types/blog.ts";
 
 type ApiRequestOptions = RequestInit & {
     accessToken?: string | null;
@@ -64,4 +65,46 @@ export async function createRoadmapItem(
         body: JSON.stringify(item),
     });
     return response.json() as Promise<TimelineItem>;
+}
+
+export async function getBlogPosts() {
+    const response = await apiFetch("/blog-posts");
+    return response.json() as Promise<BlogPost[]>;
+}
+
+export async function getBlogPost(id: string) {
+    const response = await apiFetch(`/blog-posts/${id}`);
+    return response.json() as Promise<BlogPost>;
+}
+
+export async function createBlogPost(
+    post: BlogPostInput,
+    accessToken: string
+) {
+    const response = await apiFetch("/blog-posts", {
+        method: "POST",
+        accessToken,
+        body: JSON.stringify(post),
+    });
+    return response.json() as Promise<BlogPost>;
+}
+
+export async function updateBlogPost(
+    id: string,
+    post: BlogPostInput,
+    accessToken: string
+) {
+    const response = await apiFetch(`/blog-posts/${id}`, {
+        method: "PUT",
+        accessToken,
+        body: JSON.stringify(post),
+    });
+    return response.json() as Promise<BlogPost>;
+}
+
+export async function deleteBlogPost(id: string, accessToken: string) {
+    await apiFetch(`/blog-posts/${id}`, {
+        method: "DELETE",
+        accessToken,
+    });
 }

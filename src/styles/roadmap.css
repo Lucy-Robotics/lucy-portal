@@ -3,21 +3,43 @@
 }
 
 .roadmap-page-container {
-  padding: 2rem;
+  padding: 2rem 1.5rem 3rem;
   max-width: 800px;
   margin: 0 auto;
 }
 
-.roadmap-page-container h1 {
-  text-align: center;
+.roadmap-page-header {
   margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border, #3f3f3f);
 }
 
-.roadmap-page-container h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-  font-weight: normal;
-  font-size: 1rem;
+.roadmap-page-title {
+  margin: 0;
+  color: var(--color-highlight, #00ff41);
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: var(--font-weight-bold, 700);
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+}
+
+.roadmap-page-subtitle {
+  margin: 0.75rem 0 0;
+  max-width: 40rem;
+  color: var(--color-text-sec, #b7b7b7);
+  font-size: var(--font-size-caption, 1rem);
+  font-weight: var(--font-weight-regular, 400);
+  line-height: 1.5;
+}
+
+.roadmap-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.roadmap-create-btn {
+  padding: 0.7rem 1.25rem;
 }
 
 .timeline-list {
@@ -180,10 +202,4 @@
   .card-footer {
     display: none;
   }
-}
-
-.create-item-button-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem; /* Spacing between button and roadmap items */
 }

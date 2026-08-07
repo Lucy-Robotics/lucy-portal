@@ -1,5 +1,4 @@
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
-import { useAuth } from "../providers/AuthProvider.tsx";
 
 type HeaderProps = {
     sticky?: boolean;
@@ -27,10 +26,10 @@ function ExternalIcon() {
 }
 
 function ExternalLink({
-                          href,
-                          children,
-                          className,
-                      }: {
+    href,
+    children,
+    className,
+}: {
     href: string;
     children: React.ReactNode;
     className?: string;
@@ -48,11 +47,7 @@ function ExternalLink({
     );
 }
 
-export default function Header({
-                                   sticky = true,
-                               }: HeaderProps) {
-    const { isAuthenticated, isLoading, displayName, login, logout } = useAuth();
-
+export default function Header({ sticky = true }: HeaderProps) {
     return (
         <header className={`header ${sticky ? "header--sticky" : ""}`}>
             <div className="header__left">
@@ -62,13 +57,8 @@ export default function Header({
             </div>
 
             <nav className="header__center">
-                <a href="/blog">
-                    Blog
-                </a>
-
-                <a href="/roadmap">
-                    Roadmap
-                </a>
+                <a href="/blog">Blog</a>
+                <a href="/roadmap">Roadmap</a>
 
                 <ExternalLink href={EXTERNAL_LINKS.GITHUB}>
                     GitHub
@@ -80,33 +70,6 @@ export default function Header({
             </nav>
 
             <nav className="header__right">
-                {isAuthenticated ? (
-                    <>
-                        {displayName ? (
-                            <span className="header__user" title={displayName}>
-                                {displayName}
-                            </span>
-                        ) : null}
-
-                        <button
-                            type="button"
-                            className="header__button header__button--secondary"
-                            onClick={logout}
-                        >
-                            Sign out
-                        </button>
-                    </>
-                ) : (
-                    <button
-                        type="button"
-                        className="header__button header__button--secondary"
-                        onClick={login}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? "Loading..." : "Sign in"}
-                    </button>
-                )}
-
                 <a href="/download" className="header__button header__button--main">
                     Download
                 </a>
