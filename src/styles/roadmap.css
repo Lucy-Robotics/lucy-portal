@@ -132,7 +132,7 @@
 }
 
 .status-marker--soon {
-  background-color: transparent;
+  background-color: var(--timeline-subtle-bg);
   border-color: var(--color-border);
 }
 
