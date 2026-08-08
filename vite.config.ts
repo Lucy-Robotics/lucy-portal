@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       allowedHosts,
-      port: parseInt(env.VITE_PORT || "5000"),
+      port: parseInt(env.PORT || "5000"),
     }
   }
 });
