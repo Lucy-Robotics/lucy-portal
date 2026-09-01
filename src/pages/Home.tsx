@@ -9,7 +9,6 @@ import {
     FaUsers,
     FaVideo,
 } from "react-icons/fa";
-import { FaDocker } from "react-icons/fa6";
 import type { IconType } from "react-icons";
 
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
@@ -59,10 +58,10 @@ const FEATURES: { icon: IconType; title: string; description: string }[] = [
             "Connect from multiple browsers simultaneously. Share live telemetry and visualizations while maintaining exclusive control for a single operator.",
     },
     {
-        icon: FaDocker,
-        title: "Runs anywhere via Docker",
+        icon: FaCube,
+        title: "Runs anywhere with Pixi",
         description:
-            "One container bundles Lucy alongside ROS 2, Gazebo and RViz. Runs on anything from a laptop to a Raspberry Pi or Jetson.",
+            "A single Pixi-managed environment bundles Lucy alongside ROS 2, Gazebo and RViz for smooth setup across laptops and edge devices.",
     },
     {
         icon: FaCodeBranch,
@@ -111,10 +110,10 @@ const Home = () => {
 
                 <p className="home__description">
                     Lucy is an open-source framework powered by ROS 2. It
-                    controls and simulates robotic platform and integrate with
-                    many tools, such as Gazebo simulation, RViz aor a web control
-                    panel. Lucy is multiplatform and runs inside a single Docker
-                    container.
+                    controls and simulates robotic platforms and integrates with
+                    many tools, such as Gazebo simulation, RViz and a web control
+                    panel. Lucy is multiplatform and runs from a Python + Pixi
+                    environment.
                 </p>
 
                 <div className="home__actions">
@@ -170,7 +169,13 @@ const Home = () => {
                                     <span className="home__terminal-prompt">
                                         ${" "}
                                     </span>
-                                    python3 Lucy.py
+                                    pixi install
+                                </span>
+                                <span className="home__terminal-line">
+                                    <span className="home__terminal-prompt">
+                                        ${" "}
+                                    </span>
+                                    pixi build
                                 </span>
                             </code>
                         </pre>
@@ -188,11 +193,11 @@ const Home = () => {
                         >
                             http://localhost:5000
                         </a>
-                        . Only Docker, Git &amp; Python 3 required.
+                        . Only Git, Python and Pixi are required.
                     </p>
 
                     <p className="home__quickstart-disclaimer">
-                        These commands are for Linux.
+                        These commands are for Linux and macOS.
                     </p>
 
                     <hr className="home__separator" />
