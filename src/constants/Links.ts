@@ -7,6 +7,6 @@ export const EXTERNAL_LINKS = {
     LINKEDIN: "https://www.linkedin.com/company/sentience-robotics/",
     DISCORD: "https://discord.gg/g4KNZ3eeBd",
     PYTHON: "https://www.python.org/downloads/",
-    DOCKER: "https://www.docker.com/get-started/",
+    PIXI: "https://pixi.sh/latest/",
     GIT: "https://git-scm.com/downloads",
 } as const;

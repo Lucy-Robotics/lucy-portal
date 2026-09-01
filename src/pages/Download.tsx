@@ -1,5 +1,10 @@
-import { FaGitAlt, FaLinux, FaPython, FaWindows } from "react-icons/fa";
-import { FaDocker } from "react-icons/fa6";
+import {
+    FaCube,
+    FaGitAlt,
+    FaLinux,
+    FaPython,
+    FaWindows,
+} from "react-icons/fa";
 import type { IconType } from "react-icons";
 
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
@@ -37,9 +42,9 @@ const REQUIREMENTS: {
         href: EXTERNAL_LINKS.PYTHON,
     },
     {
-        icon: FaDocker,
-        name: "Docker",
-        href: EXTERNAL_LINKS.DOCKER,
+        icon: FaCube,
+        name: "Pixi",
+        href: EXTERNAL_LINKS.PIXI,
     },
     {
         icon: FaGitAlt,
@@ -55,15 +60,15 @@ const Download = () => {
                 <h1 className="download__title">Download</h1>
 
                 <p className="download__subtext">
-                    Get Lucy running on your machine. Everything runs inside
-                    one Docker container.
+                    Get Lucy running on your machine with a Python + Pixi
+                    setup.
                 </p>
 
                 <h2 className="download__section-title">Requirements</h2>
 
                 <p className="download__section-subtext">
-                    You only need three things on the host, everything else
-                    lives in the container.
+                    You only need Python, Pixi and Git on the host. The
+                    project environment is managed with Pixi.
                 </p>
 
                 <div className="download__requirements">
@@ -99,8 +104,8 @@ const Download = () => {
 
                         <div className="download__install-card-body">
                             <p className="download__install-text">
-                                Clone with Git, then run the manager from the
-                                repository root.
+                                Clone the repository, install the environment,
+                                build it, and then launch Lucy normally.
                             </p>
 
                             <div className="download__terminal">
@@ -123,15 +128,22 @@ const Download = () => {
                                             <span className="download__terminal-prompt">
                                                 ${" "}
                                             </span>
-                                            python3 Lucy.py
+                                            pixi install
+                                        </span>
+                                        <span className="download__terminal-line">
+                                            <span className="download__terminal-prompt">
+                                                ${" "}
+                                            </span>
+                                            pixi build
                                         </span>
                                     </code>
                                 </pre>
                             </div>
 
                             <p className="download__install-text">
-                                In the launcher, enable Core + Control Panel,
-                                then open the Control Panel at{" "}
+                                Then use the launcher as usual. In the launcher,
+                                enable Core + Control Panel, then open the Control
+                                Panel at{" "}
                                 <a
                                     href="http://localhost:5000"
                                     className="download__highlight"
@@ -164,12 +176,13 @@ const Download = () => {
 
                         <div className="download__install-card-body">
                             <p className="download__install-text">
-                                Use the installer. No manual setup required.
+                                Go to the latest Lucy Windows Installer release,
+                                download Lucy.exe, run the installer, then use
+                                the launcher as normal.
                             </p>
 
                             <p className="download__install-text">
-                                Download Lucy-Setup.exe from GitHub Releases,
-                                run it, then launch Lucy from the Start Menu
+                                Once installed, launch Lucy from the Start Menu
                                 and enable Core + Control Panel.
                             </p>
 
@@ -182,12 +195,12 @@ const Download = () => {
 
                         <div className="download__install-card-footer">
                             <a
-                                href={EXTERNAL_LINKS.GITHUB_RELEASES}
+                                href="https://github.com/Sentience-Robotics/Lucy-Windows-Installer/releases/latest"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="header__button header__button--main download__install-button"
                             >
-                                Download Lucy-Setup.exe
+                                Download Lucy.exe
                                 <ExternalIcon />
                             </a>
                         </div>
