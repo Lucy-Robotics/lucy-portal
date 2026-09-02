@@ -1,0 +1,135 @@
+.installer {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 2rem 1.5rem;
+}
+
+.installer__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    width: 100%;
+    max-width: 48rem;
+
+    text-align: center;
+}
+
+.installer__eyebrow {
+    margin: 0;
+
+    color: var(--color-highlight);
+
+    font-size: 0.82rem;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.installer__title {
+    margin: 0.75rem 0 0;
+
+    color: var(--color-text-pri);
+
+    font-size: clamp(2.5rem, 7vw, 4rem);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.1;
+}
+
+.installer__subtext {
+    margin: 1.25rem 0 0;
+    max-width: 38rem;
+
+    color: var(--color-text-sec);
+
+    font-size: var(--font-size-caption);
+    line-height: 1.7;
+}
+
+.installer__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+
+    margin-top: 2rem;
+}
+
+.installer__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.installer__secondary-link {
+    color: var(--color-text-pri);
+    font-weight: var(--font-weight-bold);
+    text-decoration: underline;
+}
+
+.installer__panel {
+    width: 100%;
+    margin-top: 2rem;
+    padding: 1.5rem;
+
+    background: var(--color-bg-comp);
+    border: var(--border-width) solid var(--color-border);
+}
+
+.installer__section-title {
+    margin: 0;
+
+    color: var(--color-text-pri);
+
+    font-size: 1.2rem;
+    font-weight: var(--font-weight-bold);
+    text-align: left;
+}
+
+.installer__terminal {
+    margin-top: 1rem;
+    overflow: hidden;
+
+    background: var(--color-bg-page);
+    border: var(--border-width) solid var(--color-border);
+    text-align: left;
+}
+
+.installer__terminal-body {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+
+    color: var(--color-text-pri);
+
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.installer__text {
+    margin: 1rem 0 0;
+
+    color: var(--color-text-sec);
+
+    font-size: var(--font-size-caption);
+    line-height: 1.6;
+    text-align: left;
+}
+
+.installer__text code {
+    color: var(--color-highlight);
+    font-family: "Consolas", "Courier New", monospace;
+}
+
+@media (max-width: 640px) {
+    .installer__panel {
+        padding: 1rem;
+    }
+}

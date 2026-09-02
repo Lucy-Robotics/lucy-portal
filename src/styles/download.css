@@ -235,6 +235,35 @@ a.download__highlight:hover {
     text-decoration: underline;
 }
 
+.download__curl-panel {
+    width: 100%;
+    margin-top: 2rem;
+    padding: 1.5rem;
+
+    background: var(--color-bg-comp);
+    border: var(--border-width) solid var(--color-border);
+}
+
+.download__curl-title {
+    margin: 0;
+
+    color: var(--color-text-pri);
+
+    font-size: 1.2rem;
+    font-weight: var(--font-weight-bold);
+    text-align: left;
+}
+
+.download__terminal--wide {
+    margin-top: 1rem;
+}
+
+.download__curl-actions {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 1rem;
+}
+
 .download__install-footer {
     margin: 2rem 0 0;
 
