@@ -3,16 +3,17 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout";
 
-const Home = lazy(() => import("./pages/Home"));
-const Download = lazy(() => import("./pages/Download"));
-const Roadmap = lazy(() => import("./pages/Roadmap"));
-const Blog = lazy(() => import("./pages/Blog"));
+import Home from "./pages/Home";
+import Download from "./pages/Download";
+import Roadmap from "./pages/Roadmap";
+import Blog from "./pages/Blog";
+
 const BlogPostDetail = lazy(() => import("./pages/BlogPostDetail"));
 const Accessibility = lazy(() => import("./pages/Accessibility"));
 const Legal = lazy(() => import("./pages/Legal"));
-const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const FrontChannelLogout = lazy(() => import("./pages/FrontChannelLogout"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const App = () => {
     return (

@@ -54,6 +54,13 @@ const REQUIREMENTS: {
 ];
 
 const Download = () => {
+    const installerUrl =
+        typeof window !== "undefined"
+            ? new URL("/installer", window.location.origin).toString()
+            : "/installer";
+
+    const curlCommand = `curl -fsSL "${installerUrl}" -o installer.py && python3 installer.py`;
+
     return (
         <div className="download">
             <div className="download__content">
@@ -128,13 +135,7 @@ const Download = () => {
                                             <span className="download__terminal-prompt">
                                                 ${" "}
                                             </span>
-                                            pixi install
-                                        </span>
-                                        <span className="download__terminal-line">
-                                            <span className="download__terminal-prompt">
-                                                ${" "}
-                                            </span>
-                                            pixi build
+                                            python3 Lucy.py
                                         </span>
                                     </code>
                                 </pre>
@@ -145,13 +146,11 @@ const Download = () => {
                                 enable Core + Control Panel, then open the Control
                                 Panel at{" "}
                                 <a
-                                    href="http://localhost:5000"
+                                    href="http://localhost:4004"
                                     className="download__highlight"
                                 >
-                                    http://localhost:5000
+                                    http://localhost:4004
                                 </a>{" "}
-                                (or :5001 if 5000 is taken, common on macOS due
-                                to AirPlay).
                             </p>
                         </div>
 
@@ -205,6 +204,26 @@ const Download = () => {
                             </a>
                         </div>
                     </article>
+                </div>
+
+                <div className="download__curl-panel">
+                    <h3 className="download__curl-title">OR use the curl installer</h3>
+
+                    <div className="download__terminal download__terminal--wide">
+                        <pre className="download__terminal-body">
+                            <code>{curlCommand}</code>
+                        </pre>
+                    </div>
+
+                    <div className="download__curl-actions">
+                        <a
+                            href="/installer.py"
+                            className="header__button header__button--main download__install-button"
+                            download
+                        >
+                            Download installer.py
+                        </a>
+                    </div>
                 </div>
 
                 <p className="download__install-footer">
