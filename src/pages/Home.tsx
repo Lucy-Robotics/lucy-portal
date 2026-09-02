@@ -169,13 +169,7 @@ const Home = () => {
                                     <span className="home__terminal-prompt">
                                         ${" "}
                                     </span>
-                                    pixi install
-                                </span>
-                                <span className="home__terminal-line">
-                                    <span className="home__terminal-prompt">
-                                        ${" "}
-                                    </span>
-                                    pixi build
+                                    python3 Lucy.py
                                 </span>
                             </code>
                         </pre>
@@ -188,16 +182,27 @@ const Home = () => {
                         </span>{" "}
                         and open{" "}
                         <a
-                            href="http://localhost:5000"
+                            href="http://localhost:4004"
                             className="home__highlight"
                         >
-                            http://localhost:5000
+                            http://localhost:4004
                         </a>
-                        . Only Git, Python and Pixi are required.
-                    </p>
-
-                    <p className="home__quickstart-disclaimer">
-                        These commands are for Linux and macOS.
+                        .
+                        <p className="home__quickstart-note">
+                            Only{" "}
+                            <a href="https://git-scm.com/downloads" target="_blank" rel="noopener noreferrer" className="home__highlight">
+                                Git
+                            </a>
+                            ,{" "}
+                            <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" className="home__highlight">
+                                Python
+                            </a>
+                            {" "}and{" "}
+                            <a href="https://pixi.sh/latest/installation/" target="_blank" rel="noopener noreferrer" className="home__highlight">
+                                Pixi
+                            </a>{" "}
+                            are required.
+                        </p>
                     </p>
 
                     <hr className="home__separator" />
