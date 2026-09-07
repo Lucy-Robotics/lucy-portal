@@ -214,16 +214,6 @@ const Download = () => {
                             <code>{curlCommand}</code>
                         </pre>
                     </div>
-
-                    <div className="download__curl-actions">
-                        <a
-                            href="/installer.py"
-                            className="header__button header__button--main download__install-button"
-                            download
-                        >
-                            Download installer.py
-                        </a>
-                    </div>
                 </div>
 
                 <p className="download__install-footer">
