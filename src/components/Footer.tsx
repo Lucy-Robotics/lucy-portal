@@ -56,7 +56,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
         ],
     },
     {
-        title: "Sentience Robotics",
+        title: "Lucy Robotics",
         links: [
             {
                 text: "LinkedIn",

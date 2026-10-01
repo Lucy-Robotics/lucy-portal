@@ -200,7 +200,7 @@ const Roadmap: React.FC = () => {
             className="link"
             target="_blank"
             rel="noreferrer"
-            href="https://projects.sentience-robotics.fr/"
+            href="https://projects.lucy-robotics.fr/"
           >
             Open Project
           </a>{' '}
@@ -245,78 +245,77 @@ const Roadmap: React.FC = () => {
                   disabled={!isAuthenticated}
                   className={`timeline-item ${done ? '' : 'italic'}`}
                 >
-                    <div className="date-label">{statusLabel}</div>
+                  <div className="date-label">{statusLabel}</div>
 
-                    <div className="checkbox-container">
-                      <span
-                        className={`status-marker ${done ? 'status-marker--done' : 'status-marker--soon'}`}
-                        role="img"
-                        aria-label={`Status: ${statusLabel}`}
-                      />
+                  <div className="checkbox-container">
+                    <span
+                      className={`status-marker ${done ? 'status-marker--done' : 'status-marker--soon'}`}
+                      role="img"
+                      aria-label={`Status: ${statusLabel}`}
+                    />
+                    <div
+                      className={`line-container ${isFirst ? 'justify-end' : ''}`}
+                      aria-hidden="true"
+                    >
                       <div
-                        className={`line-container ${isFirst ? 'justify-end' : ''}`}
-                        aria-hidden="true"
-                      >
-                        <div
-                          className={`line ${isFirst ? 'rounded-t-full' : ''} ${isLast ? 'rounded-b-full' : ''} ${
-                            isFirst || isLast ? 'h-half' : 'h-full'
+                        className={`line ${isFirst ? 'rounded-t-full' : ''} ${isLast ? 'rounded-b-full' : ''} ${isFirst || isLast ? 'h-half' : 'h-full'
                           }`}
-                        />
-                      </div>
+                      />
                     </div>
+                  </div>
 
-                    <div className="card">
-                      <div className="card-body">
-                        <div className="card-content">
-                          <div className="card-header">
-                            <div className="header-left">
-                              <span
-                                className={`title ${done ? '' : 'text-secondary italic'}`}
-                              >
-                                {item.title}
-                              </span>
-                            </div>
-                            <div className="header-right">
-                              {item?.link?.text && item?.link?.href && (
-                                <a href={item.link.href} className="link">
-                                  [{item.link.text}]
-                                </a>
-                              )}
-                            </div>
+                  <div className="card">
+                    <div className="card-body">
+                      <div className="card-content">
+                        <div className="card-header">
+                          <div className="header-left">
+                            <span
+                              className={`title ${done ? '' : 'text-secondary italic'}`}
+                            >
+                              {item.title}
+                            </span>
                           </div>
-                          <p className="description">{item.description}</p>
-                          {isAuthenticated && (
-                            <div className="admin-controls">
-                              <button
-                                type="button"
-                                onClick={() => moveItem(index, -1)}
-                                disabled={isFirst}
-                                aria-label={`Move ${item.title} up`}
-                              >
-                                Move up
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => moveItem(index, 1)}
-                                disabled={isLast}
-                                aria-label={`Move ${item.title} down`}
-                              >
-                                Move down
-                              </button>
-                              <button type="button" onClick={() => handleEdit(item)}>
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteClick(item.id)}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
+                          <div className="header-right">
+                            {item?.link?.text && item?.link?.href && (
+                              <a href={item.link.href} className="link">
+                                [{item.link.text}]
+                              </a>
+                            )}
+                          </div>
                         </div>
+                        <p className="description">{item.description}</p>
+                        {isAuthenticated && (
+                          <div className="admin-controls">
+                            <button
+                              type="button"
+                              onClick={() => moveItem(index, -1)}
+                              disabled={isFirst}
+                              aria-label={`Move ${item.title} up`}
+                            >
+                              Move up
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveItem(index, 1)}
+                              disabled={isLast}
+                              aria-label={`Move ${item.title} down`}
+                            >
+                              Move down
+                            </button>
+                            <button type="button" onClick={() => handleEdit(item)}>
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteClick(item.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
+                  </div>
                 </SortableItem>
               );
             })}

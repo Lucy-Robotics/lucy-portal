@@ -105,7 +105,7 @@ const Home = () => {
                         Simulated and controled
                     </span>
                     <br />
-                    <span className="home__headline-sub">from you browser</span>
+                    <span className="home__headline-sub">from your browser</span>
                 </p>
 
                 <p className="home__description">
@@ -157,7 +157,7 @@ const Home = () => {
                                         ${" "}
                                     </span>
                                     git clone
-                                    https://github.com/Sentience-Robotics/lucy_ws.git
+                                    https://github.com/Lucy-Robotics/lucy_ws.git
                                 </span>
                                 <span className="home__terminal-line">
                                     <span className="home__terminal-prompt">

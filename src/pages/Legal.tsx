@@ -19,12 +19,12 @@ const Legal = () => {
           <dl className="legal-dl">
             <div>
               <dt>Nom / raison sociale</dt>
-              <dd>Sentience Robotics</dd>
+              <dd>Lucy Robotics</dd>
             </div>
             <div>
               <dt>Contact</dt>
               <dd>
-                <a href="mailto:contact@sentience-robotics.fr">contact@sentience-robotics.fr</a>
+                <a href="mailto:contact@lucy-robotics.fr">contact@lucy-robotics.fr</a>
               </dd>
             </div>
           </dl>
@@ -94,7 +94,7 @@ const Legal = () => {
         <div className="legal-card">
           <p>
             Les contenus originaux du site (textes, éléments graphiques propres
-            au projet Lucy / Sentience Robotics), sauf mention contraire,
+            au projet Lucy / Lucy Robotics), sauf mention contraire,
             restent la propriété de leurs auteurs respectifs. Toute
             reproduction non autorisée peut constituer une contrefaçon.
           </p>
