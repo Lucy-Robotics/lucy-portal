@@ -37,6 +37,10 @@ export class InMoovWave {
         this.robot = robot;
     }
 
+    get waving() {
+        return this.progress < 1;
+    }
+
     /* Wave, unless already waving. */
     wave() {
         if (this.progress >= 1) this.progress = 0;

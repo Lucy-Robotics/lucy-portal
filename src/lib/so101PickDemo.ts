@@ -1,46 +1,57 @@
 /*
- * SO-101 pick-and-place: activate the arm and it picks up the payload; again
+ * SO-101 pick-and-place: activate the arm and it takes the payload; again
  * and it puts it back. While at rest it turns toward the cursor.
  *
- * The approach / grasp / lift poses are solved once, at load, with a small
- * inverse-kinematics solver on the URDF chain. After that every move is an
- * eased interpolation between known poses, the way a servo arm runs a
- * taught sequence: no solver runs per frame.
+ * The rest / approach / grasp / retreat / carry poses are solved once, with
+ * a small inverse-kinematics solver on the URDF chain. The gripper is kept
+ * square to the payload's local z (so the jaws can close along it) and
+ * leans toward the plan's preferred direction where it can. After that
+ * every move is an eased interpolation between known poses, the way a servo
+ * arm runs a taught sequence: no solver runs per frame.
  *
- * The grasp is measured from the meshes: at load we find the inner faces of
- * both jaws, aim the solver at the point between them, open the jaws just
- * wider than the payload and close them onto it, and turn the payload so its
- * gripped faces are square to the jaws.
+ * The grasp is measured from the meshes: we find the inner faces of both
+ * jaws, aim the solver at the point between them, open the jaws just wider
+ * than the payload and close them onto it, and roll the wrist so the jaws
+ * close along the payload's local z.
  */
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
 const CHAIN = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex"] as const;
-/* Wrist roll for the whole sequence: the jaws close toward the viewer, so
-   the payload, gripped across its depth, faces the camera. */
-const ROLL = Math.PI / 2;
-/* Seed for the rest pose (gripper down, raised above the table). */
-const READY_SEED = [-0.3, -0.45, 0.8, 0.9];
-/* The payload sits on the table to the arm's left (x, z), and the arm is
-   turned three-quarters toward the viewer, reaching left. */
-const HOME = new THREE.Vector2(-0.17, 0.0);
-export const BASE_YAW = Math.PI + 0.55;
-/* At rest the gripper waits above the payload, a little back toward the arm. */
-const REST_OFFSET = new THREE.Vector3(0.04, 0.17, -0.03);
 /* Height of the fingers' contact faces above their tips, and how deep
    between the fingers the payload's grasp point sits. */
 const CONTACT_BAND = 0.017;
 const GRIP_DEPTH = 0.01;
+/* Above this many metres of residual, a pose counts as out of reach. */
+const REACH_TOLERANCE = 0.006;
 
 export type Payload = {
     /* Origin at the grasp point; local z is the axis the jaws close along. */
     object: THREE.Object3D;
     /* Thickness between the jaws at the grasp point. */
     gripWidth: number;
-    /* Height of the grasp point above the table when resting. */
-    restHeight: number;
-    /* Lies on the floor under the payload and fades as it rises. */
-    floorMark?: THREE.Mesh;
+};
+
+/* Where things are, in world coordinates. */
+export type PickPlan = {
+    /* The payload's grasp point, where it sits before being taken. */
+    grasp: THREE.Vector3;
+    /* Direction the gripper would rather point at the grasp (e.g. along the reach). */
+    lean: THREE.Vector3;
+    /* Where the grasp point waits at rest, and the way the gripper points there. */
+    rest: THREE.Vector3;
+    restLean: THREE.Vector3;
+    /* Where it holds the payload afterwards, and the way the gripper points there. */
+    carry: THREE.Vector3;
+    carryLean: THREE.Vector3;
+    /* How far the gripper backs off along its own axis before and after grasping. */
+    approach: number;
+    /* Joint values to rest at instead of solving `rest`, so several plans on
+       one arm share the exact same rest pose (see `restPose`). */
+    restPose?: number[];
+    /* Whether the gripper must be square to the payload's face (default), or
+       only reach it: fine for a thin round part, and it reaches much more. */
+    square?: boolean;
 };
 
 /* Pick timeline, 0 -> 1 (played backwards to put the payload back). */
@@ -59,19 +70,33 @@ const damp = (from: number, to: number, rate: number, dt: number) =>
     from + (to - from) * (1 - Math.exp(-rate * dt));
 
 export class So101PickDemo {
+    /* False when the plan's grasp is out of the arm's reach: toggle() does nothing. */
+    readonly reachable: boolean;
+    /* Metres off target for each taught pose, to see why a plan isn't reachable. */
+    readonly misses: Record<"grasp" | "approach" | "rest" | "carry", number>;
+
     private readonly payload: Payload;
-    private readonly home: THREE.Vector3;
     private readonly robot: URDFRobot;
     private readonly base: THREE.Object3D;
-    private readonly scene: THREE.Scene;
     private readonly tcp: THREE.Object3D;
+    private lean: THREE.Vector3;
+    private readonly facing: THREE.Vector3;
     private readonly panOrigin: THREE.Vector3;
     private readonly keys: { at: number; q: Pose }[];
-    private readonly homeYaw: number;
+    private readonly onHoldChange?: (holding: boolean) => void;
+    private readonly home: {
+        parent: THREE.Object3D;
+        position: THREE.Vector3;
+        quaternion: THREE.Quaternion;
+        scale: THREE.Vector3;
+    };
 
     private readonly grip = new THREE.Object3D();
+    // Where the payload sits in the gripper once taken, for takeOver().
+    private heldOffset = new THREE.Matrix4();
     private gripOpen = 0;
     private gripClosed = 0;
+    private roll = 0;
 
     private progress = 0;
     private goal = 0;
@@ -81,57 +106,112 @@ export class So101PickDemo {
     private readonly look = new THREE.Vector2();
     private readonly lookGoal = new THREE.Vector2();
 
-    /* `base` is the robot's parent, already turned to BASE_YAW and in the scene. */
-    constructor(robot: URDFRobot, base: THREE.Object3D, scene: THREE.Scene, payload: Payload) {
+    /*
+     * `base` is the robot's parent, already placed in the scene. The payload
+     * must already be in the scene at plan.grasp; it's returned there when
+     * put back.
+     */
+    constructor(
+        robot: URDFRobot,
+        base: THREE.Object3D,
+        payload: Payload,
+        plan: PickPlan,
+        onHoldChange?: (holding: boolean) => void,
+    ) {
         this.robot = robot;
         this.base = base;
-        this.scene = scene;
         this.payload = payload;
-        this.home = new THREE.Vector3(HOME.x, payload.restHeight, HOME.y);
+        this.onHoldChange = onHoldChange;
+        this.lean = plan.lean.clone().normalize();
         this.tcp = robot.links.gripper_frame_link;
+        const { object } = payload;
+        this.facing = new THREE.Vector3(0, 0, 1).applyQuaternion(object.getWorldQuaternion(new THREE.Quaternion()));
+        this.home = {
+            parent: object.parent!,
+            position: object.position.clone(),
+            quaternion: object.quaternion.clone(),
+            scale: object.scale.clone(),
+        };
 
-        scene.updateMatrixWorld(true);
+        base.updateMatrixWorld(true);
         this.measureJaws();
-        this.panOrigin = robot.links.shoulder_link.getWorldPosition(new THREE.Vector3()).setY(0);
+        this.panOrigin = robot.links.shoulder_link.getWorldPosition(new THREE.Vector3());
 
-        payload.object.position.copy(this.home);
-        scene.add(payload.object);
-        if (payload.floorMark) scene.add(payload.floorMark);
-
-        // Solve the taught poses once, with the wrist rolled as it will be.
-        this.set("wrist_roll", ROLL);
+        // Roll the wrist so the jaws close along the payload's local z, then
+        // solve the taught poses with that roll.
         this.set("gripper", this.gripOpen);
-        const c = this.home;
-        const rest = this.solveFor(new THREE.Vector3(c.x + REST_OFFSET.x, REST_OFFSET.y, c.z + REST_OFFSET.z), READY_SEED);
-        const approach = this.solveFor(new THREE.Vector3(c.x, 0.08, c.z), rest);
-        const grasp = this.solveFor(c.clone(), approach);
-        const lift = this.solveFor(new THREE.Vector3(c.x, 0.11, c.z), grasp);
+        const square = plan.square ?? true;
+        let grasp = this.solveFor(plan.grasp, [0, 0, 0.5, 0.5], { square });
+        if (grasp.error >= REACH_TOLERANCE) {
+            // Out of reach: don't spend time on the other poses.
+            this.misses = { grasp: grasp.error, approach: NaN, rest: NaN, carry: NaN };
+            this.reachable = false;
+            this.keys = [{ at: 0, q: grasp.q }, { at: 1, q: grasp.q }];
+            return;
+        }
+        this.roll = this.alignRoll(grasp.q);
+        grasp = this.solveFor(plan.grasp, grasp.q, { square });
+        // Approach and retreat straight along the gripper's axis at the grasp.
+        this.apply(grasp.q);
+        const axis = this.toolAxis();
+        const approach = this.solveFor(plan.grasp.clone().addScaledVector(axis, -plan.approach), grasp.q, { square });
+        this.lean = plan.carryLean.clone().normalize();
+        const carry = this.solveFor(plan.carry, approach.q, { square });
+        // At rest it holds nothing, so it may turn out of square.
+        this.lean = plan.restLean.clone().normalize();
+        const rest = plan.restPose
+            ? { q: plan.restPose.slice(), error: 0 }
+            : this.solveFor(plan.rest, approach.q, { square: false });
+        this.misses = { grasp: grasp.error, approach: approach.error, rest: rest.error, carry: carry.error };
+        // Rest is only where the arm waits, so it needn't be exact.
+        this.reachable = [grasp, approach, carry].every((solution) => solution.error < REACH_TOLERANCE);
 
-        // Turn the payload so the jaws close along its local z at the grasp pose.
-        this.apply(grasp);
-        const across = new THREE.Vector3().setFromMatrixColumn(robot.links.gripper_link.matrixWorld, 0);
-        this.homeYaw = Math.atan2(across.x, across.z);
-        payload.object.rotation.y = this.homeYaw;
+        // Where the payload ends up in the gripper: at the grasp, jaws closed.
+        this.apply(grasp.q);
+        this.set("gripper", this.gripClosed);
+        this.robot.updateMatrixWorld(true);
+        object.updateMatrixWorld(true);
+        this.heldOffset.copy(this.grip.matrixWorld).invert().multiply(object.matrixWorld);
 
         this.keys = [
-            { at: 0, q: rest },
-            { at: 0.3, q: approach },
-            { at: CLOSE_START, q: grasp },
-            { at: ATTACH_AT, q: grasp }, // hold still while the jaws close
-            { at: 0.82, q: lift },
-            { at: 1, q: rest },
+            { at: 0, q: rest.q },
+            { at: 0.3, q: approach.q },
+            { at: CLOSE_START, q: grasp.q },
+            { at: ATTACH_AT, q: grasp.q }, // hold still while the jaws close
+            { at: 0.8, q: approach.q },
+            { at: 1, q: carry.q },
         ];
         this.update(0);
     }
 
-    /* Pick the payload up, or put it back if it's held or on its way up. */
-    toggle() {
-        this.goal = this.goal > 0.5 ? 0 : 1;
+    /* Where the sequence stands, for the page and for tests. */
+    get state() {
+        return { progress: this.progress, goal: this.goal, holding: this.holding };
     }
 
-    /* Cursor in normalised device coordinates, or null when it leaves. */
-    setLook(ndc: { x: number; y: number } | null) {
-        this.lookGoal.set(ndc?.x ?? 0, ndc?.y ?? 0);
+    /* The look offset in use now (see setLook). */
+    get looking() {
+        return { x: this.look.x, y: this.look.y };
+    }
+
+    /* The chain's joint values at rest, to share with other plans. */
+    get restPose() {
+        return this.keys[0].q.slice();
+    }
+
+    /* At rest, not holding and not on its way anywhere. */
+    get idle() {
+        return this.goal === 0 && this.progress === 0;
+    }
+
+    /* Take the payload, or put it back if it's held or on its way. */
+    toggle() {
+        if (this.reachable) this.goal = this.goal > 0.5 ? 0 : 1;
+    }
+
+    /* Cursor direction in [-1, 1], or null when it leaves. */
+    setLook(look: { x: number; y: number } | null) {
+        this.lookGoal.set(look?.x ?? 0, look?.y ?? 0);
     }
 
     /* Advance by dt seconds; returns true while anything is still moving. */
@@ -148,27 +228,74 @@ export class So101PickDemo {
         this.pose(this.progress, instant ? 1 : dt);
 
         // The payload rides with the gripper between closing and putting back.
-        const { object, floorMark } = this.payload;
+        const { object } = this.payload;
         this.robot.updateMatrixWorld(true);
         if (!this.holding && this.progress >= ATTACH_AT) {
             this.grip.attach(object);
             this.holding = true;
+            this.onHoldChange?.(true);
         } else if (this.holding && this.progress < ATTACH_AT) {
-            this.scene.attach(object);
-            object.position.copy(this.home);
-            object.rotation.set(0, this.homeYaw, 0);
+            this.home.parent.add(object);
+            object.position.copy(this.home.position);
+            object.quaternion.copy(this.home.quaternion);
             this.holding = false;
-        }
-        if (floorMark) {
-            const at = object.getWorldPosition(new THREE.Vector3());
-            floorMark.position.set(at.x, floorMark.position.y, at.z);
-            (floorMark.material as THREE.Material).opacity =
-                THREE.MathUtils.clamp(1 - (at.y - this.home.y) * 5, 0.3, 1);
+            this.onHoldChange?.(false);
         }
 
         return Math.abs(this.goal - this.progress) > 1e-4
             || this.look.distanceTo(this.lookGoal) > 0.002
             || Math.abs(this.follow - (this.atRest ? 1 : 0)) > 0.01;
+    }
+
+    /* Back to rest at once, the payload put back home. */
+    reset() {
+        this.goal = 0;
+        this.update(0, { instant: true });
+    }
+
+    /* Run the sequence to a point on its timeline (0 rest, 0.5 at the grasp
+       with the jaws open, 1 holding), e.g. to pause while the payload is
+       brought to the gripper some other way. */
+    setGoal(goal: number) {
+        if (this.reachable) this.goal = clamp01(goal);
+    }
+
+    /* Hold the payload at once, as if it had been taken (another pick on the
+       same arm was holding it, say). */
+    takeOver() {
+        if (!this.reachable) return;
+        this.goal = 1;
+        this.progress = 1;
+        this.pose(1, 1);
+        this.robot.updateMatrixWorld(true);
+        const { object } = this.payload;
+        this.grip.add(object);
+        this.heldOffset.decompose(object.position, object.quaternion, object.scale);
+        this.holding = true;
+        this.onHoldChange?.(true);
+    }
+
+    /* Back to rest at once, the payload put back home, without telling
+       onHoldChange (it's being handed over, not put back). */
+    release() {
+        this.goal = 0;
+        this.progress = 0;
+        if (this.holding) {
+            const { object } = this.payload;
+            this.home.parent.add(object);
+            object.position.copy(this.home.position);
+            object.quaternion.copy(this.home.quaternion);
+            object.scale.copy(this.home.scale);
+            this.holding = false;
+        }
+        this.pose(0, 1);
+    }
+
+    /* Put the payload back home without animating, and detach from the robot. */
+    dispose() {
+        this.goal = 0;
+        this.update(0, { instant: true });
+        this.grip.removeFromParent();
     }
 
     private set(joint: string, value: number) {
@@ -199,9 +326,41 @@ export class So101PickDemo {
         this.set("shoulder_lift", q[1]);
         this.set("elbow_flex", q[2]);
         this.set("wrist_flex", q[3] - this.look.y * LOOK.wrist * f);
-        this.set("wrist_roll", ROLL + this.look.x * LOOK.roll * f);
+        this.set("wrist_roll", this.roll + this.look.x * LOOK.roll * f);
         const g = ease(clamp01((t - CLOSE_START) / (ATTACH_AT - CLOSE_START)));
         this.set("gripper", this.gripOpen + (this.gripClosed - this.gripOpen) * g);
+    }
+
+    /* Direction the gripper points (towards the fingertips), in world space. */
+    private toolAxis() {
+        return new THREE.Vector3(0, 0, 1).applyQuaternion(this.tcp.getWorldQuaternion(new THREE.Quaternion()));
+    }
+
+    /*
+     * Wrist roll that makes the jaws close along the payload's local z at
+     * the grasp pose. Rolling turns the gripper about its own axis, so the
+     * rest of the chain can stay put while we search.
+     */
+    private alignRoll(grasp: Pose) {
+        this.apply(grasp);
+        const target = this.facing;
+        const { lower, upper } = this.robot.joints.wrist_roll.limit;
+        const alignment = (roll: number) => {
+            this.set("wrist_roll", roll);
+            this.robot.updateMatrixWorld(true);
+            const across = new THREE.Vector3().setFromMatrixColumn(this.robot.links.gripper_link.matrixWorld, 0);
+            return Math.abs(across.normalize().dot(target)); // the jaws are symmetric
+        };
+        let best = 0;
+        let bestScore = -1;
+        for (let roll = lower; roll <= upper; roll += 0.02) {
+            const score = alignment(roll);
+            if (score > bestScore + 1e-6) {
+                best = roll;
+                bestScore = score;
+            }
+        }
+        return best;
     }
 
     /*
@@ -275,18 +434,26 @@ export class So101PickDemo {
     /* Set the chain, and return the values actually reached (after joint limits). */
     private apply(q: Pose) {
         CHAIN.forEach((name, i) => this.set(name, q[i]));
+        this.set("wrist_roll", this.roll);
         this.robot.updateMatrixWorld(true);
         return CHAIN.map((name) => this.angle(name));
     }
 
-    /* Damped least squares on position plus "gripper pointing down". */
-    private ik(goal: THREE.Vector3, start: Pose, iterations: number) {
+    /*
+     * Damped least squares on position, "gripper square to the payload's
+     * depth", and a soft pull toward the preferred lean.
+     */
+    private ik(goal: THREE.Vector3, start: Pose, iterations: number, keepSquare: boolean, lean = 0.04) {
         const saved = CHAIN.map((name) => this.angle(name));
         const residual = () => {
             const p = this.grip.getWorldPosition(new THREE.Vector3());
-            const a = new THREE.Vector3(0, 0, 1).applyQuaternion(this.tcp.getWorldQuaternion(new THREE.Quaternion()));
-            const w = 0.08; // metres of position error worth one unit of tilt
-            return [goal.x - p.x, goal.y - p.y, goal.z - p.z, -a.x * w, (-1 - a.y) * w, -a.z * w];
+            const a = this.toolAxis();
+            // 0.08 m of position error is worth one unit of tilt.
+            const square = keepSquare ? -a.dot(this.facing) * 0.08 : 0;
+            return [
+                goal.x - p.x, goal.y - p.y, goal.z - p.z, square,
+                (this.lean.x - a.x) * lean, (this.lean.y - a.y) * lean, (this.lean.z - a.z) * lean,
+            ];
         };
 
         let q = this.apply(start);
@@ -310,22 +477,24 @@ export class So101PickDemo {
             q = this.apply(q.map((v, i) => v + dq[i] * k));
             e = residual();
         }
-        const error = Math.hypot(...e);
+        // Reach is judged on position and squareness; the lean is only a preference.
+        const error = Math.hypot(e[0], e[1], e[2], e[3]);
         this.apply(saved);
         return { q, error };
     }
 
     /* Best solution for a goal: refine from `start`, and if that stalls,
        search a coarse grid of starting poses (forward-leaning preferred). */
-    private solveFor(goal: THREE.Vector3, start: Pose): Pose {
+    private solveFor(goal: THREE.Vector3, start: Pose, { square = true } = {}) {
         const preference = (q: Pose) => 0.004 * (Math.abs(q[1] - 0.4) + Math.abs(q[2] + 0.2));
-        let best = this.ik(goal, start, 20);
+        let best = this.ik(goal, start, 20, square);
         if (best.error > 0.004) {
-            const pan = Math.atan2(-(goal.z - this.panOrigin.z), goal.x - this.panOrigin.x) - this.base.rotation.y;
+            const toGoal = this.base.worldToLocal(goal.clone()).sub(this.base.worldToLocal(this.panOrigin.clone()));
+            const pan = Math.atan2(-toGoal.z, toGoal.x);
             for (const lift of [-0.8, -0.2, 0.4, 1.0]) {
                 for (const elbow of [-1.2, -0.4, 0.4, 1.2]) {
-                    for (const wrist of [0.6, 1.4]) {
-                        const candidate = this.ik(goal, [pan, lift, elbow, wrist], 20);
+                    for (const wrist of [-1.4, -0.6, 0.6, 1.4]) {
+                        const candidate = this.ik(goal, [pan, lift, elbow, wrist], 20, square);
                         if (candidate.error + preference(candidate.q) < best.error + preference(best.q) - 1e-4) {
                             best = candidate;
                         }
@@ -333,7 +502,9 @@ export class So101PickDemo {
                 }
             }
         }
-        return best.q;
+        // The lean is only a preference: polish without it so position wins.
+        const polished = this.ik(goal, best.q, 20, square, 0);
+        return polished.error < best.error ? polished : best;
     }
 }
 

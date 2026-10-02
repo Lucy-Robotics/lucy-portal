@@ -8,6 +8,8 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import URDFLoader, { type URDFRobot } from "urdf-loader";
 
+import { fetchBuffer, fetchText } from "./robotAssets.ts";
+
 type MeshEntry = {
     geometry: THREE.BufferGeometry;
     matrix: THREE.Matrix4;
@@ -19,7 +21,7 @@ type MeshEntry = {
  * comes from the parent and the transform from the mesh's full path.
  */
 async function loadMeshes(url: string) {
-    const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(url);
+    const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(await fetchBuffer(url), "");
     gltf.scene.updateMatrixWorld(true);
 
     const meshes = new Map<string, MeshEntry>();
@@ -33,12 +35,6 @@ async function loadMeshes(url: string) {
     return meshes;
 }
 
-async function loadText(url: string) {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to load ${url}: ${response.status}`);
-    return response.text();
-}
-
 /*
  * `materialFor` receives the name of the URDF <material> of each visual.
  * The returned robot is turned from URDF's z-up to three.js' y-up.
@@ -48,7 +44,7 @@ export async function loadRobot(
     glbUrl: string,
     materialFor: (urdfMaterial: string) => THREE.Material,
 ): Promise<URDFRobot> {
-    const [urdf, meshes] = await Promise.all([loadText(urdfUrl), loadMeshes(glbUrl)]);
+    const [urdf, meshes] = await Promise.all([fetchText(urdfUrl), loadMeshes(glbUrl)]);
 
     // Meshes dropped when the GLB was built (e.g. degenerate ones) are skipped.
     const missing = new Set<string>();

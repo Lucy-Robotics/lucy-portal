@@ -15,7 +15,7 @@ import type { IconType } from "react-icons";
 
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
 import Logo from "../components/Logo.tsx";
-import RobotStage from "../components/RobotStage.tsx";
+import RobotShowcase from "../components/RobotShowcase.tsx";
 import "../styles/home.css";
 
 const FEATURES: { icon: IconType; title: string; description: string }[] = [
@@ -97,6 +97,7 @@ function ExternalIcon() {
 }
 
 const Home = () => {
+    const heroRef = useRef<HTMLDivElement>(null);
     const introRef = useRef<HTMLElement>(null);
     const [isAtTop, setIsAtTop] = useState(true);
 
@@ -115,7 +116,7 @@ const Home = () => {
     return (
         <div className="home">
             <div className="home__layout">
-                <div className="home__hero">
+                <div ref={heroRef} className="home__hero">
                     <h1 className="home__title">
                         <Logo />
                     </h1>
@@ -172,8 +173,8 @@ const Home = () => {
                     </button>
                 </div>
 
-                <aside className="home__stage" aria-label="Robot preview">
-                    <RobotStage />
+                <aside className="home__stage">
+                    <RobotShowcase heroRef={heroRef} />
                 </aside>
 
                 <div className="home__main">

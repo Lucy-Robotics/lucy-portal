@@ -6,9 +6,10 @@
     padding: 0 1.5rem 3rem;
 }
 
-/* Wide screens: hero and content on the left, the robot stage pinned on the
-   right while the page scrolls. DOM order is hero, stage, main so that
-   narrow screens stack the stage right after the hero. */
+/* Wide screens: the hero across the page (the arm stands in it, free), then
+   the content on the left and the robots' box pinned on the right while the
+   page scrolls. DOM order is hero, stage, main so that narrow screens stack
+   the box right after the hero. */
 .home__layout {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
@@ -20,13 +21,15 @@
 
 /* Fills the first screen below the header */
 .home__hero {
-    grid-column: 1;
+    grid-column: 1 / -1;
     grid-row: 1;
 
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
+
+    text-align: center;
 
     position: relative;
     container-type: inline-size;
@@ -35,6 +38,8 @@
     padding: 3rem 0 4rem;
 }
 
+/* Pinned on the right from the top, at the height it settles at: it stays
+   invisible (and lets the hero be clicked) until the arm lands in it. */
 .home__stage {
     grid-column: 2;
     grid-row: 1 / span 2;
@@ -48,7 +53,7 @@
     padding: 1.5rem 0;
 }
 
-.home__stage .robot-stage {
+.home__stage > .robot-showcase {
     flex: 1;
 }
 
@@ -340,10 +345,21 @@ a.home__highlight:hover {
         display: block;
     }
 
-    .home__hero {
-        align-items: center;
+    /* The header's logo is enough on phones; the arm takes that one. The
+       tagline sits at the top, leaving the screen below to the arm. */
+    .home__title {
+        display: none;
+    }
 
-        text-align: center;
+    /* The robot below the tagline already invites a scroll. */
+    .home__scroll-hint {
+        display: none;
+    }
+
+    .home__hero {
+        justify-content: flex-start;
+
+        padding-top: 2.5rem;
     }
 
     .home__actions {
@@ -353,7 +369,7 @@ a.home__highlight:hover {
     .home__stage {
         position: static;
 
-        height: clamp(320px, 60svh, 480px);
+        height: auto;
         padding: 0 0 3rem;
     }
 
