@@ -2,15 +2,20 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { AuthProvider } from "./providers/AuthProvider";
+import { isAuthConfigured } from "./config/env";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import "./styles/globals.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <ThemeProvider>
-            <AuthProvider>
+            {isAuthConfigured ? (
+                <AuthProvider>
+                    <App />
+                </AuthProvider>
+            ) : (
                 <App />
-            </AuthProvider>
+            )}
         </ThemeProvider>
     </React.StrictMode>
 );

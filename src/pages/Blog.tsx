@@ -10,6 +10,7 @@ import {
   updateBlogPost,
   deleteBlogPost,
 } from '../lib/api';
+import { isBackendConfigured } from '../config/env';
 import '../styles/blog.css';
 import '../styles/blog-form.css';
 import '../styles/confirm-modal.css';
@@ -17,7 +18,7 @@ import '../styles/confirm-modal.css';
 const Blog: React.FC = () => {
   const { isAuthenticated, accessToken } = useAuth();
   const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isBackendConfigured);
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -40,7 +41,7 @@ const Blog: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPosts();
+    if (isBackendConfigured) fetchPosts();
   }, []);
 
   const handleCreate = () => {
@@ -153,7 +154,12 @@ const Blog: React.FC = () => {
           aria-label="Search posts or tags"
         />
         {isAuthenticated && (
-          <button type="button" className="blog-create-btn" onClick={handleCreate}>
+          <button
+            type="button"
+            className="blog-create-btn"
+            onClick={handleCreate}
+            disabled={!isBackendConfigured}
+          >
             Create post
           </button>
         )}

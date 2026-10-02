@@ -25,6 +25,7 @@ import {
   updateRoadmapItem,
   deleteRoadmapItem,
 } from '../lib/api';
+import { isBackendConfigured } from '../config/env';
 import '../styles/roadmap.css';
 import '../styles/roadmap-form.css';
 import '../styles/confirm-modal.css';
@@ -32,7 +33,7 @@ import '../styles/confirm-modal.css';
 const Roadmap: React.FC = () => {
   const { isAuthenticated, accessToken } = useAuth();
   const [items, setItems] = useState<TimelineItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isBackendConfigured);
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<TimelineItem | null>(null);
@@ -65,7 +66,7 @@ const Roadmap: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchItems();
+    if (isBackendConfigured) fetchItems();
   }, []);
 
   const persistOrder = async (reorderedItems: TimelineItem[]) => {
@@ -216,7 +217,12 @@ const Roadmap: React.FC = () => {
 
       {isAuthenticated && (
         <div className="roadmap-toolbar">
-          <button type="button" className="roadmap-create-btn" onClick={handleCreate}>
+          <button
+            type="button"
+            className="roadmap-create-btn"
+            onClick={handleCreate}
+            disabled={!isBackendConfigured}
+          >
             Create item
           </button>
         </div>

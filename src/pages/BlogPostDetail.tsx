@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type { BlogPost } from '../types/blog';
 import { getBlogPost } from '../lib/api';
+import { isBackendConfigured } from '../config/env';
 import '../styles/blog.css';
 
 const BlogPostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [post, setPost] = useState<BlogPost | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isBackendConfigured);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !isBackendConfigured) return;
 
     const fetchPost = async () => {
       try {

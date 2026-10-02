@@ -3,6 +3,7 @@ import { EXTERNAL_LINKS } from "../constants/Links.ts";
 import Logo from "./Logo.tsx";
 import { FaGithub, FaLinkedin, FaDiscord } from "react-icons/fa";
 import { useAuth } from "../providers/AuthProvider.tsx";
+import { isAuthConfigured } from "../config/env.ts";
 
 type FooterProps = {
     children?: ReactNode;
@@ -196,7 +197,7 @@ export default function Footer({ children }: FooterProps) {
                                         type="button"
                                         className="footer__admin-button"
                                         onClick={login}
-                                        disabled={isLoading}
+                                        disabled={!isAuthConfigured || isLoading}
                                     >
                                         {isLoading ? "Loading..." : "Admin sign in"}
                                     </button>
