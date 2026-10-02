@@ -1,18 +1,24 @@
 /*
  * The SO-101 arm (LeRobot URDF, TheRobotStudio, Apache 2.0) on a grid, in
- * the Lucy colours, running the cube pick-and-place demo. Renders on demand:
+ * the Lucy colours, picking up a glowing Lucy infinity. Renders on demand:
  * a frame on load and on resize, and frames only while something moves.
  */
 import * as THREE from "three";
 
+import {
+    createFloorGlow,
+    createHalo,
+    createLucyInfinity,
+    INFINITY_CENTER_HEIGHT,
+    INFINITY_GRIP_WIDTH,
+} from "./lucyInfinity.ts";
 import { loadRobot } from "./robotModel.ts";
-import { BASE_YAW, So101CubeDemo } from "./so101CubeDemo.ts";
+import { BASE_YAW, So101PickDemo } from "./so101PickDemo.ts";
 
 const MODEL_URL = "/models/so101/";
 
 const BODY_COLOR = "#2B3E50";
 const SERVO_COLOR = "#000000";
-const ACCENT_LINK = "moving_jaw_so101_v1_link"; // the gripper's top (moving) jaw
 
 export type So101Scene = { dispose(): void };
 
@@ -54,15 +60,10 @@ export async function createSo101Scene(container: HTMLElement): Promise<So101Sce
         new THREE.MeshStandardMaterial({ color, roughness, metalness: 0, flatShading: true });
     const body = material(BODY_COLOR, 0.65);
     const servo = material(SERVO_COLOR, 0.45);
-    const highlight = material(accent, 0.5);
 
     const robot = await loadRobot(MODEL_URL + "so101.urdf", MODEL_URL + "so101.glb", (urdfMaterial) =>
         urdfMaterial === "sts3215" ? servo : body,
     );
-    // The moving jaw is a leaf link, so this only reaches its own meshes.
-    robot.links[ACCENT_LINK].traverse((object) => {
-        if (object instanceof THREE.Mesh && object.material === body) object.material = highlight;
-    });
 
     const scene = new THREE.Scene();
     // Fog in the stage colour fades the grid out instead of ending it on a hard edge.
@@ -83,21 +84,40 @@ export async function createSo101Scene(container: HTMLElement): Promise<So101Sce
     scene.add(contactShadow(0.12, 0.6));
 
     const base = new THREE.Group();
-    base.rotation.y = BASE_YAW; // three-quarter view, reaching toward the viewer's right
+    base.rotation.y = BASE_YAW;
     base.add(robot);
     scene.add(base);
 
-    const demo = new So101CubeDemo(robot, base, scene, highlight, contactShadow(0.03, 0.35));
+    // The payload: the Lucy infinity, glowing and lighting what's around it.
+    // Exactly the page's green, like the flat logo: unlit, no fog, and drawn
+    // after the halo (transparent, fully opaque) so the halo can't tint it.
+    const infinity = createLucyInfinity(new THREE.MeshBasicMaterial({
+        color: accent,
+        fog: false,
+        transparent: true,
+    }));
+    infinity.renderOrder = 1;
+    const light = new THREE.PointLight(accent, 0.1, 0.6, 2);
+    const payload = new THREE.Group();
+    payload.add(infinity, createHalo(accent, 0.11), light);
 
-    // Frame the arm and the cube at rest, whatever the stage's aspect ratio.
+    const demo = new So101PickDemo(robot, base, scene, {
+        object: payload,
+        gripWidth: INFINITY_GRIP_WIDTH,
+        restHeight: INFINITY_CENTER_HEIGHT,
+        floorMark: createFloorGlow(accent, 0.3),
+    });
+
+    // Frame the arm and the payload at rest, whatever the stage's aspect ratio.
     scene.updateMatrixWorld(true);
-    const bounds = new THREE.Box3().setFromObject(base).expandByObject(demo.cube);
+    const bounds = new THREE.Box3().setFromObject(base).expandByObject(infinity);
     const center = bounds.getCenter(new THREE.Vector3());
     const radius = bounds.getSize(new THREE.Vector3()).length() / 2;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // Opaque, in the stage colour: additive glows don't composite over a transparent canvas.
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x000000, 0);
+    renderer.setClearColor(background);
     container.appendChild(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(30, 1, 0.01, 20);
@@ -121,8 +141,15 @@ export async function createSo101Scene(container: HTMLElement): Promise<So101Sce
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
     let last = 0;
+    let visible = true;
 
     const tick = (time: number) => {
+        if (!visible) {
+            // Paused off-screen; wake() resumes it when the stage comes back.
+            raf = 0;
+            last = 0;
+            return;
+        }
         const dt = last ? Math.min((time - last) / 1000, 0.05) : 1 / 60;
         last = time;
         const moving = demo.update(dt, { instant: reduceMotion });
@@ -136,22 +163,45 @@ export async function createSo101Scene(container: HTMLElement): Promise<So101Sce
     };
 
     const wake = () => {
-        if (!raf) raf = requestAnimationFrame(tick);
+        if (visible && !raf) raf = requestAnimationFrame(tick);
+    };
+
+    /*
+     * The arm follows the cursor anywhere on the page. The direction is
+     * measured from the stage's centre in half-stage units and saturated,
+     * so a cursor far across the page turns it a lot but never past its
+     * limits: it keeps facing its infinity and glances toward the cursor.
+     */
+    let pointer: { x: number; y: number } | null = null;
+
+    const updateLook = () => {
+        if (!pointer) {
+            demo.setLook(null);
+        } else {
+            const rect = container.getBoundingClientRect();
+            const x = (pointer.x - (rect.left + rect.width / 2)) / (rect.width / 2);
+            const y = -(pointer.y - (rect.top + rect.height / 2)) / (rect.height / 2);
+            demo.setLook({ x: Math.tanh(x * 0.8), y: Math.tanh(y * 0.8) });
+        }
+        wake();
     };
 
     const onPointerMove = (event: PointerEvent) => {
-        if (reduceMotion || event.pointerType !== "mouse") return;
-        const rect = container.getBoundingClientRect();
-        demo.setLook({
-            x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-            y: -(((event.clientY - rect.top) / rect.height) * 2 - 1),
-        });
-        wake();
+        if (event.pointerType !== "mouse") return;
+        pointer = { x: event.clientX, y: event.clientY };
+        updateLook();
     };
 
-    const onPointerLeave = () => {
-        demo.setLook(null);
-        wake();
+    // relatedTarget is null when the pointer leaves the window.
+    const onPointerOut = (event: PointerEvent) => {
+        if (event.relatedTarget) return;
+        pointer = null;
+        updateLook();
+    };
+
+    // The stage moves under a still cursor when the page scrolls on narrow screens.
+    const onScroll = () => {
+        if (pointer) updateLook();
     };
 
     const onClick = () => {
@@ -165,10 +215,20 @@ export async function createSo101Scene(container: HTMLElement): Promise<So101Sce
         onClick();
     };
 
-    container.addEventListener("pointermove", onPointerMove);
-    container.addEventListener("pointerleave", onPointerLeave);
+    if (!reduceMotion) {
+        window.addEventListener("pointermove", onPointerMove, { passive: true });
+        document.addEventListener("pointerout", onPointerOut);
+        window.addEventListener("scroll", onScroll, { passive: true });
+    }
     container.addEventListener("click", onClick);
     container.addEventListener("keydown", onKeyDown);
+
+    // Nothing to draw while the stage is off-screen.
+    const visibility = new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+        wake();
+    });
+    visibility.observe(container);
 
     const resizeObserver = new ResizeObserver(() => {
         frame();
@@ -182,8 +242,10 @@ export async function createSo101Scene(container: HTMLElement): Promise<So101Sce
         dispose() {
             cancelAnimationFrame(raf);
             resizeObserver.disconnect();
-            container.removeEventListener("pointermove", onPointerMove);
-            container.removeEventListener("pointerleave", onPointerLeave);
+            visibility.disconnect();
+            window.removeEventListener("pointermove", onPointerMove);
+            document.removeEventListener("pointerout", onPointerOut);
+            window.removeEventListener("scroll", onScroll);
             container.removeEventListener("click", onClick);
             container.removeEventListener("keydown", onKeyDown);
             scene.traverse((object) => {

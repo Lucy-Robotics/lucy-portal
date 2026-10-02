@@ -62,7 +62,7 @@ export default function RobotStage({ className }: RobotStageProps) {
                 {...(status === "ready" && {
                     role: "button",
                     tabIndex: 0,
-                    "aria-label": "SO-101 robot arm. Activate to pick up the cube; again to put it back.",
+                    "aria-label": "SO-101 robot arm. Activate to pick up the Lucy infinity; again to put it back.",
                 })}
             />
 
@@ -78,7 +78,7 @@ export default function RobotStage({ className }: RobotStageProps) {
 
             {status === "ready" && (
                 <p className="robot-stage__hint" aria-hidden="true">
-                    Click the arm to move the cube
+                    Click!
                 </p>
             )}
         </figure>

@@ -1,5 +1,5 @@
 /*
- * SO-101 pick-and-place: activate the arm and it picks up the cube; again
+ * SO-101 pick-and-place: activate the arm and it picks up the payload; again
  * and it puts it back. While at rest it turns toward the cursor.
  *
  * The approach / grasp / lift poses are solved once, at load, with a small
@@ -9,23 +9,41 @@
  *
  * The grasp is measured from the meshes: at load we find the inner faces of
  * both jaws, aim the solver at the point between them, open the jaws just
- * wider than the cube and close them onto it, and turn the cube so its faces
- * are square to the jaws.
+ * wider than the payload and close them onto it, and turn the payload so its
+ * gripped faces are square to the jaws.
  */
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
 const CHAIN = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex"] as const;
-const CUBE = 0.028;
-/* Wrist roll for the whole sequence: the jaws close across the screen. */
-const ROLL = 0;
+/* Wrist roll for the whole sequence: the jaws close toward the viewer, so
+   the payload, gripped across its depth, faces the camera. */
+const ROLL = Math.PI / 2;
 /* Seed for the rest pose (gripper down, raised above the table). */
-const READY_SEED = [0.3, -0.45, 0.8, 0.9];
-/* Where the cube sits, in the scene, and the arm's yaw on the table. */
-export const CUBE_HOME = new THREE.Vector3(0.16, CUBE / 2, 0.09);
-export const BASE_YAW = -0.55;
+const READY_SEED = [-0.3, -0.45, 0.8, 0.9];
+/* The payload sits on the table to the arm's left (x, z), and the arm is
+   turned three-quarters toward the viewer, reaching left. */
+const HOME = new THREE.Vector2(-0.17, 0.0);
+export const BASE_YAW = Math.PI + 0.55;
+/* At rest the gripper waits above the payload, a little back toward the arm. */
+const REST_OFFSET = new THREE.Vector3(0.04, 0.17, -0.03);
+/* Height of the fingers' contact faces above their tips, and how deep
+   between the fingers the payload's grasp point sits. */
+const CONTACT_BAND = 0.017;
+const GRIP_DEPTH = 0.01;
 
-/* Pick timeline, 0 -> 1 (played backwards to put the cube back). */
+export type Payload = {
+    /* Origin at the grasp point; local z is the axis the jaws close along. */
+    object: THREE.Object3D;
+    /* Thickness between the jaws at the grasp point. */
+    gripWidth: number;
+    /* Height of the grasp point above the table when resting. */
+    restHeight: number;
+    /* Lies on the floor under the payload and fades as it rises. */
+    floorMark?: THREE.Mesh;
+};
+
+/* Pick timeline, 0 -> 1 (played backwards to put the payload back). */
 const CLOSE_START = 0.5;
 const ATTACH_AT = 0.64;
 const DURATION = 2.8;
@@ -40,10 +58,9 @@ const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
 const damp = (from: number, to: number, rate: number, dt: number) =>
     from + (to - from) * (1 - Math.exp(-rate * dt));
 
-export class So101CubeDemo {
-    readonly cube: THREE.Mesh;
-    readonly cubeShadow: THREE.Mesh;
-
+export class So101PickDemo {
+    private readonly payload: Payload;
+    private readonly home: THREE.Vector3;
     private readonly robot: URDFRobot;
     private readonly base: THREE.Object3D;
     private readonly scene: THREE.Scene;
@@ -65,36 +82,36 @@ export class So101CubeDemo {
     private readonly lookGoal = new THREE.Vector2();
 
     /* `base` is the robot's parent, already turned to BASE_YAW and in the scene. */
-    constructor(robot: URDFRobot, base: THREE.Object3D, scene: THREE.Scene, cubeMaterial: THREE.Material, cubeShadow: THREE.Mesh) {
+    constructor(robot: URDFRobot, base: THREE.Object3D, scene: THREE.Scene, payload: Payload) {
         this.robot = robot;
         this.base = base;
         this.scene = scene;
+        this.payload = payload;
+        this.home = new THREE.Vector3(HOME.x, payload.restHeight, HOME.y);
         this.tcp = robot.links.gripper_frame_link;
 
         scene.updateMatrixWorld(true);
         this.measureJaws();
         this.panOrigin = robot.links.shoulder_link.getWorldPosition(new THREE.Vector3()).setY(0);
 
-        this.cube = new THREE.Mesh(new THREE.BoxGeometry(CUBE, CUBE, CUBE), cubeMaterial);
-        this.cube.position.copy(CUBE_HOME);
-        scene.add(this.cube);
-        this.cubeShadow = cubeShadow;
-        scene.add(cubeShadow);
+        payload.object.position.copy(this.home);
+        scene.add(payload.object);
+        if (payload.floorMark) scene.add(payload.floorMark);
 
         // Solve the taught poses once, with the wrist rolled as it will be.
         this.set("wrist_roll", ROLL);
         this.set("gripper", this.gripOpen);
-        const c = CUBE_HOME;
-        const rest = this.solveFor(new THREE.Vector3(c.x - 0.04, 0.17, c.z - 0.03), READY_SEED);
+        const c = this.home;
+        const rest = this.solveFor(new THREE.Vector3(c.x + REST_OFFSET.x, REST_OFFSET.y, c.z + REST_OFFSET.z), READY_SEED);
         const approach = this.solveFor(new THREE.Vector3(c.x, 0.08, c.z), rest);
-        const grasp = this.solveFor(new THREE.Vector3(c.x, CUBE * 0.5, c.z), approach);
+        const grasp = this.solveFor(c.clone(), approach);
         const lift = this.solveFor(new THREE.Vector3(c.x, 0.11, c.z), grasp);
 
-        // Turn the cube to sit square in the jaws at the grasp pose.
+        // Turn the payload so the jaws close along its local z at the grasp pose.
         this.apply(grasp);
         const across = new THREE.Vector3().setFromMatrixColumn(robot.links.gripper_link.matrixWorld, 0);
-        this.homeYaw = Math.atan2(-across.z, across.x);
-        this.cube.rotation.y = this.homeYaw;
+        this.homeYaw = Math.atan2(across.x, across.z);
+        payload.object.rotation.y = this.homeYaw;
 
         this.keys = [
             { at: 0, q: rest },
@@ -107,7 +124,7 @@ export class So101CubeDemo {
         this.update(0);
     }
 
-    /* Pick the cube up, or put it back if it's held or on its way up. */
+    /* Pick the payload up, or put it back if it's held or on its way up. */
     toggle() {
         this.goal = this.goal > 0.5 ? 0 : 1;
     }
@@ -130,21 +147,24 @@ export class So101CubeDemo {
         }
         this.pose(this.progress, instant ? 1 : dt);
 
-        // The cube rides with the gripper between closing and putting back.
+        // The payload rides with the gripper between closing and putting back.
+        const { object, floorMark } = this.payload;
         this.robot.updateMatrixWorld(true);
         if (!this.holding && this.progress >= ATTACH_AT) {
-            this.grip.attach(this.cube);
+            this.grip.attach(object);
             this.holding = true;
         } else if (this.holding && this.progress < ATTACH_AT) {
-            this.scene.attach(this.cube);
-            this.cube.position.copy(CUBE_HOME);
-            this.cube.rotation.set(0, this.homeYaw, 0);
+            this.scene.attach(object);
+            object.position.copy(this.home);
+            object.rotation.set(0, this.homeYaw, 0);
             this.holding = false;
         }
-        const cubeAt = this.cube.getWorldPosition(new THREE.Vector3());
-        this.cubeShadow.position.set(cubeAt.x, 0.001, cubeAt.z);
-        (this.cubeShadow.material as THREE.MeshBasicMaterial).opacity =
-            THREE.MathUtils.clamp(1 - cubeAt.y * 6, 0.2, 1);
+        if (floorMark) {
+            const at = object.getWorldPosition(new THREE.Vector3());
+            floorMark.position.set(at.x, floorMark.position.y, at.z);
+            (floorMark.material as THREE.Material).opacity =
+                THREE.MathUtils.clamp(1 - (at.y - this.home.y) * 5, 0.3, 1);
+        }
 
         return Math.abs(this.goal - this.progress) > 1e-4
             || this.look.distanceTo(this.lookGoal) > 0.002
@@ -171,7 +191,7 @@ export class So101CubeDemo {
                 break;
             }
         }
-        // Looking at the cursor is only allowed at rest (with or without the cube).
+        // Looking at the cursor is only allowed at rest (holding the payload or not).
         this.atRest = t < 0.02 || t > 0.98;
         this.follow = damp(this.follow, this.atRest ? 1 : 0, 6, dt);
         const f = this.follow;
@@ -187,8 +207,8 @@ export class So101CubeDemo {
     /*
      * Find the jaws in the gripper's own frame (x: the axis the moving jaw
      * closes along, -z: towards the fingertips). Sets `grip`, the point a
-     * held cube's centre sits at, and the open / closed gripper values that
-     * clear the cube and just touch it.
+     * held payload's grasp point sits at, and the open / closed gripper values that
+     * clear the payload and just touch it.
      */
     private measureJaws() {
         const body = this.robot.links.gripper_link;
@@ -212,8 +232,8 @@ export class So101CubeDemo {
 
         const fixed = points(body, jaw);
         const tip = Math.min(...fixed.map((v) => v.z));
-        // The faces that touch the cube: the bottom of both fingers.
-        const band = (v: THREE.Vector3) => v.z > tip + 0.002 && v.z < tip + CUBE * 0.6;
+        // The faces that touch the payload: the bottom of both fingers.
+        const band = (v: THREE.Vector3) => v.z > tip + 0.002 && v.z < tip + CONTACT_BAND;
         const toBody = body.matrixWorld.clone().invert();
         const side = jaw.getWorldPosition(new THREE.Vector3()).applyMatrix4(toBody).x > 0 ? 1 : -1;
         const fixedFace = fixed.filter(band)
@@ -226,7 +246,7 @@ export class So101CubeDemo {
             this.set("gripper", q);
             const pts = points(jaw);
             const low = Math.min(...pts.map((v) => v.z));
-            return pts.filter((v) => v.z < low + CUBE * 0.6)
+            return pts.filter((v) => v.z < low + CONTACT_BAND)
                 .reduce((a, v) => (side > 0 ? Math.min(a, v.x) : Math.max(a, v.x)), side * Infinity);
         };
         // Gap between the faces for a joint value; the jaw opens with q.
@@ -243,10 +263,11 @@ export class So101CubeDemo {
             }
             return (lo + hi) / 2;
         };
-        this.gripClosed = solve(CUBE * 0.98);
-        this.gripOpen = solve(CUBE + 0.022);
+        const width = this.payload.gripWidth;
+        this.gripClosed = solve(width * 0.98);
+        this.gripOpen = solve(width + 0.022);
 
-        this.grip.position.set(fixedFace + (side * CUBE) / 2, midY, tip + CUBE / 2 - 0.004);
+        this.grip.position.set(fixedFace + (side * width) / 2, midY, tip + GRIP_DEPTH);
         body.add(this.grip);
         this.robot.updateMatrixWorld(true);
     }
