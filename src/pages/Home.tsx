@@ -185,7 +185,7 @@ const Home = () => {
                     >
                         <p className="home__description">
                             Lucy is an open-source framework powered by ROS 2. It
-                            controls and simulates robotic platforms and integrates with
+                            controls and simulates robots and integrates with
                             many tools, such as Gazebo simulation, RViz and a web control
                             panel. Lucy is multiplatform and runs from a Python + Pixi
                             environment.
