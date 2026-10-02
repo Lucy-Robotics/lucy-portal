@@ -102,7 +102,10 @@ const Home = () => {
                         <Logo />
                     </h1>
 
-                    <p className="home__tagline">{"> One platform // any robot."}</p>
+                    <p className="home__tagline">
+                        <span className="home__tagline-accent">&gt;</span> One platform{" "}
+                        <span className="home__tagline-accent">//</span> any robot.
+                    </p>
 
                     {/* <p className="home__headline">
                         <span className="home__headline-highlight">

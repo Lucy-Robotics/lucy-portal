@@ -46,6 +46,10 @@
     font-weight: var(--font-weight-bold);
 }
 
+.home__tagline-accent {
+    color: var(--color-highlight);
+}
+
 .home__headline {
     margin: 2rem 0 0;
 
