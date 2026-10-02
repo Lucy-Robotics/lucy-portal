@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import {
+    FaChevronDown,
     FaCodeBranch,
     FaCogs,
     FaCube,
@@ -94,6 +96,21 @@ function ExternalIcon() {
 }
 
 const Home = () => {
+    const quickstartRef = useRef<HTMLElement>(null);
+    const [isAtTop, setIsAtTop] = useState(true);
+
+    useEffect(() => {
+        const onScroll = () => setIsAtTop(window.scrollY < 40);
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    const scrollToContent = () => {
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        quickstartRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+    };
+
     return (
         <div className="home">
             <div className="home__content">
@@ -151,9 +168,22 @@ const Home = () => {
                         <FaDiscord aria-hidden="true" />
                         Join our Discord
                     </a>
+
+                    <button
+                        type="button"
+                        className={`home__scroll-hint ${isAtTop ? "" : "home__scroll-hint--hidden"}`}
+                        onClick={scrollToContent}
+                        aria-label="Scroll to quickstart"
+                    >
+                        <FaChevronDown aria-hidden="true" />
+                    </button>
                 </div>
 
-                <section className="home__quickstart" aria-label="Lucy quickstart">
+                <section
+                    ref={quickstartRef}
+                    className="home__quickstart"
+                    aria-label="Lucy quickstart"
+                >
                     <div className="home__terminal">
                         <div className="home__terminal-header">
                             Lucy quickstart
