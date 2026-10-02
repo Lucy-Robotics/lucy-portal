@@ -1,0 +1,2731 @@
+<robot name="InMoov" version="1.0">
+<joint name="Empty.001_link_joint" type="fixed">
+<origin rpy="0.0000 0.0000 0.0000" xyz="-0.0039 0.0002 -0.1916"/>
+<parent link="base_node"/>
+<child link="stand_link"/>
+</joint>
+<joint name="Empty.002_link_joint" type="continuous">
+<limit lower="0" upper="0"/>
+<origin rpy="0.0000 0.0000 0.0000" xyz="0.0000 0.0000 8.9727"/>
+<parent link="stand_link"/>
+<child link="torso_bottom_link"/>
+<axis xyz="0.0000 0.0000 1.0000"/>
+</joint>
+<joint name="i01.head.eyeLeft.001_link_joint" type="revolute">
+<limit lower="-0.3490" upper="0.3490"/>
+<origin rpy="0.0000 0.0000 -1.5708" xyz="-1.0860 -0.2919 0.3757"/>
+<parent link="i01.head.rothead_link"/>
+<child link="i01.head.eyeLeft.001_link"/>
+<axis xyz="0.0000 0.0000 1.0000"/>
+</joint>
+<joint name="i01.head.eyeLeft_link_joint" type="revolute">
+<limit lower="-0.7853" upper="0.7853"/>
+<origin rpy="0.0000 -0.0000 0.0000" xyz="0.0000 -0.0059 0.0000"/>
+<parent link="i01.head.eyeLeft.001_link"/>
+<child link="i01.head.eyeLeft_link"/>
+<axis xyz="0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.head.eyeRight.001_link_joint" type="revolute">
+<limit lower="-0.3490" upper="0.3490"/>
+<origin rpy="-0.0000 -0.0000 -1.5708" xyz="-1.0964 0.2985 0.3757"/>
+<parent link="i01.head.rothead_link"/>
+<child link="i01.head.eyeRight.001_link"/>
+<axis xyz="0.0000 0.0000 1.0000"/>
+</joint>
+<joint name="i01.head.eyeRight_link_joint" type="revolute">
+<limit lower="-0.7853" upper="0.7853"/>
+<origin rpy="0.0000 -0.0000 0.0000" xyz="-0.0000 -0.0059 0.0000"/>
+<parent link="i01.head.eyeRight.001_link"/>
+<child link="i01.head.eyeRight_link"/>
+<axis xyz="0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.head.jaw_link_joint" type="revolute">
+<limit lower="0.0000" upper="0.1745"/>
+<origin rpy="-0.0000 -0.0000 -1.5708" xyz="-0.3617 0.0112 0.3244"/>
+<parent link="i01.head.rothead_link"/>
+<child link="i01.head.jaw_link"/>
+<axis xyz="0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.head.neck.001_link_joint" type="revolute">
+<limit lower="-0.3490" upper="0.3490"/>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0039 0.2981 4.2907"/>
+<parent link="torso_y_link"/>
+<child link="i01.head.neck.001_link"/>
+<axis xyz="0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.head.rollNeck_link_joint" type="revolute">
+<limit lower="-0.3490" upper="0.3490"/>
+<origin rpy="-0.0000 0.0000 -0.0000" xyz="0.0000 -0.0000 0.0043"/>
+<parent link="i01.head.neck.001_link"/>
+<child link="neck_link"/>
+<axis xyz="0.0000 0.9999 0.0111"/>
+</joint>
+<joint name="i01.head.rothead_link_joint" type="revolute">
+<limit lower="-0.5236" upper="0.5236"/>
+<origin rpy="0.0000 -0.0000 1.5708" xyz="0.0024 0.0150 0.2491"/>
+<parent link="neck_link"/>
+<child link="i01.head.rothead_link"/>
+<axis xyz="0.0000 0.0000 1.0000"/>
+</joint>
+<joint name="i01.leftHand.index2_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 0.0000 -0.0000" xyz="0.0025 0.3410 0.0068"/>
+<parent link="i01.leftHand.index_link"/>
+<child link="i01.leftHand.index2_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.index3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 -0.0000 -0.0000" xyz="0.0010 0.2269 0.0043"/>
+<parent link="i01.leftHand.index2_link"/>
+<child link="i01.leftHand.index3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.index_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-1.5685 -0.0909 -0.0033" xyz="0.3264 -0.0114 -0.9498"/>
+<parent link="i01.leftHand.wrist.001_link"/>
+<child link="i01.leftHand.index_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.majeure2_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0027 0.3593 0.0072"/>
+<parent link="i01.leftHand.majeure_link"/>
+<child link="i01.leftHand.majeure2_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.majeure3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 -0.0000 -0.0000" xyz="0.0010 0.2391 0.0045"/>
+<parent link="i01.leftHand.majeure2_link"/>
+<child link="i01.leftHand.majeure3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.majeure_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-1.5685 0.0016 -0.0030" xyz="0.0716 -0.0117 -0.9888"/>
+<parent link="i01.leftHand.wrist.001_link"/>
+<child link="i01.leftHand.majeure_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.pinky0_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-1.5678 -0.6864 -0.0049" xyz="-0.2400 0.0010 -0.3521"/>
+<parent link="i01.leftHand.wrist.001_link"/>
+<child link="i01.leftHand.pinky0_link"/>
+<axis xyz="0.0000 -0.9999 0.0111"/>
+</joint>
+<joint name="i01.leftHand.pinky2_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 0.0000 -0.0000" xyz="0.0022 0.2979 0.0059"/>
+<parent link="i01.leftHand.pinky_link"/>
+<child link="i01.leftHand.pinky2_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.pinky3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 -0.0000 -0.0000" xyz="0.0009 0.1983 0.0037"/>
+<parent link="i01.leftHand.pinky2_link"/>
+<child link="i01.leftHand.pinky3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.pinky_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 0.0000 0.9452" xyz="-0.4317 0.2048 0.0072"/>
+<parent link="i01.leftHand.pinky0_link"/>
+<child link="i01.leftHand.pinky_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.ringFinger_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 0.0000 0.7748" xyz="-0.3332 0.1528 -0.0066"/>
+<parent link="i01.leftHand.ringfinger0_link"/>
+<child link="i01.leftHand.ringFinger_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.ringfinger0_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-1.5678 -0.6864 -0.0049" xyz="-0.0567 0.0010 -0.5758"/>
+<parent link="i01.leftHand.wrist.001_link"/>
+<child link="i01.leftHand.ringfinger0_link"/>
+<axis xyz="0.0000 -0.9999 0.0111"/>
+</joint>
+<joint name="i01.leftHand.ringfinger2_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0025 0.3410 0.0068"/>
+<parent link="i01.leftHand.ringFinger_link"/>
+<child link="i01.leftHand.ringfinger2_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.ringfinger3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 0.0000 -0.0000" xyz="0.0010 0.2269 0.0043"/>
+<parent link="i01.leftHand.ringfinger2_link"/>
+<child link="i01.leftHand.ringfinger3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.thumb1_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="1.5163 -0.0989 -0.0033" xyz="0.2823 -0.0000 -0.3734"/>
+<parent link="i01.leftHand.wrist.001_link"/>
+<child link="i01.leftHand.thumb1_link"/>
+<axis xyz="0.0000 -0.9999 0.0111"/>
+</joint>
+<joint name="i01.leftHand.thumb3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 -0.0000 0.0000" xyz="0.0122 -0.3304 -0.0070"/>
+<parent link="i01.leftHand.thumb_link"/>
+<child link="i01.leftHand.thumb3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.thumb_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0318 -0.3256 0.8306" xyz="0.2597 -0.1333 -0.0080"/>
+<parent link="i01.leftHand.thumb1_link"/>
+<child link="i01.leftHand.thumb_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.leftHand.wrist.001_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 0.0000 -0.6161" xyz="-0.0000 -0.0000 -0.1692"/>
+<parent link="left_wrist_z_link"/>
+<child link="i01.leftHand.wrist.001_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.index2_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 -0.0000 0.0000" xyz="-0.0025 -0.3410 -0.0068"/>
+<parent link="i01.rightHand.index_link"/>
+<child link="i01.rightHand.index2_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.index3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 0.0000 -0.0000" xyz="-0.0010 -0.2269 -0.0043"/>
+<parent link="i01.rightHand.index2_link"/>
+<child link="i01.rightHand.index3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.index_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="1.5730 0.0909 -0.0157" xyz="-0.3232 -0.0077 -0.9539"/>
+<parent link="i01.rightHand.wrist.001_link"/>
+<child link="i01.rightHand.index_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.majeure2_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 -0.0000 -0.0000" xyz="-0.0027 -0.3593 -0.0072"/>
+<parent link="i01.rightHand.majeure_link"/>
+<child link="i01.rightHand.majeure2_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.majeure3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 -0.0000 0.0000" xyz="-0.0010 -0.2391 -0.0045"/>
+<parent link="i01.rightHand.majeure2_link"/>
+<child link="i01.rightHand.majeure3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.majeure_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="1.5730 -0.0016 -0.0159" xyz="-0.0684 -0.0128 -0.9929"/>
+<parent link="i01.rightHand.wrist.001_link"/>
+<child link="i01.rightHand.majeure_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.pinky0_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="1.5737 0.6864 -0.0141" xyz="0.2434 -0.0060 -0.3563"/>
+<parent link="i01.rightHand.wrist.001_link"/>
+<child link="i01.rightHand.pinky0_link"/>
+<axis xyz="0.0000 -0.9999 0.0111"/>
+</joint>
+<joint name="i01.rightHand.pinky2_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 0.0000 -0.0000" xyz="-0.0022 -0.2979 -0.0059"/>
+<parent link="i01.rightHand.pinky_link"/>
+<child link="i01.rightHand.pinky2_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.pinky3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 0.0000 0.0000" xyz="-0.0009 -0.1983 -0.0037"/>
+<parent link="i01.rightHand.pinky2_link"/>
+<child link="i01.rightHand.pinky3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.pinky_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 -0.0000 0.9452" xyz="0.4317 -0.2048 -0.0072"/>
+<parent link="i01.rightHand.pinky0_link"/>
+<child link="i01.rightHand.pinky_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.ringFinger_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 -0.0000 0.7748" xyz="0.3332 -0.1528 0.0066"/>
+<parent link="i01.rightHand.ringfinger0_link"/>
+<child link="i01.rightHand.ringFinger_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.ringfinger0_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="1.5737 0.6864 -0.0141" xyz="0.0601 -0.0025 -0.5800"/>
+<parent link="i01.rightHand.wrist.001_link"/>
+<child link="i01.rightHand.ringfinger0_link"/>
+<axis xyz="0.0000 -0.9999 0.0111"/>
+</joint>
+<joint name="i01.rightHand.ringfinger2_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="-0.0025 -0.3410 -0.0068"/>
+<parent link="i01.rightHand.ringFinger_link"/>
+<child link="i01.rightHand.ringfinger2_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.ringfinger3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0000 0.0000 -0.0000" xyz="-0.0010 -0.2269 -0.0043"/>
+<parent link="i01.rightHand.ringfinger2_link"/>
+<child link="i01.rightHand.ringfinger3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.thumb1_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-1.6252 0.0989 -0.0157" xyz="-0.2788 0.0028 -0.3775"/>
+<parent link="i01.rightHand.wrist.001_link"/>
+<child link="i01.rightHand.thumb1_link"/>
+<axis xyz="0.0000 -0.9999 0.0111"/>
+</joint>
+<joint name="i01.rightHand.thumb3_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 -0.0000 0.0000" xyz="-0.0122 0.3304 0.0070"/>
+<parent link="i01.rightHand.thumb_link"/>
+<child link="i01.rightHand.thumb3_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.thumb_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="-0.0318 -0.3256 0.8306" xyz="-0.2597 0.1333 0.0080"/>
+<parent link="i01.rightHand.thumb1_link"/>
+<child link="i01.rightHand.thumb_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.rightHand.wrist.001_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0000 0.0000 0.6351" xyz="-0.0000 -0.0000 -0.1650"/>
+<parent link="right_wrist_z_link"/>
+<child link="i01.rightHand.wrist.001_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="i01.torso.midStom_link_joint" type="revolute">
+<limit lower="-2.3561" upper="2.3561"/>
+<origin rpy="0.0000 0.0658 1.5708" xyz="-0.0021 0.0556 1.1380"/>
+<parent link="torso_bottom_link"/>
+<child link="torso_z_link"/>
+<axis xyz="0.0000 0.0000 1.0000"/>
+</joint>
+<joint name="i01.torso.topStom_link_joint" type="revolute">
+<limit lower="-0.3490" upper="0.3490"/>
+<origin rpy="0.0000 0.0000 -1.5708" xyz="-0.0631 0.0003 1.0191"/>
+<parent link="torso_z_link"/>
+<child link="torso_y_link"/>
+<axis xyz="0.0000 -0.9999 0.0111"/>
+</joint>
+<joint name="left_elbow_x_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0656 -0.0000 -0.0000" xyz="-0.0128 0.2922 -2.1157"/>
+<parent link="left_shoulder_z_link"/>
+<child link="left_elbow_x_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="left_shoulder_x_link_joint" type="revolute">
+<limit lower="-1.5708" upper="2.3561"/>
+<origin rpy="-0.0000 -0.0000 -0.0000" xyz="0.1135 0.0018 -0.3750"/>
+<parent link="left_shoulder_y_link"/>
+<child link="left_shoulder_x_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="left_shoulder_y_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0002 -0.0000 -0.0000" xyz="1.3547 -0.0033 2.8074"/>
+<parent link="torso_y_link"/>
+<child link="left_shoulder_y_link"/>
+<axis xyz="0.0000 -0.9999 0.0111"/>
+</joint>
+<joint name="left_shoulder_z_link_joint" type="revolute">
+<limit lower="-1.5708" upper="1.5708"/>
+<origin rpy="0.0000 0.0000 0.0000" xyz="0.6240 -0.0093 -0.5942"/>
+<parent link="left_shoulder_x_link"/>
+<child link="left_shoulder_z_link"/>
+<axis xyz="0.0000 0.0000 1.0000"/>
+</joint>
+<joint name="left_wrist_z_link_joint" type="revolute">
+<limit lower="-1.5708" upper="1.5708"/>
+<origin rpy="-0.4160 -0.0000 0.0000" xyz="-0.0876 -0.9876 -2.5393"/>
+<parent link="left_elbow_x_link"/>
+<child link="left_wrist_z_link"/>
+<axis xyz="0.0000 0.0000 1.0000"/>
+</joint>
+<joint name="right_elbow_x_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0656 0.0000 0.0000" xyz="0.0085 0.2922 -2.1157"/>
+<parent link="right_shoulder_z_link"/>
+<child link="right_elbow_x_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="right_shoulder_x_link_joint" type="revolute">
+<limit lower="-1.5708" upper="2.3561"/>
+<origin rpy="-0.0000 -0.0000 -0.0000" xyz="-0.1135 0.0018 -0.3750"/>
+<parent link="right_shoulder_y_link"/>
+<child link="right_shoulder_x_link"/>
+<axis xyz="-0.9999 0.0000 0.0111"/>
+</joint>
+<joint name="right_shoulder_y_link_joint" type="revolute">
+<limit lower="0.0000" upper="1.5708"/>
+<origin rpy="0.0002 -0.0000 -0.0000" xyz="-1.3497 -0.0033 2.8074"/>
+<parent link="torso_y_link"/>
+<child link="right_shoulder_y_link"/>
+<axis xyz="0.0000 0.9999 0.0111"/>
+</joint>
+<joint name="right_shoulder_z_link_joint" type="revolute">
+<limit lower="-1.5708" upper="1.5708"/>
+<origin rpy="0.0000 0.0000 0.0000" xyz="-0.6240 -0.0093 -0.5942"/>
+<parent link="right_shoulder_x_link"/>
+<child link="right_shoulder_z_link"/>
+<axis xyz="0.0000 0.0000 1.0000"/>
+</joint>
+<joint name="right_wrist_z_link_joint" type="revolute">
+<limit lower="-1.5708" upper="1.5708"/>
+<origin rpy="-0.4160 0.0000 0.0000" xyz="0.0876 -0.9876 -2.5393"/>
+<parent link="right_elbow_x_link"/>
+<child link="right_wrist_z_link"/>
+<axis xyz="0.0000 0.0000 1.0000"/>
+</joint>
+<link name="base_node">
+<visual>
+<origin rpy="3.1415 -0.0000 3.1415" xyz="-0.0039 -0.0073 9.3528"/>
+<geometry>
+<mesh filename="../meshes/stl/stand.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.head.eyeLeft.001_link"/>
+<link name="i01.head.eyeLeft_link">
+<visual>
+<origin rpy="-0.0000 -0.0000 -0.0000" xyz="-0.2958 0.8807 -16.0229"/>
+<material name="Material.035"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture011.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.head.eyeRight.001_link"/>
+<link name="i01.head.eyeRight_link">
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="0.2946 0.8912 -16.0229"/>
+<material name="Material.038"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture012.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.head.jaw_link">
+<visual>
+<origin rpy="0.0000 0.0000 -0.0000" xyz="0.0073 0.1506 -15.9716"/>
+<material name="Material.046"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture014.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 0.0000 -0.0000" xyz="0.0073 0.1506 -15.9716"/>
+<material name="Material.046"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture086.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 0.0000 -0.0000" xyz="0.0073 0.1506 -15.9716"/>
+<material name="Material.046"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture087.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.head.neck.001_link"/>
+<link name="i01.head.rothead_link">
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture013.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture068.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture069.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture070.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture071.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture072.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture073.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture074.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture075.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture076.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture077.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture078.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture079.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture080.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture081.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 -0.0000 -1.5708" xyz="-0.2111 0.0038 -15.6472"/>
+<material name="Material.044"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture082.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.index2_link">
+<visual>
+<origin rpy="1.9840 -0.6192 0.0925" xyz="-5.0127 5.2547 2.3917"/>
+<material name="Material.614"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture019.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.index3_link">
+<visual>
+<origin rpy="1.9840 -0.6192 0.0925" xyz="-5.0137 5.0277 2.3874"/>
+<material name="Material.618"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture020.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.index_link">
+<visual>
+<origin rpy="1.9840 -0.6192 0.0925" xyz="-5.0101 5.5957 2.3986"/>
+<material name="Material.610"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture018.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.majeure2_link">
+<visual>
+<origin rpy="1.9840 -0.6192 -0.0000" xyz="-4.2194 5.6361 2.3925"/>
+<material name="Material.613"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture023.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.majeure3_link">
+<visual>
+<origin rpy="1.9840 -0.6192 0.0000" xyz="-4.2205 5.3970 2.3879"/>
+<material name="Material.617"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture024.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.majeure_link">
+<visual>
+<origin rpy="1.9840 -0.6192 -0.0000" xyz="-4.2166 5.9955 2.3997"/>
+<material name="Material.609"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture022.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.pinky0_link">
+<visual>
+<origin rpy="1.9840 -0.6192 0.6880" xyz="-7.2270 2.6437 2.3865"/>
+<material name="Material.601"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture041.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.pinky2_link">
+<visual>
+<origin rpy="1.9840 -0.6192 -0.2572" xyz="-2.0040 6.6386 2.3732"/>
+<material name="Material.611"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture028.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.pinky3_link">
+<visual>
+<origin rpy="1.9840 -0.6192 -0.2572" xyz="-2.0049 6.4403 2.3695"/>
+<material name="Material.615"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture029.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.pinky_link">
+<visual>
+<origin rpy="1.9840 -0.6192 -0.2572" xyz="-2.0018 6.9365 2.3792"/>
+<material name="Material.607"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture027.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.ringFinger_link">
+<visual>
+<origin rpy="1.9840 -0.6192 -0.0868" xyz="-3.3853 6.3961 2.3931"/>
+<material name="Material.608"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture032.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.ringfinger0_link">
+<visual>
+<origin rpy="1.9840 -0.6192 0.6880" xyz="-7.2270 2.3545 2.3865"/>
+<material name="Material.606"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture040.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.ringfinger2_link">
+<visual>
+<origin rpy="1.9840 -0.6192 -0.0868" xyz="-3.3879 6.0550 2.3863"/>
+<material name="Material.612"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture033.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.ringfinger3_link">
+<visual>
+<origin rpy="1.9840 -0.6192 -0.0868" xyz="-3.3890 5.8281 2.3820"/>
+<material name="Material.616"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture034.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.thumb1_link">
+<visual>
+<origin rpy="-1.0879 0.6237 -0.0600" xyz="-5.0675 -5.9884 -2.7298"/>
+<material name="Material.603"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture035.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.thumb3_link">
+<visual>
+<origin rpy="-1.4326 0.8277 -1.1167" xyz="-8.3830 0.3167 -0.0395"/>
+<material name="Material.605"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture038.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.thumb_link">
+<visual>
+<origin rpy="-1.4326 0.8277 -1.1167" xyz="-8.3707 -0.0137 -0.0466"/>
+<material name="Material.604"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture037.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.leftHand.wrist.001_link">
+<visual>
+<origin rpy="0.4160 -0.0000 0.6161" xyz="-4.1472 2.4146 -6.9721"/>
+<material name="Material.602"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture235.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.index2_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 0.0925" xyz="5.0127 -5.2547 -2.3917"/>
+<material name="Material.636"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture045.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.index3_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 0.0925" xyz="5.0137 -5.0277 -2.3874"/>
+<material name="Material.640"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture046.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.index_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 0.0925" xyz="5.0101 -5.5957 -2.3986"/>
+<material name="Material.632"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture044.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.majeure2_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 -0.0000" xyz="4.2194 -5.6361 -2.3925"/>
+<material name="Material.637"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture049.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.majeure3_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 0.0000" xyz="4.2205 -5.3970 -2.3879"/>
+<material name="Material.641"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture050.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.majeure_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 -0.0000" xyz="4.2166 -5.9955 -2.3997"/>
+<material name="Material.633"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture048.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.pinky0_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 0.6880" xyz="7.2270 -2.6437 -2.3865"/>
+<material name="Material.630"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture067.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.pinky2_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 -0.2572" xyz="2.0040 -6.6386 -2.3732"/>
+<material name="Material.639"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture054.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.pinky3_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 -0.2572" xyz="2.0049 -6.4403 -2.3694"/>
+<material name="Material.643"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture055.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.pinky_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 -0.2572" xyz="2.0018 -6.9366 -2.3792"/>
+<material name="Material.635"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture053.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.ringFinger_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 -0.0868" xyz="3.3853 -6.3961 -2.3931"/>
+<material name="Material.634"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture058.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.ringfinger0_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 0.6880" xyz="7.2270 -2.3545 -2.3865"/>
+<material name="Material.631"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture066.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.ringfinger2_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 -0.0868" xyz="3.3879 -6.0550 -2.3863"/>
+<material name="Material.638"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture059.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.ringfinger3_link">
+<visual>
+<origin rpy="-1.1575 -0.6192 -0.0868" xyz="3.3890 -5.8281 -2.3819"/>
+<material name="Material.642"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture060.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.thumb1_link">
+<visual>
+<origin rpy="2.0536 0.6237 -0.0600" xyz="5.0675 5.9884 2.7298"/>
+<material name="Material.628"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture063.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.thumb3_link">
+<visual>
+<origin rpy="1.7089 0.8277 -1.1167" xyz="8.3830 -0.3167 0.0395"/>
+<material name="Material.626"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture062.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.thumb_link">
+<visual>
+<origin rpy="1.7089 0.8277 -1.1167" xyz="8.3707 0.0137 0.0466"/>
+<material name="Material.627"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture061.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="i01.rightHand.wrist.001_link">
+<visual>
+<origin rpy="0.4160 -0.0000 -0.6351" xyz="4.1958 2.3326 -6.9763"/>
+<material name="Material.629"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture204.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="left_elbow_x_link">
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture007.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture236.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture237.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture238.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture239.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture240.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture241.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture242.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture243.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture244.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture245.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture246.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 0.0000 0.0000" xyz="-2.0770 0.1207 -10.8365"/>
+<material name="Material.022"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture247.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="left_shoulder_x_link">
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.239"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture003.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture254.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture255.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture256.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture257.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture258.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture259.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture260.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture263.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture264.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture267.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture268.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture269.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.4657 1.1145 -13.5152"/>
+<material name="Material.390"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture270.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="left_shoulder_y_link">
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.3522 1.1164 -13.8902"/>
+<material name="Material.254"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture004.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.3522 1.1164 -13.8902"/>
+<material name="Material.254"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture248.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.3522 1.1164 -13.8902"/>
+<material name="Material.254"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture249.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.3522 1.1164 -13.8902"/>
+<material name="Material.254"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture250.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.3522 1.1164 -13.8902"/>
+<material name="Material.254"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture251.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.3522 1.1164 -13.8902"/>
+<material name="Material.254"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture252.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 0.0000 0.0000" xyz="-1.3522 1.1164 -13.8902"/>
+<material name="Material.254"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture253.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="left_shoulder_z_link">
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_001.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_002.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_003.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_004.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_005.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_006.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_007.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_008.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_009.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_010.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_011.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_012.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_013.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_014.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_015.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_016.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_017.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_018.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_019.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0079 -0.0000 -0.0000" xyz="-2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver].001"/>
+<geometry>
+<mesh filename="../meshes/stl/G564753_020.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="left_wrist_z_link">
+<visual>
+<origin rpy="0.4160 0.0000 0.0000" xyz="-1.9893 4.3671 -7.1413"/>
+<material name="Material.602"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture039.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="neck_link">
+<visual>
+<origin rpy="0.0000 0.0000 0.0000" xyz="-0.0014 -0.1960 -15.3981"/>
+<material name="Material.047"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture015.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 0.0000 0.0000" xyz="-0.0014 -0.1960 -15.3981"/>
+<material name="Material.047"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture083.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 0.0000 0.0000" xyz="-0.0014 -0.1960 -15.3981"/>
+<material name="Material.047"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture084.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0000 0.0000 0.0000" xyz="-0.0014 -0.1960 -15.3981"/>
+<material name="Material.047"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture085.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="right_elbow_x_link">
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture008.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture205.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture206.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture207.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture208.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture209.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture210.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture211.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture212.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture213.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture214.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture215.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="2.0812 0.1207 -10.8365"/>
+<material name="Material.031"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture216.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="right_shoulder_x_link">
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture005.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture223.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture224.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture225.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture226.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.012"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture227.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture228.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture229.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture230.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture231.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture233.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0656 -0.0000 -3.1415" xyz="1.4657 1.1145 -13.5152"/>
+<material name="Material.238"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture234.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="right_shoulder_y_link">
+<visual>
+<origin rpy="0.0656 -0.0000 -0.0000" xyz="1.3522 1.1164 -13.8902"/>
+<material name="Material.016"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture006.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 -0.0000 -0.0000" xyz="1.3522 1.1164 -13.8902"/>
+<material name="Material.016"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture217.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 -0.0000 -0.0000" xyz="1.3522 1.1164 -13.8902"/>
+<material name="Material.016"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture218.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 -0.0000 -0.0000" xyz="1.3522 1.1164 -13.8902"/>
+<material name="Material.016"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture219.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 -0.0000 -0.0000" xyz="1.3522 1.1164 -13.8902"/>
+<material name="Material.016"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture220.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 -0.0000 -0.0000" xyz="1.3522 1.1164 -13.8902"/>
+<material name="Material.016"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture221.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0656 -0.0000 -0.0000" xyz="1.3522 1.1164 -13.8902"/>
+<material name="Material.016"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture222.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="right_shoulder_z_link">
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_001.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_002.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_003.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_004.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_005.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_006.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_007.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_008.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_009.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_010.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_011.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_012.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_013.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_014.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_015.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_016.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_017.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_018.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+<geometry>
+<mesh filename="../meshes/stl/G566220_019.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="3.1336 0.0000 0.0000" xyz="2.0898 1.1239 -12.9210"/>
+<material name="[0131_Silver]"/>
+</visual>
+</link>
+<link name="right_wrist_z_link">
+<visual>
+<origin rpy="0.4160 0.0000 0.0000" xyz="1.9935 4.3671 -7.1413"/>
+<material name="Material.629"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture065.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="stand_link"/>
+<link name="torso_bottom_link">
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture002.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture195.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture196.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture197.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture198.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture199.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture200.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture201.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture202.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="-0.0000 -0.0000 0.0000" xyz="0.0000 0.4436 -8.9727"/>
+<material name="Material.008"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture203.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="torso_y_link">
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture088.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture089.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture090.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture091.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture092.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture093.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture094.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture095.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture096.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture097.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture098.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture099.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture100.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture101.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture102.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture103.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture104.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture105.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture106.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture107.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture108.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture109.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture110.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture111.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture112.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture113.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture114.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture115.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture116.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture117.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture118.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture119.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture120.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture121.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture122.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture123.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture124.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture125.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture126.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture127.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture128.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture129.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture130.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture131.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture132.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture133.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture134.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture135.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture136.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture137.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture138.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture139.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture140.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture141.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture142.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture143.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture144.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture145.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture146.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture147.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture148.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture149.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture150.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture151.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture152.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture153.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture154.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture155.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture156.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture157.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture158.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture159.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture160.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture161.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture162.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture163.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture164.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture165.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 -0.0000 -0.0000" xyz="0.0024 1.1160 -11.0825"/>
+<material name="Material.026"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture166.stl"/>
+</geometry>
+</visual>
+</link>
+<link name="torso_z_link">
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture001.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture167.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture168.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture169.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture170.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture171.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture172.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture173.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture174.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture175.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture176.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture177.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture178.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture179.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture180.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture181.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture182.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture183.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture184.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture185.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture186.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture187.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture188.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture189.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture190.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture191.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture192.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture193.stl"/>
+</geometry>
+</visual>
+<visual>
+<origin rpy="0.0658 0.0000 -1.5708" xyz="1.0528 -0.0021 -10.0633"/>
+<material name="Material.007"/>
+<geometry>
+<mesh filename="../meshes/stl/Texture194.stl"/>
+</geometry>
+</visual>
+</link>
+<material name="Material.007">
+<color rgba="0.4627 0.2823 0.1058 1.0000"/>
+</material>
+<material name="Material.008">
+<color rgba="0.0000 0.0000 0.0000 1.0000"/>
+</material>
+<material name="Material.012">
+<color rgba="0.0000 0.0000 0.0000 1.0000"/>
+</material>
+<material name="Material.016">
+<color rgba="0.0156 0.0156 0.0274 1.0000"/>
+</material>
+<material name="Material.022">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.026">
+<color rgba="0.0000 0.0000 0.0000 1.0000"/>
+</material>
+<material name="Material.031">
+<color rgba="0.0000 0.0000 0.0000 1.0000"/>
+</material>
+<material name="Material.035">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.038">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.044">
+<color rgba="0.0000 0.0000 0.0000 1.0000"/>
+</material>
+<material name="Material.046">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.047">
+<color rgba="0.0000 0.0000 0.0000 1.0000"/>
+</material>
+<material name="Material.238">
+<color rgba="0.7607 0.7568 0.8000 1.0000"/>
+</material>
+<material name="Material.239">
+<color rgba="0.0000 0.0000 0.0000 1.0000"/>
+</material>
+<material name="Material.254">
+<color rgba="0.0156 0.0156 0.0274 1.0000"/>
+</material>
+<material name="Material.390">
+<color rgba="0.9451 0.9607 0.9098 1.0000"/>
+</material>
+<material name="Material.601">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.602">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.603">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.604">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.605">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.606">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.607">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.608">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.609">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.610">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.611">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.612">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.613">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.614">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.615">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.616">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.617">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.618">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.626">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.627">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.628">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.629">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.630">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.631">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.632">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.633">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.634">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.635">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.636">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.637">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.638">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.639">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.640">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.641">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.642">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="Material.643">
+<color rgba="1.0000 1.0000 1.0000 1.0000"/>
+</material>
+<material name="[0131_Silver]">
+<color rgba="0.7490 0.7490 0.7490 1.0000"/>
+</material>
+<material name="[0131_Silver].001">
+<color rgba="0.7490 0.7490 0.7490 1.0000"/>
+</material>
+</robot>

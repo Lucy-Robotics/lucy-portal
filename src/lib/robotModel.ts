@@ -50,12 +50,14 @@ export async function loadRobot(
 ): Promise<URDFRobot> {
     const [urdf, meshes] = await Promise.all([loadText(urdfUrl), loadMeshes(glbUrl)]);
 
+    // Meshes dropped when the GLB was built (e.g. degenerate ones) are skipped.
+    const missing = new Set<string>();
     const loader = new URDFLoader();
     loader.loadMeshCb = (path, _manager, urdfMaterial, done) => {
         const name = path.split("/").pop()!.replace(/\.stl$/i, "");
         const entry = meshes.get(name);
         if (!entry) {
-            console.warn(`Mesh "${name}" is missing from ${glbUrl}`);
+            missing.add(name);
             done(new THREE.Group());
             return;
         }
@@ -69,6 +71,19 @@ export async function loadRobot(
     };
 
     const robot = loader.parse(urdf);
+    if (missing.size) console.debug(`${glbUrl}: ${missing.size} URDF meshes not in the GLB, skipped`, [...missing]);
     robot.rotation.x = -Math.PI / 2;
     return robot;
+}
+
+/* Call `fn` on a link's own meshes, without descending into its child links. */
+export function forEachOwnMesh(link: THREE.Object3D, fn: (mesh: THREE.Mesh) => void) {
+    const walk = (object: THREE.Object3D) => {
+        for (const child of object.children) {
+            if ((child as { isURDFLink?: boolean }).isURDFLink) continue;
+            if (child instanceof THREE.Mesh) fn(child);
+            walk(child);
+        }
+    };
+    walk(link);
 }

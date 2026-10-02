@@ -1,8 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 
+import type { RobotName } from "../lib/robotStageScene.ts";
 import "../styles/robot-stage.css";
 
 type Status = "loading" | "ready" | "unavailable";
+
+const ROBOTS: Record<RobotName, { name: string; family: string; action: string }> = {
+    so101: {
+        name: "SO-101",
+        family: "LeRobot",
+        action: "SO-101 robot arm. Activate to pick up the Lucy infinity; again to put it back.",
+    },
+    inmoov: {
+        name: "InMoov",
+        family: "Humanoid",
+        action: "InMoov humanoid. Activate and it waves.",
+    },
+};
+
+/* Page scroll -> stage view: the SO-101 near the top, InMoov by mid-page. */
+function scrollToView() {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    if (scrollable <= 0) return 0;
+    return (window.scrollY / scrollable - 0.1) / 0.5;
+}
 
 function hasWebGl() {
     try {
@@ -21,23 +42,32 @@ export default function RobotStage({ className }: RobotStageProps) {
     const viewportRef = useRef<HTMLDivElement>(null);
     const [webGl] = useState(hasWebGl);
     const [status, setStatus] = useState<Status>(webGl ? "loading" : "unavailable");
+    const [active, setActive] = useState<RobotName>("so101");
 
     useEffect(() => {
         const viewport = viewportRef.current;
         if (!viewport || !webGl) return;
 
         let cancelled = false;
-        let dispose: (() => void) | undefined;
+        let cleanup: (() => void) | undefined;
 
-        // three.js and the model only load on pages that show the stage.
-        import("../lib/so101Scene.ts")
-            .then(({ createSo101Scene }) => createSo101Scene(viewport))
+        // three.js and the models only load on pages that show the stage.
+        import("../lib/robotStageScene.ts")
+            .then(({ createRobotStageScene }) =>
+                createRobotStageScene(viewport, { onActiveChange: setActive }),
+            )
             .then((scene) => {
                 if (cancelled) {
                     scene.dispose();
                     return;
                 }
-                dispose = scene.dispose;
+                const onScroll = () => scene.setView(scrollToView());
+                onScroll();
+                window.addEventListener("scroll", onScroll, { passive: true });
+                cleanup = () => {
+                    window.removeEventListener("scroll", onScroll);
+                    scene.dispose();
+                };
                 setStatus("ready");
             })
             .catch((error: unknown) => {
@@ -47,14 +77,16 @@ export default function RobotStage({ className }: RobotStageProps) {
 
         return () => {
             cancelled = true;
-            dispose?.();
+            cleanup?.();
         };
     }, [webGl]);
+
+    const robot = ROBOTS[active];
 
     return (
         <figure
             className={`robot-stage chamfer ${className ?? ""}`}
-            aria-label="3D view of an SO-101 robot arm"
+            aria-label="3D view of an SO-101 robot arm and an InMoov humanoid"
         >
             <div
                 ref={viewportRef}
@@ -62,7 +94,7 @@ export default function RobotStage({ className }: RobotStageProps) {
                 {...(status === "ready" && {
                     role: "button",
                     tabIndex: 0,
-                    "aria-label": "SO-101 robot arm. Activate to pick up the Lucy infinity; again to put it back.",
+                    "aria-label": robot.action,
                 })}
             />
 
@@ -73,7 +105,7 @@ export default function RobotStage({ className }: RobotStageProps) {
             )}
 
             <figcaption className="robot-stage__caption">
-                SO-101 <span className="robot-stage__caption-sep">//</span> LeRobot
+                {robot.name} <span className="robot-stage__caption-sep">//</span> {robot.family}
             </figcaption>
 
             {status === "ready" && (
