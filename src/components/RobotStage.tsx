@@ -56,7 +56,15 @@ export default function RobotStage({ className }: RobotStageProps) {
             className={`robot-stage chamfer ${className ?? ""}`}
             aria-label="3D view of an SO-101 robot arm"
         >
-            <div ref={viewportRef} className="robot-stage__viewport" />
+            <div
+                ref={viewportRef}
+                className="robot-stage__viewport"
+                {...(status === "ready" && {
+                    role: "button",
+                    tabIndex: 0,
+                    "aria-label": "SO-101 robot arm. Activate to pick up the cube; again to put it back.",
+                })}
+            />
 
             {status !== "ready" && (
                 <p className="robot-stage__status" role="status">
@@ -67,6 +75,12 @@ export default function RobotStage({ className }: RobotStageProps) {
             <figcaption className="robot-stage__caption">
                 SO-101 <span className="robot-stage__caption-sep">//</span> LeRobot
             </figcaption>
+
+            {status === "ready" && (
+                <p className="robot-stage__hint" aria-hidden="true">
+                    Click the arm to move the cube
+                </p>
+            )}
         </figure>
     );
 }
