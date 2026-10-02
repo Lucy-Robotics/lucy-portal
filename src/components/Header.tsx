@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
+import Logo from "./Logo.tsx";
 
 type HeaderProps = {
     sticky?: boolean;
@@ -93,7 +94,7 @@ export default function Header({ sticky = true }: HeaderProps) {
             <div className="header__bar">
                 <div className="header__left">
                     <a href="/" className="header__brand" onClick={closeMenu}>
-                        LUCY
+                        <Logo />
                     </a>
                 </div>
 

@@ -1,5 +1,5 @@
 @import "./themes.css";
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;500;700&display=swap");
 
 /* ==============================
    App layout
@@ -74,14 +74,40 @@
 
 
 .header__brand {
+    display: inline-flex;
+
     color: var(--color-highlight);
 
     font-size: 2rem;
     font-weight: var(--font-weight-bold);
 
     text-decoration: none;
+}
 
-    letter-spacing: 0.1em;
+/* ==============================
+   Logo
+   ============================== */
+
+.logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15em;
+
+    line-height: 1;
+}
+
+/* logo.png is square with transparent padding: crop to the infinity mark */
+.logo__mark {
+    height: 1em;
+    aspect-ratio: 5 / 2;
+    object-fit: cover;
+}
+
+.logo__text {
+    color: var(--color-text-pri);
+    font-family: var(--font-brand);
+    font-weight: 700;
+    letter-spacing: 0.02em;
 }
 
 

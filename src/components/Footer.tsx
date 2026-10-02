@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
+import Logo from "./Logo.tsx";
 import { FaGithub, FaLinkedin, FaDiscord } from "react-icons/fa";
 import { useAuth } from "../providers/AuthProvider.tsx";
 
@@ -124,7 +125,7 @@ export default function Footer({ children }: FooterProps) {
                     <div className="footer__grid">
                         <div className="footer__brand">
                             <a href="/" className="footer__logo">
-                                LUCY
+                                <Logo />
                             </a>
 
                             <p className="footer__description">
