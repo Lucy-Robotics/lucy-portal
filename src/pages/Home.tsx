@@ -195,7 +195,7 @@ const Home = () => {
                                         ${" "}
                                     </span>
                                     git clone
-                                    https://github.com/Sentience-Robotics/lucy_ws.git
+                                    https://github.com/Lucy-Robotics/lucy_ws.git
                                 </span>
                                 <span className="home__terminal-line">
                                     <span className="home__terminal-prompt">

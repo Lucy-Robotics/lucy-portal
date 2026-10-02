@@ -123,7 +123,7 @@ const Download = () => {
                                                 ${" "}
                                             </span>
                                             git clone
-                                            https://github.com/Sentience-Robotics/lucy_ws.git
+                                            https://github.com/Lucy-Robotics/lucy_ws.git
                                         </span>
                                         <span className="download__terminal-line">
                                             <span className="download__terminal-prompt">
@@ -194,7 +194,7 @@ const Download = () => {
 
                         <div className="download__install-card-footer">
                             <a
-                                href="https://github.com/Sentience-Robotics/Lucy-Windows-Installer/releases/latest"
+                                href="https://github.com/Lucy-Robotics/Lucy-Windows-Installer/releases/latest"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="header__button header__button--main download__install-button"
