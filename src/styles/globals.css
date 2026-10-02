@@ -1,5 +1,5 @@
 @import "./themes.css";
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=IBM+Plex+Mono:wght@400;500;700&display=swap");
 
 /* ==============================
    App layout
@@ -88,26 +88,27 @@
    Logo
    ============================== */
 
+/* Proportions follow the brand lockup: the mark sits slightly above the
+   baseline and is a bit taller than the x-height. */
 .logo {
     display: inline-flex;
-    align-items: center;
-    gap: 0.15em;
+    align-items: baseline;
+    gap: 0.16em;
 
     line-height: 1;
 }
 
-/* logo.png is square with transparent padding: crop to the infinity mark */
 .logo__mark {
-    height: 1em;
-    aspect-ratio: 5 / 2;
-    object-fit: cover;
+    position: relative;
+    bottom: 0.05em;
+
+    height: 0.68em;
 }
 
 .logo__text {
     color: var(--color-text-pri);
     font-family: var(--font-brand);
     font-weight: 700;
-    letter-spacing: 0.02em;
 }
 
 
@@ -373,6 +374,7 @@
     margin-top: .75rem;
     line-height: 1.5;
     color: var(--color-text-muted);
+    font-size: .9rem;
 }
 
 .footer__column {
@@ -425,6 +427,7 @@
 
 .footer__bottom p {
     margin: 0;
+    font-size: .8rem;
 }
 
 .footer__bottom-right {

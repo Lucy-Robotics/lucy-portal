@@ -104,7 +104,7 @@ const Home = () => {
 
                     <p className="home__tagline">
                         <span className="home__tagline-accent">&gt;</span> One platform{" "}
-                        <span className="home__tagline-accent">//</span> any robot.
+                        <span className="home__tagline-accent">//</span> Any robot.
                     </p>
 
                     {/* <p className="home__headline">
@@ -114,44 +114,44 @@ const Home = () => {
                         <br />
                         <span className="home__headline-sub">from you browser</span>
                     </p> */}
-                </div>
 
-                <p className="home__description">
-                    Lucy is an open-source framework powered by ROS 2. It
-                    controls and simulates robotic platforms and integrates with
-                    many tools, such as Gazebo simulation, RViz and a web control
-                    panel. Lucy is multiplatform and runs from a Python + Pixi
-                    environment.
-                </p>
+                    <p className="home__description">
+                        Lucy is an open-source framework powered by ROS 2. It
+                        controls and simulates robotic platforms and integrates with
+                        many tools, such as Gazebo simulation, RViz and a web control
+                        panel. Lucy is multiplatform and runs from a Python + Pixi
+                        environment.
+                    </p>
 
-                <div className="home__actions">
+                    <div className="home__actions">
+                        <a
+                            href="/download"
+                            className="header__button header__button--main home__button"
+                        >
+                            Download
+                        </a>
+
+                        <a
+                            href={EXTERNAL_LINKS.LIVE_DEMO}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="header__button header__button--primary home__button"
+                        >
+                            Live Demo
+                            <ExternalIcon />
+                        </a>
+                    </div>
+
                     <a
-                        href="/download"
-                        className="header__button header__button--main home__button"
-                    >
-                        Download
-                    </a>
-
-                    <a
-                        href={EXTERNAL_LINKS.LIVE_DEMO}
+                        href={EXTERNAL_LINKS.DISCORD}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="header__button header__button--primary home__button"
+                        className="home__discord"
                     >
-                        Live Demo
-                        <ExternalIcon />
+                        <FaDiscord aria-hidden="true" />
+                        Join our Discord
                     </a>
                 </div>
-
-                <a
-                    href={EXTERNAL_LINKS.DISCORD}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="home__discord"
-                >
-                    <FaDiscord aria-hidden="true" />
-                    Join our Discord
-                </a>
 
                 <section className="home__quickstart" aria-label="Lucy quickstart">
                     <div className="home__terminal">

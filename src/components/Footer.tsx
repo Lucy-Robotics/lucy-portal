@@ -128,11 +128,6 @@ export default function Footer({ children }: FooterProps) {
                             <a href="/" className="footer__logo">
                                 <Logo />
                             </a>
-
-                            <p className="footer__description">
-                                An open-source humanoid robot by Lucy.org.
-                                Built on InMoov &amp; ROS 2.
-                            </p>
                         </div>
 
                         {columns.map((column) => (

@@ -12,6 +12,7 @@
     flex-direction: column;
     align-items: center;
 
+    width: 100%;
     max-width: 64rem;
 
     text-align: center;
@@ -24,6 +25,7 @@
     align-items: center;
     justify-content: center;
 
+    width: 100%;
     min-height: calc(100svh - 65px - 4.5rem);
 }
 
@@ -42,7 +44,8 @@
 
     color: var(--color-text-pri);
 
-    font-size: clamp(3.5rem, 3vw, 1.75rem);
+    font-family: var(--font-brand);
+    font-size: clamp(1rem, 5.5vw, 3.125rem);
     font-weight: var(--font-weight-bold);
 }
 
@@ -67,7 +70,7 @@
 }
 
 .home__description {
-    margin: 2rem 0 0;
+    margin: 3rem 0 0;
 
     color: var(--color-text-sec);
 
@@ -233,11 +236,45 @@ a.home__highlight:hover {
     text-align: left;
 }
 
+/* Chamfered top-right and bottom-left corners. The card background paints the
+   border colour; ::before fills the inside, its chamfer shortened so the
+   diagonal edges keep the same border width. */
 .home__feature-card {
+    --chamfer: 1rem;
+
+    position: relative;
+    isolation: isolate;
+
     padding: 1.25rem;
 
+    background: var(--color-border);
+    clip-path: polygon(
+        0 0,
+        calc(100% - var(--chamfer)) 0,
+        100% var(--chamfer),
+        100% 100%,
+        var(--chamfer) 100%,
+        0 calc(100% - var(--chamfer))
+    );
+}
+
+.home__feature-card::before {
+    --inner-chamfer: calc(var(--chamfer) - 0.586 * var(--border-width));
+
+    content: "";
+    position: absolute;
+    inset: var(--border-width);
+    z-index: -1;
+
     background: var(--color-bg-comp);
-    border: var(--border-width) solid var(--color-border);
+    clip-path: polygon(
+        0 0,
+        calc(100% - var(--inner-chamfer)) 0,
+        100% var(--inner-chamfer),
+        100% 100%,
+        var(--inner-chamfer) 100%,
+        0 calc(100% - var(--inner-chamfer))
+    );
 }
 
 .home__feature-card-title {
@@ -288,10 +325,6 @@ a.home__highlight:hover {
 
     .home__hero {
         min-height: calc(100svh - 57px - 3rem);
-    }
-
-    .home__tagline {
-        font-size: clamp(1.25rem, 6vw, 1.75rem);
     }
 
     .home__headline {
