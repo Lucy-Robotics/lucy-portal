@@ -7,7 +7,7 @@ export const MECHANISM_COLOR = "#000000";
 export const INMOOV_COLOR = "#f2f2f2";
 /* InMoov's iris and pupil radii, as a share of its eyeball's radius (the iris is the page's green). */
 export const IRIS_SIZE = 0.45;
-export const PUPIL_SIZE = 0.25;
+export const PUPIL_SIZE = 0.31;
 /* Glow of an infinity resting on the grid, relative to one in hand (0..1). */
 export const RESTING_GLOW = 0.35;
 
@@ -81,7 +81,7 @@ export const HEAD_LOOK_SPEED = 2.5;
 export const WAVE = {
     // The raised right arm: forward, sideways, and the elbow's bend.
     raise: { forward: 1.7, side: 0.3, elbow: 1.1 },
-    // Wrist roll that turns the palm toward the viewer (the joint stops at ±1.57),
+    // Wrist roll that turns the palm toward the viewer (the joint turns freely),
     // complete once the arm is this much raised (0..1).
     palmRoll: 4.05,
     palmRollBy: 0.714,
