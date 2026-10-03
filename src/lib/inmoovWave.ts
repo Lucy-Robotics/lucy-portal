@@ -22,10 +22,7 @@ const ARM = {
 const PALM_OUT = 1.45;
 const WAVE_TIME = 3.4;
 
-const smooth = (t: number) => t * t * (3 - 2 * t);
-const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
-const damp = (from: number, to: number, rate: number, dt: number) =>
-    from + (to - from) * (1 - Math.exp(-rate * dt));
+const { clamp, damp, smoothstep } = THREE.MathUtils;
 
 export class InMoovWave {
     private readonly robot: URDFRobot;
@@ -67,13 +64,13 @@ export class InMoovWave {
         if (this.progress < 1) {
             this.progress = instant ? 1 : Math.min(1, this.progress + dt / WAVE_TIME);
             const w = this.progress;
-            const up = smooth(clamp01(w / 0.2)) * (1 - smooth(clamp01((w - 0.8) / 0.2)));
-            const swing = Math.sin(clamp01((w - 0.2) / 0.6) * Math.PI * 6);
+            const up = smoothstep(w, 0, 0.2) * (1 - smoothstep(w, 0.8, 1));
+            const swing = Math.sin(clamp((w - 0.2) / 0.6, 0, 1) * Math.PI * 6);
             set(ARM.x, 1.7 * up);
             set(ARM.y, 0.3 * up);
             set(ARM.elbow, 1.1 * up);
             set(ARM.z, (-0.3 + 0.25 * swing) * up);
-            set(ARM.wrist, PALM_OUT * smooth(clamp01(up * 1.4)));
+            set(ARM.wrist, PALM_OUT * smoothstep(up * 1.4, 0, 1));
             set(HEAD.jaw, w > 0.2 && w < 0.45 ? 0.18 * Math.abs(Math.sin(w * 60)) : 0);
         }
 

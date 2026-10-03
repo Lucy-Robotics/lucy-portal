@@ -78,7 +78,11 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                     glow,
                 }, {
                     compact: () => compact.matches,
-                    onActiveChange: setActive,
+                    onActiveChange: (robot) => {
+                        setActive(robot);
+                        // Wide screens: the scroll picks the robot, the arrows follow.
+                        if (!compact.matches) setIndex(ROBOTS.findIndex(({ id }) => id === robot));
+                    },
                 }),
             )
             .then((scene) => {
@@ -87,7 +91,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                     return;
                 }
                 sceneRef.current = scene;
-                (window as TestWindow).__robotPage = { ...scene.testHook, ready: true }; // TEST-HOOK
+                if (import.meta.env.DEV) (window as TestWindow).__robotPage = { ...scene.testHook, ready: true }; // TEST-HOOK
                 setStatus("ready");
             })
             .catch((error: unknown) => {
@@ -97,15 +101,22 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
 
         return () => {
             cancelled = true;
-            delete (window as TestWindow).__robotPage; // TEST-HOOK
+            if (import.meta.env.DEV) delete (window as TestWindow).__robotPage; // TEST-HOOK
             sceneRef.current?.dispose();
             sceneRef.current = null;
         };
     }, [webGl, heroRef]);
 
-    // Phones: the arrows choose the robot in the box.
+    // Phones: the arrows choose the robot in the box, also after switching
+    // from a wide layout (where the scroll chose it).
     useEffect(() => {
-        sceneRef.current?.setView(index / (ROBOTS.length - 1));
+        const scene = sceneRef.current;
+        if (!scene) return;
+        const show = () => scene.setView(index / (ROBOTS.length - 1));
+        show();
+        const compact = window.matchMedia(COMPACT);
+        compact.addEventListener("change", show);
+        return () => compact.removeEventListener("change", show);
     }, [index, status]);
 
     const robot = ROBOTS.find(({ id }) => id === active) ?? ROBOTS[0];

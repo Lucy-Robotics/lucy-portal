@@ -65,9 +65,7 @@ const LOOK = { pan: 0.55, wrist: 0.35, roll: 0.25 };
 type Pose = number[];
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
-const damp = (from: number, to: number, rate: number, dt: number) =>
-    from + (to - from) * (1 - Math.exp(-rate * dt));
+const { clamp, damp } = THREE.MathUtils;
 
 export class So101PickDemo {
     /* False when the plan's grasp is out of the arm's reach: toggle() does nothing. */
@@ -257,7 +255,7 @@ export class So101PickDemo {
        with the jaws open, 1 holding), e.g. to pause while the payload is
        brought to the gripper some other way. */
     setGoal(goal: number) {
-        if (this.reachable) this.goal = clamp01(goal);
+        if (this.reachable) this.goal = clamp(goal, 0, 1);
     }
 
     /* Hold the payload at once, as if it had been taken (another pick on the
@@ -313,7 +311,7 @@ export class So101PickDemo {
             const a = this.keys[i - 1];
             const b = this.keys[i];
             if (t <= b.at) {
-                const k = ease(clamp01((t - a.at) / (b.at - a.at)));
+                const k = ease(clamp((t - a.at) / (b.at - a.at), 0, 1));
                 q = a.q.map((v, n) => v + (b.q[n] - v) * k);
                 break;
             }
@@ -327,7 +325,7 @@ export class So101PickDemo {
         this.set("elbow_flex", q[2]);
         this.set("wrist_flex", q[3] - this.look.y * LOOK.wrist * f);
         this.set("wrist_roll", this.roll + this.look.x * LOOK.roll * f);
-        const g = ease(clamp01((t - CLOSE_START) / (ATTACH_AT - CLOSE_START)));
+        const g = ease(clamp((t - CLOSE_START) / (ATTACH_AT - CLOSE_START), 0, 1));
         this.set("gripper", this.gripOpen + (this.gripClosed - this.gripOpen) * g);
     }
 

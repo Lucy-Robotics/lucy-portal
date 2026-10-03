@@ -147,10 +147,7 @@ const HIT_SLOP = 20; // px: thin robots, so a click in a gap still counts
 
 type Rect = { left: number; top: number; width: number; height: number };
 
-const damp = (from: number, to: number, rate: number, dt: number) =>
-    from + (to - from) * (1 - Math.exp(-rate * dt));
-const smooth = (t: number) => t * t * (3 - 2 * t);
-const clamp01 = (t: number) => Math.max(0, Math.min(1, t));
+const { clamp, damp, smoothstep } = THREE.MathUtils;
 const lerpRect = (a: Rect, b: Rect, t: number): Rect => ({
     left: a.left + (b.left - a.left) * t,
     top: a.top + (b.top - a.top) * t,
@@ -477,6 +474,15 @@ export async function createRobotPageScene(
     // (pinned on the right from the top).
     let transitionScroll = 0;
 
+    /* The canvas covers the window. */
+    const fitCanvas = () => {
+        const size = renderer.getSize(new THREE.Vector2());
+        if (size.x === window.innerWidth && size.y === window.innerHeight) return;
+        renderer.setSize(window.innerWidth, window.innerHeight, false);
+        backdrop.width = renderer.domElement.width;
+        backdrop.height = renderer.domElement.height;
+    };
+
     let layoutMs = 0; // TEST-HOOK: main-thread cost of laying out the hero
     let plansReady = false;
     const layoutHero = (reachIndex = 0, withPlans = true) => {
@@ -484,9 +490,7 @@ export async function createRobotPageScene(
         const width = window.innerWidth;
         const height = window.innerHeight;
         disposeHeroPlans();
-        renderer.setSize(width, height, false);
-        backdrop.width = renderer.domElement.width;
-        backdrop.height = renderer.domElement.height;
+        fitCanvas();
 
         const hero = page.hero.getBoundingClientRect();
         landScroll = hero.bottom + window.scrollY;
@@ -686,10 +690,10 @@ export async function createRobotPageScene(
 
     /* Hero -> Stage over the first half of the hero's scroll (see
        transitionScroll): the arm has settled in the box by then. */
-    const enterGoal = () => (transitionScroll > 0 ? clamp01(window.scrollY / transitionScroll) : 0);
+    const enterGoal = () => (transitionScroll > 0 ? clamp(window.scrollY / transitionScroll, 0, 1) : 0);
 
     /* Wide screens: once the hero has scrolled past, the scroll pans to InMoov. */
-    const scrollView = () => clamp01((window.scrollY - landScroll) / (0.9 * window.innerHeight));
+    const scrollView = () => clamp((window.scrollY - landScroll) / (0.9 * window.innerHeight), 0, 1);
 
     const heroPick = () => (heroTarget ? heroPlans.get(heroTarget)?.pick ?? null : null);
     let lastDriver: So101PickDemo | null = null;
@@ -715,7 +719,10 @@ export async function createRobotPageScene(
         const fromPlan = planOf(from)?.[1];
         if (fromPlan) {
             fromPlan.logo.classList.remove("robot-shake");
-            if (!holding && fromPlan.phase !== "idle") markVisible(fromPlan.logo, true);
+            if (!holding && fromPlan.phase !== "idle") {
+                markVisible(fromPlan.logo, true);
+                if (logoOut === fromPlan.logo) logoOut = null;
+            }
             fromPlan.phase = "idle";
         }
         from.release();
@@ -771,9 +778,8 @@ export async function createRobotPageScene(
     };
 
     /* A caught logo: shake, fly in, grip; or let go, fly back, rest. */
-    let wristTwist = 0; // added to the wrist roll while it strains for the logo
+    let wristTwist = 0; // added to the wrist roll while it strains for the logo (reset every frame)
     const catchStep = (dt: number) => {
-        wristTwist = 0;
         const plan = heroTarget ? heroPlans.get(heroTarget) : null;
         if (!plan?.flight) return false;
         const { progress, holding } = plan.pick.state;
@@ -796,7 +802,7 @@ export async function createRobotPageScene(
                 break;
             case "shake": // the logo works itself loose; the wrist strains for it
                 if (!instant) {
-                    const envelope = Math.sin(Math.PI * clamp01(plan.timer / SHAKE_TIME));
+                    const envelope = Math.sin(Math.PI * clamp(plan.timer / SHAKE_TIME, 0, 1));
                     wristTwist = WRIST_TWIST.amplitude * envelope * Math.sin(2 * Math.PI * WRIST_TWIST.rate * plan.timer);
                 }
                 if (instant || plan.timer >= SHAKE_TIME) {
@@ -810,7 +816,7 @@ export async function createRobotPageScene(
                 }
                 break;
             case "fly": {
-                const e = instant ? 1 : smooth(clamp01(plan.timer / FLIGHT_TIME));
+                const e = instant ? 1 : smoothstep(plan.timer, 0, FLIGHT_TIME);
                 place(e);
                 if (e >= 1) {
                     plan.phase = "grip";
@@ -829,7 +835,7 @@ export async function createRobotPageScene(
                 }
                 break;
             case "flyback": {
-                const e = instant ? 1 : smooth(clamp01(plan.timer / FLIGHT_TIME));
+                const e = instant ? 1 : smoothstep(plan.timer, 0, FLIGHT_TIME);
                 place(1 - e);
                 if (e >= 1) {
                     heroPayload.group.visible = false;
@@ -921,7 +927,7 @@ export async function createRobotPageScene(
     const draw = () => {
         const height = window.innerHeight;
         const box = frameRect();
-        const settle = smooth(clamp01(enter / 0.8));
+        const settle = smoothstep(enter, 0, 0.8);
         drawRect = lerpRect(heroRect, box, settle);
         // Rising into view on load: start a screen lower, ease out.
         drawRect.top += (1 - (1 - (1 - rise) ** 3)) * height;
@@ -945,7 +951,7 @@ export async function createRobotPageScene(
         const screen: Rect = { left: -1, top: -1, width: window.innerWidth + 2, height: height + 2 };
         // The grid's window closes in on the box slowly, from 55% of the way:
         // always wider than the box while the arm is still flying in (to 80%).
-        const close = smooth(clamp01((enter - CLOSE_FROM) / (1 - CLOSE_FROM)));
+        const close = smoothstep(enter, CLOSE_FROM, 1);
         const clip = enter <= 0 ? "none" : clipTo(lerpRect(screen, box, close), close);
         container.style.clipPath = clip;
         page.backdrop.style.clipPath = clip;
@@ -1124,6 +1130,7 @@ export async function createRobotPageScene(
             else if (hovered !== "inmoov" && wave && head) wave.setLook(lookFrom(head));
         }
         const picking = pick.update(dt, { instant: reduceMotion });
+        wristTwist = 0;
         const catching = enter < 0.02 && catchStep(dt);
         growHeld();
         if (wristTwist) so101.joints.wrist_roll.setJointValue(so101.joints.wrist_roll.angle + wristTwist);
@@ -1134,7 +1141,7 @@ export async function createRobotPageScene(
         // was already downloading).
         if (rise >= 1 && !inmoovRequested) {
             inmoovRequested = true;
-            void loadInMoov();
+            loadInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
         } else if (rise >= 1 && !plansReady && !relayoutTimer) {
             layoutHero();
             timings.plans = performance.now() - started;
@@ -1279,19 +1286,34 @@ export async function createRobotPageScene(
     };
 
     // Logos move once the fonts load, and on resize: lay the hero out again,
-    // but never in the middle of taking a logo (that would drop it): wait.
+    // but never while the arm is moving (that would drop what it carries):
+    // wait, the canvas following the window meanwhile.
+    let disposed = false;
     let relayoutTimer = 0;
     const relayout = () => {
+        if (disposed) return;
         window.clearTimeout(relayoutTimer);
         relayoutTimer = window.setTimeout(() => {
             relayoutTimer = 0;
-            const busy = logoOut !== null || [...heroPlans.values()].some((plan) => !plan.pick.idle);
-            if (busy) {
+            if (inMotion(boxPick) || [...heroPlans.values()].some((plan) => !plan.pick.idle)) {
+                fitCanvas();
+                draw();
                 relayout();
                 return;
             }
+            // Laying out puts the arm back at rest: if it's holding the box's
+            // infinity (and the page logo it brought along), it gets them back.
+            const held = boxPick.state.holding;
+            const carried = held ? logoOut : null;
             // Before the hero is up, stay light: the plans come after the rise.
             layoutHero(0, plansReady);
+            if (held) {
+                boxPick.takeOver();
+                if (carried) {
+                    markVisible(carried, false);
+                    logoOut = carried;
+                }
+            }
             draw();
             wake();
         }, 150);
@@ -1317,7 +1339,6 @@ export async function createRobotPageScene(
     document.addEventListener("visibilitychange", wake);
     void document.fonts?.ready.then(relayout);
 
-    let disposed = false;
     let inmoovRequested = false;
     const loadInMoov = async () => {
         // InMoov's URDF colours are Blender leftovers, so its parts are coloured by link.
@@ -1344,7 +1365,7 @@ export async function createRobotPageScene(
     wake();
 
     // TEST-HOOK: lets a browser test find the robots on screen and check the
-    // effect of real clicks. Temporary: remove, or put behind a dev-only guard.
+    // effect of real clicks. RobotShowcase only exposes it in development.
     const screenRect = (object: THREE.Object3D) => screenBounds(object);
     const testHook = {
         hitTest,
@@ -1385,7 +1406,7 @@ export async function createRobotPageScene(
     return {
         activate: (robot) => activate(robot),
         setView(t) {
-            viewGoal = clamp01(t);
+            viewGoal = clamp(t, 0, 1);
             wake();
         },
         testHook,
