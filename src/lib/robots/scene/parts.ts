@@ -2,11 +2,12 @@
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
-import { BODY_COLOR, INMOOV_COLOR, INMOOV_HEIGHT, INMOOV_X, MECHANISM_COLOR } from "../config.ts";
+import { BODY_COLOR, INMOOV_COLOR, INMOOV_HEIGHT, INMOOV_X, IRIS_SIZE, MECHANISM_COLOR, PUPIL_SIZE } from "../config.ts";
 import { createLucyGlowMaterial, createLucyInfinity, type InfinityShape } from "../lucyInfinity.ts";
 import { forEachOwnMesh } from "../robotModel.ts";
 
-const INMOOV_MECHANISM_LINKS = /^neck_link$|^(left|right)_shoulder_[xz]_link$/;
+const INMOOV_MECHANISM_LINKS = /^neck_link$/;
+const INMOOV_EYE_LINKS = /eye(Left|Right)_link$/;
 
 /* The infinities are drawn on their own layer as well, for their glow. */
 export const INFINITY_LAYER = 1;
@@ -59,9 +60,11 @@ export function createPayload(shape: InfinityShape, material: THREE.Material, ac
 export type Payload = ReturnType<typeof createPayload>;
 
 /* InMoov comes in Blender units, so it's scaled to its real height and stood on the grid. */
-export function standInMoov(inmoov: URDFRobot, materials: Materials) {
+export function standInMoov(inmoov: URDFRobot, materials: Materials, irisColor: string) {
+    const eyes: THREE.Mesh[] = [];
     for (const [name, link] of Object.entries(inmoov.links)) {
         if (INMOOV_MECHANISM_LINKS.test(name)) forEachOwnMesh(link, (mesh) => (mesh.material = materials.mechanism));
+        if (INMOOV_EYE_LINKS.test(name)) forEachOwnMesh(link, (mesh) => eyes.push(mesh));
     }
     const base = new THREE.Group();
     base.add(inmoov);
@@ -71,5 +74,45 @@ export function standInMoov(inmoov: URDFRobot, materials: Materials) {
     base.scale.setScalar(scale);
     base.position.set(INMOOV_X, -raw.min.y * scale, 0);
     base.updateMatrixWorld(true);
+    for (const eye of eyes) eye.material = createEyeMaterial(eye, irisColor);
     return base;
+}
+
+/* The eye meshes have no texture or UVs, so the iris and pupil are drawn by
+   distance from the eyeball's forward axis (toward the viewer at rest). */
+function createEyeMaterial(eye: THREE.Mesh, irisColor: string) {
+    const material = new THREE.MeshStandardMaterial({ color: INMOOV_COLOR, roughness: 0.4, metalness: 0, flatShading: true });
+    eye.geometry.computeBoundingBox();
+    const box = eye.geometry.boundingBox!;
+    const radius = Math.max(...box.getSize(new THREE.Vector3()).toArray()) / 2;
+    const uniforms = {
+        eyeCenter: { value: box.getCenter(new THREE.Vector3()) },
+        eyeForward: { value: new THREE.Vector3(0, 0, 1).transformDirection(eye.matrixWorld.clone().invert()) },
+        irisRadius: { value: IRIS_SIZE * radius },
+        pupilRadius: { value: PUPIL_SIZE * radius },
+        irisColor: { value: new THREE.Color(irisColor) },
+    };
+    material.onBeforeCompile = (shader) => {
+        Object.assign(shader.uniforms, uniforms);
+        shader.vertexShader = shader.vertexShader
+            .replace("#include <common>", "#include <common>\nvarying vec3 vEyePosition;")
+            .replace("#include <begin_vertex>", "#include <begin_vertex>\nvEyePosition = position;");
+        shader.fragmentShader = shader.fragmentShader
+            .replace("#include <common>", `#include <common>
+                varying vec3 vEyePosition;
+                uniform vec3 eyeCenter;
+                uniform vec3 eyeForward;
+                uniform float irisRadius;
+                uniform float pupilRadius;
+                uniform vec3 irisColor;`)
+            .replace("#include <color_fragment>", `#include <color_fragment>
+                vec3 offset = vEyePosition - eyeCenter;
+                float across = length(offset - dot(offset, eyeForward) * eyeForward);
+                float edge = fwidth(across);
+                diffuseColor.rgb = mix(diffuseColor.rgb, irisColor, 1.0 - smoothstep(irisRadius - edge, irisRadius + edge, across));
+                diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.0), 1.0 - smoothstep(pupilRadius - edge, pupilRadius + edge, across));`);
+    };
+    // Both eyes share one program (each keeps its own uniforms).
+    material.customProgramCacheKey = () => "inmoov-eye";
+    return material;
 }

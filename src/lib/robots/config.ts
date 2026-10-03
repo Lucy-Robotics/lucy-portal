@@ -5,6 +5,9 @@ import * as THREE from "three";
 export const BODY_COLOR = "#2B3E50";
 export const MECHANISM_COLOR = "#000000";
 export const INMOOV_COLOR = "#f2f2f2";
+/* InMoov's iris and pupil radii, as a share of its eyeball's radius (the iris is the page's green). */
+export const IRIS_SIZE = 0.45;
+export const PUPIL_SIZE = 0.25;
 /* Glow of an infinity resting on the grid, relative to one in hand (0..1). */
 export const RESTING_GLOW = 0.35;
 

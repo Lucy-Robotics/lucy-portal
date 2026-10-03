@@ -814,7 +814,7 @@ export async function createRobotPageScene(
         const robot = await loadRobot(ROBOT_ASSETS.inmoov.urdf, ROBOT_ASSETS.inmoov.glb, () => materials.inmoov);
         if (disposed) return;
         inmoov = robot;
-        humanoid = standInMoov(robot, materials);
+        humanoid = standInMoov(robot, materials, accent);
         humanoid.visible = enter >= 1;
         scene.add(humanoid);
         head = robot.links["i01.head.rothead_link"];
