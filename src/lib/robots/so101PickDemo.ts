@@ -17,6 +17,9 @@
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
+import {
+    APPROACH_AT, ATTACH_AT, CLOSE_START, DURATION, HOLD_OFFSET, LIFT_AT, LOOK, LOOK_OFFSET, LOOK_SPEED,
+} from "./config.ts";
 import { LookFollow } from "./lookFollow.ts";
 import { clamp, damp, easeInOutCubic, smoothstep } from "./math.ts";
 
@@ -61,20 +64,6 @@ export type PickPlan = {
        measured (gripper joint radians, negative for less). */
     gripperOffset?: { open: number; closed: number };
 };
-
-/* Pick timeline, 0 -> 1 (played backwards to put the payload back). */
-const CLOSE_START = 0.5;
-const ATTACH_AT = 0.64;
-const APPROACH_AT = 0.3; // in front of the payload, from rest
-const LIFT_AT = 0.8; // back at the approach, from where it lifts the payload to carry it
-const DURATION = 3.3;
-
-/* How far the arm turns toward the cursor at the screen edges, in radians,
-   and an angle added to each joint at rest, empty-handed (positive or negative). */
-const LOOK = { pan: 0.75, wrist: 0.95, roll: 0.25 };
-const LOOK_OFFSET = { pan: -0.7, wrist: -0.2, roll: -1.3 };
-/* Added instead while it holds the payload (blended in as it lifts it), in radians. */
-const HOLD_OFFSET = { pan: -0.7, wrist: 0.6, roll: 0 };
 
 type Pose = number[];
 
@@ -124,7 +113,7 @@ export class So101PickDemo {
     private holding = false;
     private follow = 1;
     private atRest = true;
-    private readonly look = new LookFollow(4);
+    private readonly look = new LookFollow(LOOK_SPEED);
 
     /*
      * Solves the plan's poses a little at a time (a generator: drive it to

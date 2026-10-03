@@ -5,6 +5,7 @@
  */
 import type { URDFRobot } from "urdf-loader";
 
+import { HEAD_LOOK_SPEED, HEAD_TURN, PALM_OUT, WAVE_TIME } from "./config.ts";
 import { LookFollow } from "./lookFollow.ts";
 import { clamp, smoothstep } from "./math.ts";
 
@@ -21,15 +22,10 @@ const ARM = {
     elbow: "right_elbow_x_link_joint",
     wrist: "right_wrist_z_link_joint", // turn the forearm: palm toward the viewer
 };
-const PALM_OUT = 1.45;
-const WAVE_TIME = 3.4;
-
-/* How far the head turns, tilts and rolls with the look, at its edges, in radians. */
-export const HEAD_TURN = { yaw: 0.32, pitch: 0.12, roll: 0.06 };
 
 export class InMoovWave {
     private readonly robot: URDFRobot;
-    private readonly look = new LookFollow(2.5);
+    private readonly look = new LookFollow(HEAD_LOOK_SPEED);
     private progress = 1; // 0..1 through a wave, 1 = idle
 
     constructor(robot: URDFRobot) {

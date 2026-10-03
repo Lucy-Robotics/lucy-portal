@@ -24,7 +24,13 @@
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
-import { HEAD_TURN, InMoovWave } from "./inmoovWave.ts";
+import {
+    ARM_ATTENTION_TIME, ARM_INSET, ARM_MAX_WIDTH_SHARE, ARM_YAW, ATTENTION_TIME, BODY_COLOR, BOX_INFINITY_X, BOX_SLIDE,
+    CARRY, CARRY_COMPACT, CATCH_RANGE, CLOSE_FROM, EYE_LIGHT, FLIGHT_TIME, FOV, HEADER_REACHES, HERO_GRIPPER, HERO_ROLL,
+    HIT_SLOP, INMOOV_COLOR, INMOOV_HEIGHT, INMOOV_X, LEVEL_DIRECTION, LOGO_HEIGHT, MECHANISM_COLOR, PHONE_BASE, REST,
+    HEAD_TURN, REST_COMPACT, RESTING_GLOW, RISE_TIME, SHAKE_TIME, TRANSITION_SHARE, VIEW_DIRECTION, WRIST_TWIST,
+} from "./config.ts";
+import { InMoovWave } from "./inmoovWave.ts";
 import {
     createHalo,
     createLucyGlowMaterial,
@@ -76,82 +82,14 @@ export type RobotPageScene = {
     dispose(): void;
 };
 
-const BODY_COLOR = "#2B3E50";
-const MECHANISM_COLOR = "#000000";
-const INMOOV_COLOR = "#f2f2f2";
 const INMOOV_MECHANISM_LINKS = /^neck_link$|^(left|right)_shoulder_[xz]_link$/;
 const INMOOV_EYE_LINKS = /eye(Left|Right)_link$/;
 
-/* The arm stands at the world's origin, turned three-quarters toward the
-   viewer and reaching left; its infinity stands on the grid to its left. */
-const ARM_YAW = Math.PI + 0.55;
-const BOX_INFINITY_X = -0.17;
-/* The share of the hero's height scrolled by the end of the hero -> Stage
-   transition. */
-const TRANSITION_SHARE = 0.5;
-/* Where in the transition the grid's window starts closing in on the box. */
-const CLOSE_FROM = 0.55;
-/* How far left of its spot it slides in from, in metres. */
-const BOX_SLIDE = 0.35;
-/* Where the gripper waits at rest (every plan shares this pose), and where
-   it holds a logo it has taken. */
-const REST = new THREE.Vector3(-0.13, 0.14, 0.06);
-/* On phones the arm is drawn much bigger (to reach the header): its base
-   stands right of centre (this share of the width) so it can wait in a
-   natural ready pose, gripper hanging over the screen's left, and it holds a
-   taken logo above itself. */
-const PHONE_BASE = 0.66;
-const REST_COMPACT = new THREE.Vector3(-0.08, 0.17, 0.06);
-const CARRY_COMPACT = new THREE.Vector3(-0.04, 0.3, 0);
-const CARRY = new THREE.Vector3(-0.12, 0.27, 0);
 const UP = new THREE.Vector3(0, 1, 0);
 const DOWN = new THREE.Vector3(0, -1, 0);
 
-/* InMoov stands to the right, out of the arm's shot; its own shot keeps the
-   arm in view beside it: all these robots, one platform. */
-const INMOOV_X = 0.6;
-const INMOOV_HEIGHT = 1.8;
-
-/* Hero sizing, in metres. Wide screens: the hero logo sits this high above
-   the arm's base (just within reach), the base this far from the right edge,
-   and the arm's footprint takes at most this share of the width. Phones: the
-   header logo sits this far from the shoulder. */
-const LOGO_HEIGHT = 0.27;
-const ARM_INSET = 0.09;
-const ARM_MAX_WIDTH_SHARE = 0.4;
-/* Wide screens, taking the hero's logo: extra wrist roll, and jaws opened
-   wider / closed tighter than measured (radians, negative for less). */
-const HERO_ROLL = 0.3;
-const HERO_GRIPPER = { open: 0, closed: 0 };
-/* Phones: how far the header logo may be from the shoulder, longest first:
-   the further the arm can reach, the smaller it can be drawn. */
-const HEADER_REACHES = [0.435, 0.42, 0.4, 0.38, 0.37, 0.35, 0.33, 0.31];
-/* A logo out of reach: the arm stretches toward it as far as it possibly can
-   (searched between these distances from the shoulder, in metres), the logo
-   shakes in place, then flies into the open gripper. Seconds. */
-const CATCH_RANGE = { min: 0.22, max: 0.55, steps: 5 };
-/* On load the robots rise into view from below the screen, in seconds. */
-const RISE_TIME = 1.3;
-/* After a click, the robots turn to the visitor (the camera) instead of the
-   cursor, for their animation and this long after it, in ms (InMoov's). */
-const ATTENTION_TIME = 2500;
-const ARM_ATTENTION_TIME = 800; // the arm's, back to the cursor sooner
-const SHAKE_TIME = 0.9;
-/* Meanwhile the wrist twists back and forth (radians, twists per second):
-   trying to get it, and showing the open jaws. */
-const WRIST_TWIST = { amplitude: 0.6, rate: 2 };
-const FLIGHT_TIME = 0.7;
-
-/* The camera looks down a little, from in front. On phones the hero's is
-   level, at floor height: the base's bottom is then a flat line on the
-   screen's bottom edge. */
-const VIEW_DIRECTION = new THREE.Vector3(0, 0.38, 1).normalize();
-const LEVEL_DIRECTION = new THREE.Vector3(0, 0, 1);
-const FOV = 30;
-
 /* Clicks on these go to the page, even over a robot. */
 const INTERACTIVE = "a, button, input, textarea, select, label, summary, [role='button'], [contenteditable]";
-const HIT_SLOP = 20; // px: thin robots, so a click in a gap still counts
 
 type Rect = { left: number; top: number; width: number; height: number };
 
@@ -203,18 +141,14 @@ function createMaterials(accent: string) {
     };
 }
 
-/* A Lucy infinity and the light it casts. Its origin is where it's pinched.
-   The page gives it the logo's own glow (see the glow layer). */
-/* How much glow an infinity has resting on the grid, against one in hand. */
-const RESTING_GLOW = 0.35;
-
 /* The infinities are drawn on their own layer as well, for their glow. */
 const INFINITY_LAYER = 1;
 
 /* InMoov's eyes, each with a faint green light. */
 const EYES = 2;
-const EYE_LIGHT = 0.03;
 
+/* A Lucy infinity and the light it casts. Its origin is where it's pinched.
+   The page gives it the logo's own glow (see the glow layer). */
 function createPayload(shape: InfinityShape, material: THREE.Material, accent: string) {
     const infinity = createLucyInfinity(shape, material);
     infinity.layers.set(INFINITY_LAYER);
