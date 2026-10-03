@@ -196,7 +196,7 @@ function createPayload(shape: InfinityShape, material: THREE.Material, accent: s
     return {
         group,
         infinity,
-        // Hiding only darkens its light: a new light count recompiles every material.
+        // Hiding only darkens its light, as a new light count recompiles every material.
         get shown() {
             return shown;
         },
@@ -323,7 +323,7 @@ export async function createRobotPageScene(
     // InMoov's eye lights exist from the start, dark until it shows (constant light count).
     const eyeLights = Array.from({ length: EYES }, () => new THREE.PointLight(accent, 0, 0.35, 2));
     scene.add(...eyeLights);
-    // Lights on every layer: the glow pass reuses the main pass's shaders.
+    // Lights on every layer, so the glow pass reuses the main pass's shaders.
     scene.traverse((object) => {
         if (object instanceof THREE.Light) object.layers.enableAll();
     });
@@ -403,7 +403,7 @@ export async function createRobotPageScene(
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.autoClear = false;
     container.appendChild(renderer.domElement);
-    // The grid's own renderer, on the layer behind the page: no per-frame copy.
+    // The grid has its own renderer on the layer behind the page (no per-frame copy).
     const gridRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     gridRenderer.setPixelRatio(renderer.getPixelRatio());
     page.backdrop.appendChild(gridRenderer.domElement);
@@ -993,7 +993,7 @@ export async function createRobotPageScene(
         container.style.clipPath = clip;
         page.backdrop.style.clipPath = clip;
         page.glow.style.clipPath = clip;
-        if (clip === HIDDEN) return; // scrolled out of sight (phones): nothing to draw
+        if (clip === HIDDEN) return; // scrolled out of sight (phones), nothing to draw
 
         // Where the infinities are on screen, for their glow (measured before
         // the camera gets its view offset for drawing).
@@ -1199,13 +1199,13 @@ export async function createRobotPageScene(
         else last = 0;
     };
 
-    /* Compile every material ahead, so none compiles mid-scroll. Only with parallel
-       compiling: otherwise it just moves the stall to the page load. */
+    /* Compile every material ahead so none compiles mid-scroll. Only with parallel
+       compiling, as otherwise it just moves the stall to the page load. */
     const precompile = (target: THREE.WebGLRenderer, world: THREE.Scene) => {
         if (!target.extensions.has("KHR_parallel_shader_compile")) return;
         target.compileAsync(world, camera).catch(() => {}); // else compiled when first drawn
         if (target !== renderer) return;
-        // compileAsync skips depthOnly (an override material): draw it once, on one pixel.
+        // compileAsync skips depthOnly (an override material), so draw it once on one pixel.
         const humanoidVisible = humanoid?.visible ?? false;
         if (humanoid) humanoid.visible = true;
         renderer.setScissorTest(true);
@@ -1332,11 +1332,11 @@ export async function createRobotPageScene(
         if (robot) activate(robot);
     };
 
-    // Scrolling moves the box: the next frame (right after the scroll event) follows.
+    // Scrolling moves the box, and the next frame (right after the scroll event) follows.
     const onScroll = wake;
 
-    // Logos move once the fonts load, and on resize: lay the hero out again,
-    // but not while the arm moves (it would drop what it carries): wait.
+    // Lay the hero out again once the fonts load and on resize (the logos move),
+    // but wait while the arm moves, or it would drop what it carries.
     let disposed = false;
     let relayoutTimer = 0;
     const relayout = () => {
@@ -1350,7 +1350,7 @@ export async function createRobotPageScene(
                 relayout();
                 return;
             }
-            // The layout resets the arm: give back what it held (and the logo it carried).
+            // The layout resets the arm, so give back what it held (and the logo it carried).
             const held = boxPick.state.holding;
             const carried = held ? logoOut : null;
             // Before the hero is up, stay light: the plans come after the rise.

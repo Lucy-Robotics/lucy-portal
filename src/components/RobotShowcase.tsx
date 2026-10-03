@@ -23,7 +23,7 @@ function hasWebGl() {
     try {
         const canvas = document.createElement("canvas");
         const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
-        // Only a probe: give the context back (browsers allow few at once).
+        // Only a probe, so give the context back (browsers allow few at once).
         gl?.getExtension("WEBGL_lose_context")?.loseContext();
         return Boolean(gl);
     } catch {
@@ -71,7 +71,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
         prefetchHeroAssets();
         import("../lib/robotPageScene.ts")
             .then(({ createRobotPageScene }) =>
-                // Unmounted meanwhile (or StrictMode's first mount): build nothing.
+                // Build nothing if unmounted meanwhile (or on StrictMode's first mount).
                 cancelled ? null : createRobotPageScene(layer, {
                     hero,
                     heroLogo: hero.querySelector<HTMLElement>(".logo__mark"),
@@ -84,7 +84,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                     compact: () => compact.matches,
                     onActiveChange: (robot) => {
                         setActive(robot);
-                        // Wide screens: the scroll picks the robot, the arrows follow.
+                        // On wide screens the scroll picks the robot and the arrows follow.
                         if (!compact.matches) setIndex(ROBOTS.findIndex(({ id }) => id === robot));
                     },
                 }),
@@ -112,7 +112,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
         };
     }, [webGl, heroRef]);
 
-    // Phones: the arrows choose the robot (again after leaving a wide layout).
+    // On phones the arrows choose the robot (again after leaving a wide layout).
     useEffect(() => {
         const scene = sceneRef.current;
         if (!scene) return;

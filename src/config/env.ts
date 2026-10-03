@@ -13,7 +13,7 @@ export const keycloakAuthority = `${env.keycloakUrl}/realms/${env.keycloakRealm}
 
 export const isBackendConfigured = Boolean(env.backendUrl);
 
-// Sign-in needs a token proxy: the Vite server's or the backend's (see oidc.ts).
+// Sign-in needs a token proxy, the Vite server's or the backend's (see oidc.ts).
 export const isAuthConfigured =
     Boolean(env.keycloakUrl && env.keycloakRealm && env.keycloakClientId) &&
     (import.meta.env.DEV || import.meta.env.KEYCLOAK_TOKEN_PROXY || isBackendConfigured);

@@ -444,8 +444,8 @@ export class So101PickDemo {
         return CHAIN.map((name) => this.angle(name));
     }
 
-    /* World matrices from the root to the gripper only: all the solver reads, and far
-       cheaper than the whole robot. The rest catches up before drawing. */
+    /* World matrices from the root to the gripper only. That's all the solver reads,
+       far cheaper than the whole robot, and the rest catches up before drawing. */
     private updateChain() {
         for (const object of this.chain) {
             object.updateMatrix();

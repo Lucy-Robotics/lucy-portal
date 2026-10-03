@@ -18,7 +18,7 @@ function request(url: string) {
             if (!r.ok) throw new Error(`Failed to load ${url}: ${r.status}`);
             return r;
         });
-        // A failed download isn't kept: whoever asks next tries again.
+        // A failed download isn't kept, so whoever asks next tries again.
         response.catch(() => responses.delete(url));
         responses.set(url, response);
     }

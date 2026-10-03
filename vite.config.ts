@@ -6,7 +6,7 @@ import { keycloakTokenProxy } from "./vite-plugin-keycloak-token-proxy.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/* Built files under /assets have hashed names: browsers may cache them for good. */
+/* Built files under /assets have hashed names, so browsers may cache them for good. */
 const cacheHashedAssets = (): Plugin => ({
   name: "cache-hashed-assets",
   configurePreviewServer(server) {
@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: [
         { find: "@", replacement: path.resolve(__dirname, "./src") },
-        // urdf-loader's default mesh loaders: robotModel.ts brings its own.
+        // urdf-loader's default mesh loaders, replaced by robotModel.ts.
         {
           find: /^three\/examples\/jsm\/loaders\/(STL|Collada)Loader\.js$/,
           replacement: path.resolve(__dirname, "./src/lib/unusedMeshLoader.ts"),
