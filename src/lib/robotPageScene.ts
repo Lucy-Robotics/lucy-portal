@@ -1444,9 +1444,9 @@ export async function createRobotPageScene(
     const onHeroLogo = onLogoClick("hero");
     const onHeaderLogo = onLogoClick("header");
 
-    /* The hero's text (logo, tagline) invites the arm: hovering it makes the
+    /* The hero's title (logo and name) invites the arm: hovering it makes the
        infinity the arm would take glow, and clicking it takes it. */
-    const heroText = [...page.hero.querySelectorAll<HTMLElement>(".home__title, .home__tagline")];
+    const heroText = [...page.hero.querySelectorAll<HTMLElement>(".home__title")];
     const invited = () => (options.compact() ? page.headerLogo : page.heroLogo);
     const onTextEnter = () => {
         if (enter < 0.02) invited()?.classList.add("robot-invite");
