@@ -1,8 +1,5 @@
-/*
- * The robots' model files, each fetched once and shared. This module has no
- * three.js in it, so the page can start downloading what the first frame
- * needs (the arm and the logo) while three.js itself is still on its way.
- */
+/* Each model file is fetched once and shared. No three.js here, so downloads can
+   start before three.js itself has loaded. */
 export const ROBOT_ASSETS = {
     so101: { urdf: "/models/so101/so101.urdf", glb: "/models/so101/so101.glb" },
     inmoov: { urdf: "/models/inmoov/inmoov.urdf", glb: "/models/inmoov/inmoov.glb" },
@@ -18,11 +15,11 @@ function request(url: string) {
             if (!r.ok) throw new Error(`Failed to load ${url}: ${r.status}`);
             return r;
         });
-        // A failed download isn't kept, so whoever asks next tries again.
+        // Forget failures so the next caller retries.
         response.catch(() => responses.delete(url));
         responses.set(url, response);
     }
-    // Every reader gets its own copy of the body.
+    // A body can only be read once, so each reader gets a clone.
     return response.then((r) => r.clone());
 }
 
@@ -33,9 +30,7 @@ const prefetch = (urls: string[]) => {
     for (const url of urls) request(url).catch(() => {}); // reported by whoever reads it
 };
 
-/* Start downloading what the hero's first frame needs. */
 export const prefetchHeroAssets = () =>
     prefetch([ROBOT_ASSETS.so101.urdf, ROBOT_ASSETS.so101.glb, ROBOT_ASSETS.infinity]);
 
-/* Then the rest, while the hero comes up. */
 export const prefetchOtherAssets = () => prefetch([ROBOT_ASSETS.inmoov.urdf, ROBOT_ASSETS.inmoov.glb]);

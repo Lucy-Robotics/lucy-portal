@@ -1,8 +1,5 @@
-/*
- * Load a robot from its URDF with urdf-loader, taking the meshes from one
- * compressed GLB instead of fetching every STL. The GLB has one node per
- * source mesh, named after the STL file without its extension.
- */
+/* Loads a URDF with its meshes from one compressed GLB instead of every STL. GLB
+   nodes are named after their STL file. */
 import * as THREE from "three";
 import URDFLoader, { type URDFRobot } from "urdf-loader";
 
@@ -15,9 +12,8 @@ type MeshEntry = {
 };
 
 /*
- * GLB -> meshes by name. gltfpack keeps each named node and hangs the mesh
- * under an unnamed child carrying the quantization transform, so the name
- * comes from the parent and the transform from the mesh's full path.
+ * gltfpack hangs each mesh under an unnamed child carrying the quantization
+ * transform, so the name comes from the parent and the transform from the full path.
  */
 async function loadMeshes(url: string) {
     const gltf = await loadGltf(url);
@@ -33,10 +29,7 @@ async function loadMeshes(url: string) {
     return meshes;
 }
 
-/*
- * `materialFor` receives the name of the URDF <material> of each visual.
- * The returned robot is turned from URDF's z-up to three.js' y-up.
- */
+/* `materialFor` gets each visual's URDF <material> name. The robot is turned from z-up to y-up. */
 export async function loadRobot(
     urdfUrl: string,
     glbUrl: string,
@@ -44,7 +37,7 @@ export async function loadRobot(
 ): Promise<URDFRobot> {
     const [urdf, meshes] = await Promise.all([fetchText(urdfUrl), loadMeshes(glbUrl)]);
 
-    // Meshes dropped when the GLB was built (e.g. degenerate ones) are skipped.
+    // The GLB build drops some meshes (degenerate ones), so missing ones are skipped.
     const missing = new Set<string>();
     const loader = new URDFLoader();
     loader.loadMeshCb = (path, _manager, urdfMaterial, done) => {
@@ -71,7 +64,7 @@ export async function loadRobot(
     return robot;
 }
 
-/* Call `fn` on a link's own meshes, without descending into its child links. */
+/* Skips meshes that belong to child links. */
 export function forEachOwnMesh(link: THREE.Object3D, fn: (mesh: THREE.Mesh) => void) {
     const walk = (object: THREE.Object3D) => {
         for (const child of object.children) {

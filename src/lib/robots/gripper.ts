@@ -2,17 +2,14 @@
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
-/* Height of the fingers' contact faces above their tips, and how deep
-   between the fingers the payload's grasp point sits. */
+/* Height of the contact faces above the fingertips, and grasp point depth between the fingers, in metres. */
 const CONTACT_BAND = 0.017;
 const GRIP_DEPTH = 0.01;
 
 /*
- * Find the jaws in the gripper's own frame (x: the axis the moving jaw
- * closes along, -z: towards the fingertips). Returns `grip`, the point a held
- * payload's grasp point sits at (gripper frame), and the open / closed
- * gripper values that clear a payload `gripWidth` thick and just touch it.
- * Leaves the gripper joint moved.
+ * Works in the gripper frame, where the moving jaw closes along x and -z points
+ * to the fingertips. Returns the grasp point and the joint values that clear a
+ * payload `gripWidth` thick or just touch it. Leaves the gripper joint moved.
  */
 export function measureJaws(robot: URDFRobot, gripWidth: number) {
     const body = robot.links.gripper_link;
@@ -36,7 +33,7 @@ export function measureJaws(robot: URDFRobot, gripWidth: number) {
 
     const fixed = points(body, jaw);
     const tip = Math.min(...fixed.map((v) => v.z));
-    // The faces that touch the payload: the bottom of both fingers.
+    // The contact faces are the bottom of both fingers.
     const band = (v: THREE.Vector3) => v.z > tip + 0.002 && v.z < tip + CONTACT_BAND;
     const toBody = body.matrixWorld.clone().invert();
     const side = jaw.getWorldPosition(new THREE.Vector3()).applyMatrix4(toBody).x > 0 ? 1 : -1;
@@ -53,7 +50,6 @@ export function measureJaws(robot: URDFRobot, gripWidth: number) {
         return pts.filter((v) => v.z < low + CONTACT_BAND)
             .reduce((a, v) => (side > 0 ? Math.min(a, v.x) : Math.max(a, v.x)), side * Infinity);
     };
-    // Gap between the faces for a joint value; the jaw opens with q.
     const gap = (q: number) => side * (jawFace(q) - fixedFace);
     const { lower, upper } = robot.joints.gripper.limit;
     const solve = (want: number) => {
@@ -73,8 +69,8 @@ export function measureJaws(robot: URDFRobot, gripWidth: number) {
     return { grip, open, closed };
 }
 
-/* Where the gripper's servo is, seen down the roll axis (gripper frame), or
-   null if not found. Meshes are named after their STL (see robotModel.ts). */
+/* Servo direction across the roll axis (gripper frame), or null. Relies on meshes
+   named after their STL (see robotModel.ts). */
 export function findServoSide(robot: URDFRobot) {
     const body = robot.links.gripper_link;
     const servo = body.children.flatMap((child) => {

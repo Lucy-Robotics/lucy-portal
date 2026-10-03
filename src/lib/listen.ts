@@ -1,4 +1,4 @@
-/* Listen to an event, and get back what stops listening (collect them to stop all at once). */
+/* Returns a function that removes the listener. */
 export function listen<E extends Event>(
     target: EventTarget,
     type: string,

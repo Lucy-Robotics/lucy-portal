@@ -1,7 +1,6 @@
 /*
- * The hero's layout: where the arm stands and how big it's drawn so it can
- * reach the page's logos, and the plans for taking them. A generator (see
- * lib/background.ts): the plans are solved a step at a time.
+ * Where the hero's arm stands, how big it's drawn to reach the page's logos,
+ * and its plans for taking them. Solved a step at a time (see lib/background.ts).
  */
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
@@ -20,23 +19,20 @@ import { rayFrom, toScreen, topRect, viewWidth, type Rect, type TopRect } from "
 
 export type HeroTarget = "hero" | "header";
 
-// A caught logo: the arm reaches (pick to 0.5, jaws open), the logo shakes,
-// flies in, the jaws close (pick to 1); and the same backwards.
+// A caught logo's steps. The pick is at 0.5 with the jaws open, at 1 once gripped.
 export type CatchPhase = "idle" | "reach" | "shake" | "fly" | "grip" | "held" | "letgo" | "flyback" | "return";
 
 export type HeroPlan = {
     logo: HTMLElement;
     pick: So101PickDemo;
-    // Where the hero payload sits for this plan before it's taken, and the
-    // point of it the gripper takes (along its loops, from the crossing).
+    // `pinch` is the gripped point along the loops, measured from the crossing.
     home: { position: THREE.Vector3; scale: number; pinch: number };
-    // A logo out of reach flies to the arm instead: where it starts.
+    // Set only when the logo is out of reach and flies to the arm.
     flight: { from: THREE.Vector3; fromScale: number } | null;
     phase: CatchPhase;
     timer: number;
 };
 
-/* What the layout needs from the scene. */
 export type HeroLayoutScene = {
     page: { hero: HTMLElement; heroLogo: HTMLElement | null; headerLogo: HTMLElement | null; frame: HTMLElement; header: HTMLElement | null };
     compact: boolean;
@@ -46,27 +42,24 @@ export type HeroLayoutScene = {
     camera: THREE.PerspectiveCamera;
     framing: Framing;
     shoulder: () => THREE.Vector3;
-    /* Every plan rests in the box pick's rest pose. */
+    /* The box pick's rest pose, shared by every plan. */
     restPose: number[];
-    /* The box's pick back at rest, the arm with it. */
     resetArm: () => void;
     heroPayload: Payload;
     placeHeroPayload: (position: THREE.Vector3, scale: number, pinch: number) => void;
-    /* A plan's logo taken (or put back) by the arm. */
     onHeroHold: (logo: HTMLElement, holding: boolean) => void;
 };
 
 export type HeroLayout = {
     heroRect: Rect;
-    // Scroll position where the hero has scrolled past.
+    // Scroll position (px) once past the hero.
     landScroll: number;
-    // Scroll position where the arm has settled in the box: half the hero, or
-    // later on wide screens if the hero's text would still be under the box
-    // (pinned on the right from the top).
+    // Scroll position where the arm has settled in the box. Half the hero, or later
+    // on wide screens while the hero's text would still be under the box.
     transitionScroll: number;
     // The box's chamfer, in px.
     chamferSize: number;
-    // The plans, when asked for (always on phones).
+    // Only when asked for (always on phones).
     plans: Map<HeroTarget, HeroPlan> | null;
 };
 
@@ -89,7 +82,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
 
     const frame = page.frame.getBoundingClientRect();
     const aspect = frame.width && frame.height ? frame.width / frame.height : 0.77;
-    // The hero's camera. The scene draws between steps: put it back after each.
+    // The scene draws between steps, so the hero camera is put back after each.
     const heroCamera = () => s.framing.place(0, aspect, compact ? 1 : 0);
     heroCamera();
 
@@ -99,7 +92,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
     const ndcUp = base.clone().add(new THREE.Vector3(0, 0.1, 0)).project(camera);
     const perPixel = (ndcUp.y - ndcBase.y) / 2 / 0.1;
 
-    // Page scale, and where the base stands on the bottom edge.
+    // Page scale in px per metre, and where the base stands on the bottom edge.
     const heroLogo = page.heroLogo && !compact ? topRect(page.heroLogo) : null;
     const headerLogo = page.headerLogo ? topRect(page.headerLogo) : null;
     let scale = 1500;
@@ -108,7 +101,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
         scale = Math.min((height - heroLogo.centerY) / LOGO_HEIGHT, (ARM_MAX_WIDTH_SHARE * width) / 0.12);
         baseX = width - ARM_INSET * scale;
     } else if (headerLogo?.width) {
-        // Phones: centred, just big enough to reach the header logo.
+        // Phones get an arm just big enough to reach the header logo.
         const shoulderHeight = s.shoulder().y;
         for (let i = 0; i < 8; i++) {
             const dy = height - shoulderHeight * scale - headerLogo.centerY;
@@ -123,12 +116,11 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
         width: rectWidth,
         height: rectHeight,
     };
-    // The base's front edge sits lower on screen than its centre: lift the
-    // arm until its lowest point just touches the bottom edge.
+    // The base's front edge sits lower on screen than its centre, so lift the
+    // arm until its lowest point touches the bottom edge.
     s.resetArm();
     yield;
     heroCamera();
-    // Lowest on screen is lowest in clip space: project in place, no copies.
     let lowestNdc = Infinity;
     const vertex = new THREE.Vector3();
     forEachOwnMesh(s.so101.links.base_link, (mesh) => {
@@ -163,21 +155,17 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
     const carryAt = compact ? CARRY_COMPACT : CARRY;
     const carry = new THREE.Vector3(carryAt.x, carryAt.y, from.z);
 
-    /*
-     * Reach for a logo where it is. Out of reach, catch it instead: the
-     * arm reaches toward it as far as it comfortably can, and the logo
-     * flies into its gripper.
-     */
+    /* Out of reach, the arm stretches toward the logo and the logo flies into its gripper. */
     const planFor = function* (logo: HTMLElement, rect: TopRect): Generator<void, HeroPlan | null> {
         const center = toWorld(rect.centerX, rect.centerY);
         const markScale = (rect.width * metresPerPixel(center)) / s.shape.width;
-        // Wide screens, pinched by the far end of its right loop, which the
-        // arm reaches from above right (over the text). Phones, taken by its centre.
+        // Wide screens pinch the far end of the right loop, reached from above
+        // the text. Phones take it by its centre.
         const pinchAt = compact ? 0 : s.shape.rightEnd;
         const pinch = center.clone().addScaledVector(right, pinchAt * markScale);
         const towards = pinch.clone().sub(from).normalize();
-        // A logo is thin and round-edged, so the gripper needn't be square
-        // to it: it reaches much further that way.
+        // A logo is thin and round-edged, so the gripper needn't be square to it.
+        // It reaches much further that way.
         const common = compact
             ? { rest: REST_COMPACT.clone(), restLean: DOWN, carry, carryLean: UP, square: false }
             : { rest: REST.clone(), restLean: DOWN, carry, carryLean: UP, square: false, restPose: s.restPose, rollOffset: HERO_ROLL, gripperOffset: HERO_GRIPPER };
@@ -196,8 +184,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
         // Phones try a bigger arm before falling back to catching.
         if (compact && reachIndex < HEADER_REACHES.length - 1) return null;
 
-        // Catch it: stretched toward it as far as the arm goes, where the
-        // caught logo is fully on screen and clear of the header.
+        // The caught logo must stay fully on screen and clear of the header.
         const margin = 16;
         const halfWidth = (s.shape.width / 2) / metresPerPixel(from);
         const headerBottom = page.header?.getBoundingClientRect().bottom ?? 0;
@@ -218,7 +205,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
             catching.dispose();
             return null;
         };
-        // The longest reach that works: binary search, keeping the best.
+        // Binary search for the longest reach that works.
         let best: { at: THREE.Vector3; pick: So101PickDemo } | null = null;
         try {
             best = yield* tryCatch(CATCH_RANGE.min);
@@ -247,8 +234,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
         }
     };
 
-    // Worked out aside and handed over all at once: the arm never drives a
-    // plan while the next one is still being solved.
+    // Handed over all at once, so the arm never drives a plan while the next is still being solved.
     const plans = new Map<HeroTarget, HeroPlan>();
     try {
         for (const [name, logo, rect] of [["hero", page.heroLogo, heroLogo], ["header", page.headerLogo, headerLogo]] as const) {
@@ -262,7 +248,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
         for (const plan of plans.values()) plan.pick.dispose(); // abandoned half way
     }
 
-    // Phones: the header logo out of reach at this size, a bit bigger.
+    // On phones, retry with a bigger arm when the header logo is out of reach.
     if (compact && !layout.plans.has("header") && reachIndex < HEADER_REACHES.length - 1) {
         for (const plan of layout.plans.values()) plan.pick.dispose();
         return yield* layoutHero(s, withPlans, reachIndex + 1);

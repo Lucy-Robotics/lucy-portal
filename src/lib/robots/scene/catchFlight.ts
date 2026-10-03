@@ -1,7 +1,6 @@
 /*
- * A logo out of the arm's reach, caught: the arm stretches toward it, the
- * logo shakes loose, flies into the open gripper and the jaws close; and the
- * same backwards to put it back.
+ * A logo out of the arm's reach shakes loose and flies into the open gripper,
+ * then the same backwards to put it back.
  */
 import { FLIGHT_TIME, SHAKE_TIME, WRIST_TWIST } from "../config.ts";
 import { clamp, smoothstep, UP } from "../math.ts";
@@ -12,14 +11,11 @@ export type CatchScene = {
     heroPayload: Payload;
     /* No animation: every phase is over at once. */
     instant: boolean;
-    /* The page's logo out (with the arm: hidden on the page) or back. */
+    /* Hides the page's logo while the arm has it, or shows it again. */
     setLogoOut: (logo: HTMLElement, out: boolean) => void;
 };
 
-/*
- * Advance a caught logo by dt seconds. Returns whether it's still on its way,
- * and how much to twist the wrist meanwhile (while it strains for the logo).
- */
+/* `dt` is in seconds. Also returns the wrist twist while it strains for the logo. */
 export function stepCatch(plan: HeroPlan, dt: number, s: CatchScene) {
     const { flight, logo } = plan;
     if (!flight) return { moving: false, wristTwist: 0 };
@@ -34,14 +30,14 @@ export function stepCatch(plan: HeroPlan, dt: number, s: CatchScene) {
     let wristTwist = 0;
     plan.timer += dt;
     switch (plan.phase) {
-        case "reach": // stretching toward the logo, jaws open
+        case "reach": // jaws open at 0.5
             if (progress >= 0.5 - 1e-3) {
                 plan.phase = "shake";
                 plan.timer = 0;
                 logo.classList.add("robot-shake");
             }
             break;
-        case "shake": // the logo works itself loose; the wrist strains for it
+        case "shake":
             if (!s.instant) {
                 const envelope = Math.sin(Math.PI * clamp(plan.timer / SHAKE_TIME, 0, 1));
                 wristTwist = WRIST_TWIST.amplitude * envelope * Math.sin(2 * Math.PI * WRIST_TWIST.rate * plan.timer);
@@ -67,7 +63,7 @@ export function stepCatch(plan: HeroPlan, dt: number, s: CatchScene) {
         case "grip":
             if (holding && progress >= 1) plan.phase = "held";
             break;
-        case "letgo": // opening the jaws: the logo floats free at the catch point
+        case "letgo": // the logo floats free once the jaws are open
             if (progress <= 0.5 + 1e-3) {
                 plan.phase = "flyback";
                 plan.timer = 0;

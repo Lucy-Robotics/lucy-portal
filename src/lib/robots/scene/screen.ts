@@ -1,14 +1,11 @@
-/*
- * The page side of the scene: screen rectangles, the viewport, and where the
- * 3D world lands on screen through the camera.
- */
+/* Screen rectangles, the viewport, and where the 3D world lands on screen. */
 import * as THREE from "three";
 
 export type Rect = { left: number; top: number; width: number; height: number };
 
-/* The fixed layers' width: the window's less a classic scrollbar. innerWidth
-   counts the scrollbar, and a canvas that wide is squeezed into the layer
-   (the robots then miss their glow, the hit tests and the box by a few px). */
+/* The fixed layers' width, without a classic scrollbar. A canvas as wide as
+   innerWidth gets squeezed into the layer, and the robots then miss their glow,
+   the hit tests and the box by a few px. */
 export const viewWidth = () => document.documentElement.clientWidth;
 
 export const lerpRect = (a: Rect, b: Rect, t: number): Rect => ({
@@ -27,7 +24,7 @@ export function cssColor(name: string, fallback: string) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
 }
 
-/* An element's rectangle in the viewport, as the page is at the top. */
+/* An element's rectangle in the viewport, as if the page were scrolled to the top. */
 export function topRect(element: Element) {
     const rect = element.getBoundingClientRect();
     const fixed = getComputedStyle(element.closest(".header") ?? element).position;
@@ -42,13 +39,12 @@ export function topRect(element: Element) {
 }
 export type TopRect = ReturnType<typeof topRect>;
 
-/* A world point on screen, the camera's view drawn into `rect`. */
+/* `rect` is where the camera's view is drawn on screen. */
 export function toScreen(point: THREE.Vector3, camera: THREE.Camera, rect: Rect) {
     const p = point.clone().project(camera);
     return { x: rect.left + ((p.x + 1) / 2) * rect.width, y: rect.top + ((1 - p.y) / 2) * rect.height };
 }
 
-/* The ray from the camera through a screen point. */
 export function rayFrom(x: number, y: number, camera: THREE.Camera, rect: Rect) {
     const ndc = new THREE.Vector2(((x - rect.left) / rect.width) * 2 - 1, -(((y - rect.top) / rect.height) * 2 - 1));
     const raycaster = new THREE.Raycaster();
@@ -59,7 +55,7 @@ export function rayFrom(x: number, y: number, camera: THREE.Camera, rect: Rect) 
 
 export type ScreenBounds = { left: number; right: number; top: number; bottom: number };
 
-/* Screen bounds of boxes' corners (each box in `matrix`'s space). */
+/* Each box is in its `matrix`'s space, or world space without one. */
 const corner = new THREE.Vector3();
 function boxesOnScreen(boxes: { box: THREE.Box3; matrix?: THREE.Matrix4 }[], camera: THREE.Camera, rect: Rect): ScreenBounds {
     const bounds = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
@@ -77,12 +73,12 @@ function boxesOnScreen(boxes: { box: THREE.Box3; matrix?: THREE.Matrix4 }[], cam
     return bounds;
 }
 
-/* An object's bounding box (in world space), projected to the screen. */
+/* The object's world-space bounding box, projected. */
 export const screenBounds = (object: THREE.Object3D, camera: THREE.Camera, rect: Rect) =>
     boxesOnScreen([{ box: new THREE.Box3().setFromObject(object) }], camera, rect);
 
-/* Tighter: each of its meshes' own box, projected. An axis-aligned box in
-   world space overshoots a lot once the object turns. */
+/* Tighter than screenBounds, since a world axis-aligned box overshoots a lot
+   once the object turns. */
 export function partsBounds(object: THREE.Object3D, camera: THREE.Camera, rect: Rect) {
     const boxes: { box: THREE.Box3; matrix: THREE.Matrix4 }[] = [];
     object.traverse((part) => {
@@ -93,8 +89,8 @@ export function partsBounds(object: THREE.Object3D, camera: THREE.Camera, rect: 
     return boxesOnScreen(boxes, camera, rect);
 }
 
-/* A CSS clip-path showing a rectangle (kept below the header) with the box's
-   chamfer (`chamferSize` px) scaled by `chamfer` (0 square, 1 the box's). */
+/* A CSS clip-path for a rectangle kept below the header. `chamferSize` is the
+   box's chamfer in px, and `chamfer` scales it (0 square, 1 the box's). */
 export const HIDDEN = "inset(100%)";
 export function chamferedClip(rect: Rect, chamfer: number, chamferSize: number, headerBottom: number) {
     const inset = 1; // inside the box's border

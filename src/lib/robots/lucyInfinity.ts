@@ -1,8 +1,7 @@
 /*
- * The Lucy infinity mark in 3D, from the team's logo model
- * (public/models/lucy/infinity.glb: the "InfinitySign" of Logo-Export.glb,
- * simplified and compressed). Local frame once loaded: loops along x, up
- * along y, its thickness along z (it faces +z). The origin is the crossing.
+ * The Lucy infinity mark, from the "InfinitySign" of the team's Logo-Export.glb,
+ * simplified and compressed. Once loaded the loops run along x, it faces +z,
+ * and the origin is the crossing.
  */
 import * as THREE from "three";
 
@@ -12,22 +11,17 @@ import { ROBOT_ASSETS } from "./robotAssets.ts";
 /* Overall width of the mark, loop end to loop end, in metres. */
 const WIDTH = 0.09;
 
-/* The mark's geometry and the measurements a gripper needs. */
 export type InfinityShape = {
     geometry: THREE.BufferGeometry;
     width: number;
     height: number;
-    /* Thickness front to back: what the jaws close across. */
+    /* Thickness front to back, which the jaws close across. */
     depth: number;
-    /* Centre of the stroke at the right loop's far end, where a gripper
-       coming from the right pinches it. */
+    /* x of the stroke centre at the right loop's far end, where a gripper pinches it. */
     rightEnd: number;
 };
 
-/*
- * The compressed model stores positions and normals as normalized 16-bit
- * integers; transforming them in place would clamp them. Float copies.
- */
+/* The compressed model stores normalized 16-bit attributes, which would clamp if transformed in place. */
 function dequantize(source: THREE.BufferGeometry) {
     const geometry = new THREE.BufferGeometry();
     for (const name of ["position", "normal"]) {
@@ -56,8 +50,7 @@ export async function loadLucyInfinity(url: string = ROBOT_ASSETS.infinity): Pro
     if (!geometry) throw new Error(`No mesh in ${url}`);
     const shape: THREE.BufferGeometry = geometry;
 
-    // Exported lying down (height along z, thickness along y): stand it up,
-    // facing +z, centred on its crossing, at its real size.
+    // Exported lying down, so stand it up facing +z, centred and at its real size.
     shape.rotateX(-Math.PI / 2);
     shape.computeBoundingBox();
     shape.translate(...shape.boundingBox!.getCenter(new THREE.Vector3()).negate().toArray());
@@ -67,8 +60,7 @@ export async function loadLucyInfinity(url: string = ROBOT_ASSETS.infinity): Pro
     shape.computeBoundingSphere();
     const box = shape.boundingBox!;
 
-    // The right loop's stroke: the points near mid-height on the far right
-    // span from its inner edge to its outer edge.
+    // Points near mid-height on the far right span the right loop's stroke, inner to outer edge.
     const position = shape.attributes.position;
     const point = new THREE.Vector3();
     let inner = box.max.x;
@@ -90,12 +82,8 @@ export function createLucyInfinity(shape: InfinityShape, material: THREE.Materia
     return new THREE.Mesh(shape.geometry, material);
 }
 
-/*
- * The logo's material: the team's Blender shader (Fresnel, IOR 1.45, through
- * a colour ramp whose second stop sits at 0.068, into a strong emission),
- * with the colours that shader renders to, as in the logo image: a mint face
- * where the mark turns to the viewer, a deeper green toward its edges.
- */
+/* Mirrors the team's Blender shader (Fresnel at IOR 1.45 through a colour ramp into
+   emission), with the colours it renders to. */
 const LOGO_FACE = "#00ff99";
 const LOGO_EDGE = "#00ff5a";
 
@@ -108,7 +96,7 @@ export function createLucyGlowMaterial() {
             face: { value: face },
             rim: { value: rim },
             f0: { value: ((1 - ior) / (1 + ior)) ** 2 },
-            // 0..1: lets the mark fade in, dark and transparent to fully lit.
+            // 0..1, fades the mark from dark and transparent to fully lit.
             glow: { value: 1 },
         },
         vertexShader: /* glsl */ `

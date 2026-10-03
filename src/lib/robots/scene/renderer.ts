@@ -1,7 +1,7 @@
 /*
- * The WebGL side: the robots' canvas (fixed over the page), the grid's own
- * (on the layer behind the page: no per-frame copy), and the glow layer's
- * copy of the infinities.
+ * The robots' canvas sits fixed over the page. The grid has its own canvas
+ * behind the page, so it needs no per-frame copy. The glow layer gets a copy
+ * of the infinities.
  */
 import * as THREE from "three";
 
@@ -9,15 +9,14 @@ import { nextTask } from "../../background.ts";
 import { INFINITY_LAYER } from "./parts.ts";
 import { viewWidth, type Rect } from "./screen.ts";
 
-/* What a frame draws. */
 export type Frame = {
     scene: THREE.Scene;
     gridScene: THREE.Scene;
     gridVisible: boolean;
     camera: THREE.PerspectiveCamera;
-    // Where on screen the camera's view goes.
+    // Where on screen the camera's view is drawn.
     drawRect: Rect;
-    // Where the infinities are (with room for their glow), and the glow's CSS filter.
+    // The infinities with room for their glow, or null when off screen.
     glowArea: Rect | null;
     glowFilter: string;
 };
@@ -26,15 +25,15 @@ export class SceneRenderer {
     private readonly main: THREE.WebGLRenderer;
     private readonly grid: THREE.WebGLRenderer;
     private readonly glowLayer: HTMLElement;
-    // Only as big as the infinities (and their glow) on screen: the CSS
-    // drop-shadow is cheap on a small canvas, not on the whole screen.
+    // Only as big as the infinities and their glow. The CSS drop-shadow is cheap
+    // on a small canvas but not on the whole screen.
     private readonly glowCanvas = document.createElement("canvas");
     private readonly glowContext: CanvasRenderingContext2D;
-    // Draws the robots into the depth buffer only: they hide what's behind them.
+    // Draws the robots into the depth buffer only, so they hide what's behind them.
     private readonly depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false });
     private gridDrawn = false;
 
-    /* Each WebGL context takes a while to create: the page runs in between. */
+    /* Each WebGL context takes a while to create, so the page runs in between. */
     static async create(layer: HTMLElement, backdrop: HTMLElement, glowLayer: HTMLElement) {
         const main = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         main.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -56,12 +55,11 @@ export class SceneRenderer {
         this.glowContext = this.glowCanvas.getContext("2d")!;
     }
 
-    /* The browser compiles shaders in the background (else compileAsync just blocks). */
+    /* Whether shaders compile in the background. Without it compileAsync just blocks. */
     get parallelCompile() {
         return this.main.extensions.has("KHR_parallel_shader_compile");
     }
 
-    /* The canvases cover the window. */
     fit() {
         const size = this.main.getSize(new THREE.Vector2());
         if (size.x === viewWidth() && size.y === window.innerHeight) return;
@@ -69,14 +67,14 @@ export class SceneRenderer {
         this.grid.setSize(viewWidth(), window.innerHeight, false);
     }
 
-    /* Compile every material ahead (hidden ones too, and `alsoShown` for the
-       depth pass), so none compiles mid-scroll. Only with parallel compiling:
-       otherwise it just moves the stall to the page load. */
+    /* Compiles every material ahead so none compiles mid-scroll. `alsoShown` is
+       shown for the depth pass. Skipped without parallel compiling, where it
+       would only move the stall to page load. */
     precompile(scene: THREE.Scene, gridScene: THREE.Scene, camera: THREE.Camera, alsoShown: THREE.Object3D | null = null) {
         if (!this.parallelCompile) return;
-        this.grid.compileAsync(gridScene, camera).catch(() => {}); // else compiled when first drawn
+        this.grid.compileAsync(gridScene, camera).catch(() => {});
         this.main.compileAsync(scene, camera).catch(() => {});
-        // compileAsync skips depthOnly (an override material), so draw it once on one pixel.
+        // compileAsync skips override materials, so depthOnly is drawn once on one pixel.
         const wasVisible = alsoShown?.visible ?? false;
         if (alsoShown) alsoShown.visible = true;
         this.main.setScissorTest(true);
@@ -90,7 +88,6 @@ export class SceneRenderer {
         if (alsoShown) alsoShown.visible = wasVisible;
     }
 
-    /* Before the first frame, with parallel compiling: none of it stalls. */
     async compileFirst(scene: THREE.Scene, camera: THREE.Camera) {
         if (this.parallelCompile) await this.main.compileAsync(scene, camera);
     }
@@ -102,20 +99,16 @@ export class SceneRenderer {
         main.setScissorTest(false);
         main.setClearColor(0x000000, 0);
         main.clear();
-        // The camera frames the draw rectangle, which may cover only part of
-        // the screen (or overflow it): render the whole screen as a window onto
-        // that framing, so a logo flying in from the header is still drawn.
+        // The draw rectangle may cover only part of the screen or overflow it.
+        // The whole screen is rendered as a window onto it, so a logo flying in
+        // from the header is still drawn.
         main.setViewport(0, 0, viewWidth(), height);
         camera.setViewOffset(drawRect.width, drawRect.height, -drawRect.left, -drawRect.top, viewWidth(), height);
 
-        // Behind the page, the grid never crosses its text. Drawn once more when it goes, to clear it.
+        // Drawn once more after it's hidden, to clear it.
         if (f.gridVisible || this.gridDrawn) this.grid.render(f.gridScene, camera);
         this.gridDrawn = f.gridVisible;
 
-        // The infinities' glow, like the logo's on the page: their visible
-        // parts (the robots in front still hide them) are copied to the glow
-        // layer, whose CSS drop-shadow does the glowing. Only the rectangle
-        // around them is drawn and copied.
         glowCanvas.style.display = area ? "" : "none";
         this.glowLayer.style.filter = f.glowFilter;
         if (area) {
@@ -133,8 +126,8 @@ export class SceneRenderer {
             });
             main.setScissorTest(true);
             main.setScissor(area.left, height - area.top - area.height, area.width, area.height);
-            // The robots into depth only, then the infinities alone (their own
-            // layer): only their visible parts come out, wherever they're held.
+            // Robots into depth first, then the infinities alone, so only their
+            // unhidden parts come out wherever they're held.
             camera.layers.set(0);
             scene.overrideMaterial = this.depthOnly;
             main.render(scene, camera);

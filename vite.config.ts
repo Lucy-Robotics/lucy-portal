@@ -13,7 +13,7 @@ const cacheHashedAssets = (): Plugin => ({
   configurePreviewServer(server) {
     const assets = path.resolve(server.config.root, server.config.build.outDir, "assets");
     server.middlewares.use("/assets/", (req, res, next) => {
-      // Only files that exist: a 404 (mid-deploy, say) mustn't be cached for good.
+      // Only existing files, so a 404 (mid-deploy, say) is never cached for good.
       const name = decodeURIComponent((req.url ?? "").split("?")[0]);
       if (fs.existsSync(path.join(assets, name))) {
         res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
@@ -46,7 +46,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: [
         { find: "@", replacement: path.resolve(__dirname, "./src") },
-        // urdf-loader's default mesh loaders, replaced by robotModel.ts.
+        // urdf-loader imports STL and Collada loaders that robotModel.ts never uses, so stub them out.
         {
           find: /^three\/examples\/jsm\/loaders\/(STL|Collada)Loader\.js$/,
           replacement: path.resolve(__dirname, "./src/lib/robots/unusedMeshLoader.ts"),

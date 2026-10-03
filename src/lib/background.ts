@@ -1,11 +1,7 @@
-/*
- * Background work, written as generators that yield between small steps:
- * a few ms of it at a time, the page drawing its frames in between. Slower
- * overall, but nothing stalls.
- */
+/* Runs generator work a few ms at a time so the page keeps drawing frames in between. */
 const SLICE_MS = 5;
 
-/* Run steps for about `ms`, and say where it stands. */
+/* Run steps for about `ms`. */
 export function runFor<T>(steps: Generator<void, T>, ms = SLICE_MS) {
     const end = performance.now() + ms;
     let step = steps.next();
@@ -13,10 +9,8 @@ export function runFor<T>(steps: Generator<void, T>, ms = SLICE_MS) {
     return step;
 }
 
-/* Let the page run (and draw) before carrying on. */
 export const nextTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-/* Run steps to the end, a slice at a time. */
 export async function inBackground<T>(steps: Generator<void, T>): Promise<T> {
     for (;;) {
         const step = runFor(steps);

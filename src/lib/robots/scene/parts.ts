@@ -23,8 +23,7 @@ export function createMaterials() {
 }
 export type Materials = ReturnType<typeof createMaterials>;
 
-/* A Lucy infinity and the light it casts. Its origin is where it's pinched.
-   The page gives it the logo's own glow (see the glow layer). */
+/* A Lucy infinity and the light it casts. Its origin is where it's pinched. */
 export function createPayload(shape: InfinityShape, material: THREE.Material, accent: string) {
     const infinity = createLucyInfinity(shape, material);
     infinity.layers.set(INFINITY_LAYER);
@@ -59,7 +58,7 @@ export function createPayload(shape: InfinityShape, material: THREE.Material, ac
 }
 export type Payload = ReturnType<typeof createPayload>;
 
-/* InMoov, in Blender units: scaled to its real height, stood on the grid. */
+/* InMoov comes in Blender units, so it's scaled to its real height and stood on the grid. */
 export function standInMoov(inmoov: URDFRobot, materials: Materials) {
     for (const [name, link] of Object.entries(inmoov.links)) {
         if (INMOOV_MECHANISM_LINKS.test(name)) forEachOwnMesh(link, (mesh) => (mesh.material = materials.mechanism));

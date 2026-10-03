@@ -13,7 +13,7 @@ const ROBOTS: { id: RobotName; name: string; family: string }[] = [
     { id: "inmoov", name: "InMoov", family: "Humanoid" },
 ];
 
-/* Matches the home layout's single-column breakpoint (home.css). */
+/* Must match the single-column breakpoint in home.css. */
 const COMPACT = "(max-width: 959px)";
 
 // TEST-HOOK: browser tests read the robots' state through window.__robotPage.
@@ -23,7 +23,7 @@ function hasWebGl() {
     try {
         const canvas = document.createElement("canvas");
         const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
-        // Only a probe, so give the context back (browsers allow few at once).
+        // Give the probe context back, since browsers allow only a few at once.
         gl?.getExtension("WEBGL_lose_context")?.loseContext();
         return Boolean(gl);
     } catch {
@@ -32,17 +32,14 @@ function hasWebGl() {
 }
 
 type RobotShowcaseProps = {
-    /* The hero, whose logo the arm takes on wide screens. */
+    /* Its logo is what the arm takes on wide screens. */
     heroRef: RefObject<HTMLElement | null>;
 };
 
 /*
- * The home page's robots. They're drawn on a canvas fixed over the whole
- * page (see robotPageScene.ts): in the hero the arm stands free on the
- * bottom edge of the screen, and as this box scrolls into view it settles
- * into it. On phones, arrows switch robot; on wide screens the scroll does.
- * The hidden buttons give keyboard and screen-reader users the same actions
- * as clicking the robots.
+ * The robots draw on a canvas fixed over the whole page (see robotPageScene.ts)
+ * and settle into this box as it scrolls into view. The hidden buttons give
+ * keyboard and screen-reader users the same actions as clicking the robots.
  */
 export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
     const layerRef = useRef<HTMLDivElement>(null);
@@ -67,12 +64,11 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
         let cancelled = false;
         const compact = window.matchMedia(COMPACT);
 
-        // three.js and the models only load on the page that shows the robots;
-        // the arm's and the logo's models download alongside three.js.
+        // Lazy so three.js stays off other pages. The hero models download alongside it.
         prefetchHeroAssets();
         import("../lib/robots/robotPageScene.ts")
             .then(({ createRobotPageScene }) =>
-                // Build nothing if unmounted meanwhile (or on StrictMode's first mount).
+                // Build nothing if unmounted meanwhile (including StrictMode's first mount).
                 cancelled ? null : createRobotPageScene(layer, {
                     hero,
                     heroLogo: hero.querySelector<HTMLElement>(".logo__mark"),
@@ -114,7 +110,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
         };
     }, [webGl, heroRef]);
 
-    // On phones the arrows choose the robot (again after leaving a wide layout).
+    // On phones the arrows choose the robot, also after leaving a wide layout.
     useEffect(() => {
         const scene = sceneRef.current;
         if (!scene) return;
@@ -145,8 +141,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                 <figure
                     ref={frameRef}
                     className="robot-showcase__frame chamfer"
-                    // Hidden until the arm lands in it (also while loading); shown
-                    // as is only to say the 3D view is unavailable.
+                    // Hidden until the arm lands, except to show the unavailable message.
                     data-live={status !== "unavailable" ? "" : undefined}
                 >
                     {status !== "ready" && (
@@ -177,8 +172,8 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                 </button>
             </div>
 
-            {/* Fixed layers, out of the page's stacking contexts (the sticky
-                column has one): the grid behind the content, the robots above. */}
+            {/* Portaled out of the sticky column's stacking context, so the grid can sit
+                behind the content and the robots above it. */}
             {createPortal(
                 <>
                     <div ref={backdropRef} className="robot-backdrop" aria-hidden="true" />

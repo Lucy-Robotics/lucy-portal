@@ -1,8 +1,4 @@
-/*
- * InMoov (Lucy URDF; meshes by Gael Langevin, CC BY-NC 4.0). Its head turns
- * slowly toward the cursor with a slight tilt; activated, it raises its
- * right hand and waves.
- */
+/* InMoov (Lucy URDF, meshes by Gael Langevin, CC BY-NC 4.0). */
 import type { URDFRobot } from "urdf-loader";
 
 import { HEAD_LOOK_SPEED, HEAD_TURN, PALM_OUT, WAVE_TIME } from "./config.ts";
@@ -18,9 +14,9 @@ const HEAD = {
 const ARM = {
     x: "right_shoulder_x_link_joint", // raise forward
     y: "right_shoulder_y_link_joint", // raise sideways
-    z: "right_shoulder_z_link_joint", // turn the upper arm: swings the hand side to side
+    z: "right_shoulder_z_link_joint", // turns the upper arm, swinging the hand side to side
     elbow: "right_elbow_x_link_joint",
-    wrist: "right_wrist_z_link_joint", // turn the forearm: palm toward the viewer
+    wrist: "right_wrist_z_link_joint", // turns the forearm, palm toward the viewer
 };
 
 export class InMoovWave {
@@ -36,7 +32,6 @@ export class InMoovWave {
         return this.progress < 1;
     }
 
-    /* Wave, unless already waving. */
     wave() {
         if (this.progress >= 1) this.progress = 0;
     }
@@ -46,18 +41,17 @@ export class InMoovWave {
         this.look.setGoal(look);
     }
 
-    /* Advance by dt seconds; returns true while anything is still moving. */
+    /* Advance by dt seconds. Returns true while anything still moves. */
     update(dt: number, { instant = false } = {}) {
         const set = (name: string, value: number) => this.robot.joints[name]?.setJointValue(value);
 
-        // Head: slow and small, with a slight tilt toward the side the cursor is on.
         this.look.step(dt, instant);
         const { x, y } = this.look.current;
         set(HEAD.yaw, x * HEAD_TURN.yaw);
         set(HEAD.pitch, -y * HEAD_TURN.pitch);
         set(HEAD.roll, x * HEAD_TURN.roll);
 
-        // Wave: raise (0-0.2), three waves (0.2-0.8), lower (0.8-1).
+        // Raise over 0-0.2, three waves over 0.2-0.8, lower over 0.8-1.
         if (this.progress < 1) {
             this.progress = instant ? 1 : Math.min(1, this.progress + dt / WAVE_TIME);
             const w = this.progress;

@@ -1,7 +1,5 @@
-/* The robots' canvas: fixed over the whole page, above the header (the arm
-   reaches the header's logo on phones), and transparent to the pointer so
-   every link stays clickable. The scene clips it to the box once the arm
-   has settled in. */
+/* Above the header, since the arm reaches the header logo on phones. Transparent
+   to the pointer so links stay clickable. */
 .robot-layer {
     position: fixed;
     inset: 0;
@@ -10,7 +8,7 @@
     pointer-events: none;
 }
 
-/* Behind the page's content: the grid while it spreads over the page. */
+/* The grid, behind the page content. */
 .robot-backdrop {
     position: fixed;
     inset: 0;
@@ -19,8 +17,7 @@
     pointer-events: none;
 }
 
-/* Just under the robots: the infinities, glowing like the logo (the scene
-   sets the drop-shadow to the mark's size and state). */
+/* Infinity glow under the robots. The scene sets the drop-shadow per mark. */
 .robot-glow {
     position: fixed;
     inset: 0;
@@ -38,8 +35,7 @@
     height: 100%;
 }
 
-/* Above the arm while it waits in the hero (placed by the scene, then
-   moved by --hint-x / --hint-y: positive is right / down). */
+/* Placed by the scene, then offset by --hint-x and --hint-y (positive is right and down). */
 .robot-click-hint {
     --hint-x: 50px;
     --hint-y: -55px;
@@ -81,7 +77,6 @@
     color: var(--color-highlight);
 }
 
-/* Phones (the home's single-column layout) get their own nudge. */
 @media (max-width: 959px) {
     .robot-click-hint {
         --hint-x: -20px;
@@ -89,14 +84,13 @@
     }
 }
 
-/* Out of the way while the phone menu is open. */
 html:has(.header--menu-open) .robot-layer,
 html:has(.header--menu-open) .robot-glow,
 html:has(.header--menu-open) .robot-click-hint {
     visibility: hidden;
 }
 
-/* The hero's text invites the arm to take the infinity: it glows. */
+/* The hero logo glows while the hero text invites the arm to take it. */
 .robot-takeable {
     cursor: pointer;
 }
@@ -111,7 +105,7 @@ html:has(.header--menu-open) .robot-click-hint {
     transition: filter 0.25s ease;
 }
 
-/* Over a robot (hit-tested by the scene), or over a logo the arm can take. */
+/* Set by the scene's hit test, so it must win over every child's cursor. */
 html.robot-hover,
 html.robot-hover * {
     cursor: pointer !important;
@@ -121,7 +115,7 @@ html.robot-hover * {
     cursor: pointer;
 }
 
-/* A logo working itself loose before it flies to the arm (and settling back). */
+/* A logo working itself loose before it flies to the arm. */
 .logo__mark.robot-shake {
     animation: robot-shake 0.9s ease-in-out;
 }
@@ -141,8 +135,7 @@ html.robot-hover * {
     }
 }
 
-/* The box the robots settle into. The scene draws its inside; the frame
-   fades in once the arm has landed, and its caption just after. */
+/* The scene draws the inside. The frame fades in once the arm lands, the caption just after. */
 .robot-showcase {
     display: flex;
     flex-direction: column;
@@ -176,8 +169,8 @@ html.robot-hover * {
     opacity: 1;
 }
 
-/* See-through inside, so the grid (drawn behind the page) shows under the
-   caption: the border is a ring instead of the usual filled chamfer. */
+/* See-through so the grid shows inside, with the border drawn as a ring instead
+   of the usual filled chamfer. */
 .robot-showcase__frame[data-live] {
     background: none;
 }
@@ -207,8 +200,8 @@ html.robot-hover * {
     );
 }
 
-/* Wide screens: until the arm has landed, the (invisible) box's column over
-   the hero must not catch the pointer: the hero stays hoverable, clickable. */
+/* Until the arm lands, the invisible box column overlaps the hero and must not
+   catch the pointer. */
 @media (min-width: 960px) {
     .home__stage {
         pointer-events: none;
@@ -272,7 +265,7 @@ html.robot-hover * {
     pointer-events: none;
 }
 
-/* Arrows only on phones; wide screens switch robot with the scroll. */
+/* Arrows only on phones. Wide screens switch robot with the scroll. */
 .robot-showcase__arrow {
     display: none;
     flex: none;
@@ -322,7 +315,6 @@ html.robot-hover * {
     }
 }
 
-/* Narrow phones: the box takes the width, the arrows sit under it. */
 @media (max-width: 560px) {
     .robot-showcase__row {
         flex-wrap: wrap;
@@ -335,7 +327,7 @@ html.robot-hover * {
     }
 }
 
-/* Keyboard and screen-reader access to the robots: hidden until focused. */
+/* Keyboard and screen-reader access to the robots, hidden until focused. */
 .robot-actions {
     position: fixed;
     bottom: 1rem;
