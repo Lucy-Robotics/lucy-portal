@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => {
         // urdf-loader's default mesh loaders, replaced by robotModel.ts.
         {
           find: /^three\/examples\/jsm\/loaders\/(STL|Collada)Loader\.js$/,
-          replacement: path.resolve(__dirname, "./src/lib/unusedMeshLoader.ts"),
+          replacement: path.resolve(__dirname, "./src/lib/robots/unusedMeshLoader.ts"),
         },
       ],
     },

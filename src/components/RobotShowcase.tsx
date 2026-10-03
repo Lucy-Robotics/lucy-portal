@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { FaChevronDown, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
-import { prefetchHeroAssets } from "../lib/robotAssets.ts";
-import type { RobotName, RobotPageScene } from "../lib/robotPageScene.ts";
+import { prefetchHeroAssets } from "../lib/robots/robotAssets.ts";
+import type { RobotName, RobotPageScene } from "../lib/robots/robotPageScene.ts";
 import "../styles/robot-showcase.css";
 
 type Status = "loading" | "ready" | "unavailable";
@@ -70,7 +70,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
         // three.js and the models only load on the page that shows the robots;
         // the arm's and the logo's models download alongside three.js.
         prefetchHeroAssets();
-        import("../lib/robotPageScene.ts")
+        import("../lib/robots/robotPageScene.ts")
             .then(({ createRobotPageScene }) =>
                 // Build nothing if unmounted meanwhile (or on StrictMode's first mount).
                 cancelled ? null : createRobotPageScene(layer, {
