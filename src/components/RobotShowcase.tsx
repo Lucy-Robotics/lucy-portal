@@ -22,7 +22,10 @@ type TestWindow = { __robotPage?: RobotPageScene["testHook"] & { ready: true } }
 function hasWebGl() {
     try {
         const canvas = document.createElement("canvas");
-        return Boolean(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
+        const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+        // Only a probe: give the context back (browsers allow few at once).
+        gl?.getExtension("WEBGL_lose_context")?.loseContext();
+        return Boolean(gl);
     } catch {
         return false;
     }
@@ -68,7 +71,8 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
         prefetchHeroAssets();
         import("../lib/robotPageScene.ts")
             .then(({ createRobotPageScene }) =>
-                createRobotPageScene(layer, {
+                // Unmounted meanwhile (or StrictMode's first mount): build nothing.
+                cancelled ? null : createRobotPageScene(layer, {
                     hero,
                     heroLogo: hero.querySelector<HTMLElement>(".logo__mark"),
                     headerLogo: document.querySelector<HTMLElement>(".header__brand .logo__mark"),
@@ -86,6 +90,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                 }),
             )
             .then((scene) => {
+                if (!scene) return;
                 if (cancelled) {
                     scene.dispose();
                     return;

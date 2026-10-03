@@ -23,9 +23,14 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "./src"),
-      },
+      alias: [
+        { find: "@", replacement: path.resolve(__dirname, "./src") },
+        // urdf-loader's default mesh loaders: robotModel.ts brings its own.
+        {
+          find: /^three\/examples\/jsm\/loaders\/(STL|Collada)Loader\.js$/,
+          replacement: path.resolve(__dirname, "./src/lib/unusedMeshLoader.ts"),
+        },
+      ],
     },
     define: {
       "import.meta.env.BACKEND_URL": JSON.stringify(env.BACKEND_URL ?? ""),

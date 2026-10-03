@@ -284,8 +284,8 @@ export async function createRobotPageScene(
     rim.position.set(0.8, 0.4, -1);
     scene.add(key, rim);
 
-    // The grid has its own scene: drawn behind the page during the
-    // transition, under the robots once in the box.
+    // The grid has its own scene (and renderer, see below): drawn behind the
+    // page during the transition, under the robots once in the box.
     const gridScene = new THREE.Scene();
     gridScene.fog = fog;
     const grid = new THREE.GridHelper(16, 160, gridColor, gridColor);
@@ -379,9 +379,12 @@ export async function createRobotPageScene(
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.autoClear = false;
     container.appendChild(renderer.domElement);
-    const backdrop = document.createElement("canvas");
-    page.backdrop.appendChild(backdrop);
-    const backdropContext = backdrop.getContext("2d")!;
+    // The grid is drawn straight onto the layer behind the page, by its own
+    // renderer: no copying it out of the robots' canvas every frame.
+    const gridRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    gridRenderer.setPixelRatio(renderer.getPixelRatio());
+    page.backdrop.appendChild(gridRenderer.domElement);
+    let gridDrawn = false;
     // Only as big as the infinities (and their glow) on screen: the CSS
     // drop-shadow is cheap on a small canvas, not on the whole screen.
     const glowCanvas = document.createElement("canvas");
@@ -474,14 +477,16 @@ export async function createRobotPageScene(
     // (pinned on the right from the top).
     let transitionScroll = 0;
 
-    /* The canvas covers the window. */
+    /* The canvases cover the window. */
     const fitCanvas = () => {
         const size = renderer.getSize(new THREE.Vector2());
         if (size.x === window.innerWidth && size.y === window.innerHeight) return;
         renderer.setSize(window.innerWidth, window.innerHeight, false);
-        backdrop.width = renderer.domElement.width;
-        backdrop.height = renderer.domElement.height;
+        gridRenderer.setSize(window.innerWidth, window.innerHeight, false);
     };
+
+    // The box's chamfer, in px (read on layout, not every frame).
+    let chamferSize = 24;
 
     let layoutMs = 0; // TEST-HOOK: main-thread cost of laying out the hero
     let plansReady = false;
@@ -491,6 +496,7 @@ export async function createRobotPageScene(
         const height = window.innerHeight;
         disposeHeroPlans();
         fitCanvas();
+        chamferSize = parseFloat(getComputedStyle(page.frame).getPropertyValue("--chamfer")) * 16 || 24;
 
         const hero = page.hero.getBoundingClientRect();
         landScroll = hero.bottom + window.scrollY;
@@ -905,14 +911,15 @@ export async function createRobotPageScene(
 
     /* The canvas's visible area: a rectangle (kept below the header) with the
        box's chamfer, scaled by `chamfer` (0 square, 1 the box's). */
-    const clipTo = (rect: Rect, chamfer: number) => {
+    const HIDDEN = "inset(100%)";
+    const clipTo = (rect: Rect, chamfer: number, headerBottom: number) => {
         const inset = 1; // inside the box's border
-        const top = Math.max(rect.top + inset, page.header?.getBoundingClientRect().bottom ?? 0);
+        const top = Math.max(rect.top + inset, headerBottom);
         const left = rect.left + inset;
         const right = rect.left + rect.width - inset;
         const bottom = rect.top + rect.height - inset;
-        if (bottom <= top) return "inset(100%)";
-        const cut = chamfer * (parseFloat(getComputedStyle(page.frame).getPropertyValue("--chamfer")) * 16 || 24);
+        if (bottom <= top) return HIDDEN;
+        const cut = chamfer * chamferSize;
         const topCut = top <= rect.top + inset ? cut : 0;
         return `polygon(${left}px ${top}px, ${right - topCut}px ${top}px, ${right}px ${top + topCut}px, `
             + `${right}px ${bottom}px, ${left + cut}px ${bottom}px, ${left}px ${bottom - cut}px)`;
@@ -926,7 +933,9 @@ export async function createRobotPageScene(
      */
     const draw = () => {
         const height = window.innerHeight;
+        // Read the layout before writing to the page (no forced reflow).
         const box = frameRect();
+        const headerBottom = page.header?.getBoundingClientRect().bottom ?? 0;
         const settle = smoothstep(enter, 0, 0.8);
         drawRect = lerpRect(heroRect, box, settle);
         // Rising into view on load: start a screen lower, ease out.
@@ -952,10 +961,11 @@ export async function createRobotPageScene(
         // The grid's window closes in on the box slowly, from 55% of the way:
         // always wider than the box while the arm is still flying in (to 80%).
         const close = smoothstep(enter, CLOSE_FROM, 1);
-        const clip = enter <= 0 ? "none" : clipTo(lerpRect(screen, box, close), close);
+        const clip = enter <= 0 ? "none" : clipTo(lerpRect(screen, box, close), close, headerBottom);
         container.style.clipPath = clip;
         page.backdrop.style.clipPath = clip;
         page.glow.style.clipPath = clip;
+        if (clip === HIDDEN) return; // scrolled out of sight (phones): nothing to draw
 
         // Where the infinities are on screen, for their glow (measured before
         // the camera gets its view offset for drawing).
@@ -985,15 +995,11 @@ export async function createRobotPageScene(
         renderer.setViewport(0, 0, window.innerWidth, height);
         camera.setViewOffset(drawRect.width, drawRect.height, -drawRect.left, -drawRect.top, window.innerWidth, height);
 
-        // The grid lives behind the page (copied out of this canvas right after
-        // drawing it): it never crosses the page's text, and in the box (whose
-        // inside is see-through) it stays under the caption.
-        backdropContext.clearRect(0, 0, backdrop.width, backdrop.height);
-        if (grid.visible) {
-            renderer.render(gridScene, camera);
-            backdropContext.drawImage(renderer.domElement, 0, 0);
-            renderer.clear();
-        }
+        // The grid lives behind the page: it never crosses the page's text,
+        // and in the box (whose inside is see-through) it stays under the
+        // caption. Drawn once more when it goes, to clear it.
+        if (grid.visible || gridDrawn) gridRenderer.render(gridScene, camera);
+        gridDrawn = grid.visible;
 
         // The infinities' glow, like the logo's on the page: their visible
         // parts (the robots in front still hide them) are copied to the glow
@@ -1278,12 +1284,9 @@ export async function createRobotPageScene(
         if (robot) activate(robot);
     };
 
-    // Scrolling moves the box: redraw right away so the arm stays in it.
-    const onScroll = () => {
-        enter = enterGoal();
-        draw();
-        wake();
-    };
+    // Scrolling moves the box: the next frame draws the arm there (scroll
+    // events come just before animation frames, so it keeps up).
+    const onScroll = wake;
 
     // Logos move once the fonts load, and on resize: lay the hero out again,
     // but never while the arm is moving (that would drop what it carries):
@@ -1451,9 +1454,11 @@ export async function createRobotPageScene(
                     (object.material as THREE.Material).dispose();
                 }
             });
-            renderer.dispose();
-            renderer.domElement.remove();
-            backdrop.remove();
+            for (const used of [renderer, gridRenderer]) {
+                used.dispose();
+                used.forceContextLoss();
+                used.domElement.remove();
+            }
             glowCanvas.remove();
             depthOnly.dispose();
         },
