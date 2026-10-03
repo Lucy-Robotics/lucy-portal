@@ -361,8 +361,7 @@
 <child link="left_shoulder_z_link"/>
 <axis xyz="0.0000 0.0000 1.0000"/>
 </joint>
-<joint name="left_wrist_z_link_joint" type="revolute">
-<limit lower="-1.5708" upper="1.5708"/>
+<joint name="left_wrist_z_link_joint" type="continuous">
 <origin rpy="-0.4160 -0.0000 0.0000" xyz="-0.0876 -0.9876 -2.5393"/>
 <parent link="left_elbow_x_link"/>
 <child link="left_wrist_z_link"/>
@@ -396,8 +395,7 @@
 <child link="right_shoulder_z_link"/>
 <axis xyz="0.0000 0.0000 1.0000"/>
 </joint>
-<joint name="right_wrist_z_link_joint" type="revolute">
-<limit lower="-1.5708" upper="1.5708"/>
+<joint name="right_wrist_z_link_joint" type="continuous">
 <origin rpy="-0.4160 0.0000 0.0000" xyz="0.0876 -0.9876 -2.5393"/>
 <parent link="right_elbow_x_link"/>
 <child link="right_wrist_z_link"/>
