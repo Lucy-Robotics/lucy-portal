@@ -27,7 +27,7 @@ import type { URDFRobot } from "urdf-loader";
 import { inBackground, runFor } from "../background.ts";
 import { listen } from "../listen.ts";
 import {
-    ARM_ATTENTION_TIME, ARM_YAW, ATTENTION_TIME, BOX_INFINITY_X, BOX_SLIDE, CLOSE_FROM, EYE_LIGHT, FOV, HEAD_TURN,
+    ARM_ATTENTION_TIME, ARM_YAW, ATTENTION_TIME, BOX_INFINITY_X, BOX_SLIDE, CLOSE_FROM, FOV, HEAD_TURN,
     HIT_SLOP, REST, RESTING_GLOW, RISE_TIME,
 } from "./config.ts";
 import { InMoovWave } from "./inmoovWave.ts";
@@ -40,7 +40,7 @@ import { SceneRenderer } from "./scene/renderer.ts";
 import { Framing } from "./scene/framing.ts";
 import { glowArea, glowReach, logoGlow, rgbOf } from "./scene/glow.ts";
 import { layoutHero as layOutHero, type HeroPlan, type HeroTarget } from "./scene/heroLayout.ts";
-import { createMaterials, createPayload, EYES, INFINITY_LAYER, standInMoov } from "./scene/parts.ts";
+import { createMaterials, createPayload, INFINITY_LAYER, standInMoov } from "./scene/parts.ts";
 import {
     chamferedClip, contains, cssColor, HIDDEN, lerpRect, partsBounds, rayFrom, screenBounds, toRect, toScreen, topRect,
     viewWidth, type Rect,
@@ -97,7 +97,7 @@ export async function createRobotPageScene(
     const accent = cssColor("--color-highlight", "#00ff41");
     const background = cssColor("--color-bg-comp", "#141414");
     const gridColor = cssColor("--color-border", "#3f3f3f");
-    const materials = createMaterials(accent);
+    const materials = createMaterials();
 
     // The hero needs the arm and the logo; InMoov comes later (see loadInMoov).
     const started = performance.now();
@@ -143,9 +143,6 @@ export async function createRobotPageScene(
     const heroPayload = createPayload(shape, materials.logo, accent);
     heroPayload.shown = false;
     scene.add(boxPayload.group, heroPayload.group);
-    // InMoov's eye lights exist from the start, dark until it shows (constant light count).
-    const eyeLights = Array.from({ length: EYES }, () => new THREE.PointLight(accent, 0, 0.35, 2));
-    scene.add(...eyeLights);
     // Lights on every layer, so the glow pass reuses the main pass's shaders.
     scene.traverse((object) => {
         if (object instanceof THREE.Light) object.layers.enableAll();
@@ -154,7 +151,6 @@ export async function createRobotPageScene(
     // InMoov, once loaded (after the hero is up and running).
     let inmoov: URDFRobot | null = null;
     let humanoid: THREE.Group | null = null;
-    let eyeHalos: THREE.Object3D[] = [];
     let head: THREE.Object3D | null = null;
     let wave: InMoovWave | null = null;
 
@@ -490,11 +486,6 @@ export async function createRobotPageScene(
         boxPayload.setGlow(held ? 1 : smoothstep(enter, 0.55, 1));
         if (!held && boxPick.idle) boxPayload.group.position.x = boxInfinity.x - (1 - arrive) * BOX_SLIDE;
         if (humanoid) humanoid.visible = enter >= 1;
-        eyeLights.forEach((light, i) => {
-            const halo = humanoid?.visible ? eyeHalos[i] : undefined;
-            light.intensity = halo ? EYE_LIGHT : 0;
-            halo?.getWorldPosition(light.position);
-        });
         page.frame.toggleAttribute("data-landed", enter >= 1);
 
         const screen: Rect = { left: -1, top: -1, width: viewWidth() + 2, height: height + 2 };
@@ -879,9 +870,7 @@ export async function createRobotPageScene(
         const robot = await loadRobot(ROBOT_ASSETS.inmoov.urdf, ROBOT_ASSETS.inmoov.glb, () => materials.inmoov);
         if (disposed) return;
         inmoov = robot;
-        const stood = standInMoov(robot, materials, accent);
-        humanoid = stood.body;
-        eyeHalos = stood.halos;
+        humanoid = standInMoov(robot, materials);
         humanoid.visible = enter >= 1;
         scene.add(humanoid);
         head = robot.links["i01.head.rothead_link"];
@@ -961,7 +950,7 @@ export async function createRobotPageScene(
             disposeHeroPlans();
             boxPick.dispose();
             scene.traverse((object) => {
-                if (object instanceof THREE.Mesh || object instanceof THREE.LineSegments || object instanceof THREE.Sprite) {
+                if (object instanceof THREE.Mesh || object instanceof THREE.LineSegments) {
                     object.geometry.dispose();
                     const list = Array.isArray(object.material) ? object.material : [object.material];
                     list.forEach((material) => {

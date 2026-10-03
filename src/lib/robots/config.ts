@@ -11,8 +11,6 @@ export const MECHANISM_COLOR = "#000000";
 export const INMOOV_COLOR = "#f2f2f2";
 /* How much glow an infinity has resting on the grid, against one in hand. */
 export const RESTING_GLOW = 0.35;
-/* The light of each of InMoov's eyes. */
-export const EYE_LIGHT = 0.03;
 
 /* ---------------- the stage ---------------- */
 /* The arm stands at the world's origin, turned three-quarters toward the

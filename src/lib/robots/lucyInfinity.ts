@@ -141,39 +141,3 @@ export function createLucyGlowMaterial() {
         transparent: true,
     });
 }
-
-/* Radial white-to-transparent falloff, tinted by the material colour. */
-function glowTexture() {
-    const size = 128;
-    const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = size;
-    const ctx = canvas.getContext("2d")!;
-    const half = size / 2;
-    const gradient = ctx.createRadialGradient(half, half, 0, half, half, half);
-    gradient.addColorStop(0, "rgba(255, 255, 255, 0.55)");
-    gradient.addColorStop(0.35, "rgba(255, 255, 255, 0.18)");
-    gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, size, size);
-    return new THREE.CanvasTexture(canvas);
-}
-
-/*
- * Small halo around the mark. Normally blended (a green haze whose alpha
- * falls off), so it composites correctly over the page through a
- * transparent canvas. Not depth-tested: a sprite is a flat plane, so arm
- * pieces crossing it would slice it; drawn on top, it reads as glow.
- */
-export function createHalo(color: string, size: number, opacity = 1) {
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: glowTexture(),
-        color,
-        opacity,
-        depthTest: false,
-        depthWrite: false,
-        transparent: true,
-        fog: false,
-    }));
-    sprite.scale.setScalar(size);
-    return sprite;
-}
