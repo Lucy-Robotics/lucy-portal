@@ -6,8 +6,7 @@ import { keycloakTokenProxy } from "./vite-plugin-keycloak-token-proxy.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/* `vite preview`: built files under /assets have a content hash in their name,
-   so browsers (and Cloudflare) may keep them for good. */
+/* Built files under /assets have hashed names: browsers may cache them for good. */
 const cacheHashedAssets = (): Plugin => ({
   name: "cache-hashed-assets",
   configurePreviewServer(server) {
@@ -24,7 +23,7 @@ export default defineConfig(({ mode }) => {
   const allowedHosts = env.VITE_ALLOWED_HOST
       ? env.VITE_ALLOWED_HOST.split(",").map((h) => h.trim()).filter(Boolean)
       : undefined;
-  // `npm run dev` and `npm start` (the built site) listen the same way.
+  // Same host and port for `npm run dev` and `npm start`.
   const listen = { host: true, allowedHosts, port: parseInt(env.PORT || "5000") };
 
   return {
@@ -52,7 +51,7 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.KEYCLOAK_URL": JSON.stringify(env.KEYCLOAK_URL ?? ""),
       "import.meta.env.KEYCLOAK_REALM": JSON.stringify(env.KEYCLOAK_REALM ?? ""),
       "import.meta.env.KEYCLOAK_CLIENT_ID": JSON.stringify(env.KEYCLOAK_CLIENT_ID ?? ""),
-      // Whether this server proxies the token exchange (only the flag reaches the browser).
+      // Whether this server proxies sign-in (only the flag, never the secret).
       "import.meta.env.KEYCLOAK_TOKEN_PROXY": JSON.stringify(Boolean(env.KEYCLOAK_CLIENT_SECRET)),
     },
     server: listen,

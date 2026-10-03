@@ -64,10 +64,7 @@ async function proxyTokenExchange(
     res.end(responseBody);
 }
 
-/*
- * POST /api/auth/token, with the client secret added, on the dev server and
- * on `vite preview` (`npm start`, how the built site is served).
- */
+/* POST /api/auth/token with the client secret added, in dev and in preview (`npm start`). */
 export function keycloakTokenProxy(env: KeycloakEnv): Plugin {
     const route = (server: { middlewares: Connect.Server }) => {
         server.middlewares.use("/api/auth/token", (req, res) => {

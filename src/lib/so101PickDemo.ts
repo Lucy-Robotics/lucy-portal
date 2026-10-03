@@ -336,8 +336,7 @@ export class So101PickDemo {
         this.set("gripper", this.gripOpen + (this.gripClosed - this.gripOpen) * g);
     }
 
-    /* Direction the gripper points (towards the fingertips), in world space,
-       as of the last updateChain. */
+    /* Direction the gripper points (towards the fingertips), as of the last updateChain. */
     private toolAxis() {
         return new THREE.Vector3().setFromMatrixColumn(this.tcp.matrixWorld, 2).normalize();
     }
@@ -445,11 +444,8 @@ export class So101PickDemo {
         return CHAIN.map((name) => this.angle(name));
     }
 
-    /*
-     * World matrices of the chain to the gripper only: all the solver reads.
-     * Much cheaper than the whole robot (every mesh) at each solver step; the
-     * rest catches up at the next full update, at the latest before drawing.
-     */
+    /* World matrices from the root to the gripper only: all the solver reads, and far
+       cheaper than the whole robot. The rest catches up before drawing. */
     private updateChain() {
         for (const object of this.chain) {
             object.updateMatrix();

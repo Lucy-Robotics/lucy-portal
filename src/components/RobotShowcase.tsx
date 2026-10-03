@@ -112,8 +112,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
         };
     }, [webGl, heroRef]);
 
-    // Phones: the arrows choose the robot in the box, also after switching
-    // from a wide layout (where the scroll chose it).
+    // Phones: the arrows choose the robot (again after leaving a wide layout).
     useEffect(() => {
         const scene = sceneRef.current;
         if (!scene) return;

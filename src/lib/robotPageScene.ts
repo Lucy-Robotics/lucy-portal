@@ -196,8 +196,7 @@ function createPayload(shape: InfinityShape, material: THREE.Material, accent: s
     return {
         group,
         infinity,
-        /* Hidden, only the infinity goes and its light goes dark: the scene
-           keeps the same lights (a change in number recompiles every material). */
+        // Hiding only darkens its light: a new light count recompiles every material.
         get shown() {
             return shown;
         },
@@ -301,8 +300,8 @@ export async function createRobotPageScene(
     rim.position.set(0.8, 0.4, -1);
     scene.add(key, rim);
 
-    // The grid has its own scene (and renderer, see below): drawn behind the
-    // page during the transition, under the robots once in the box.
+    // The grid has its own scene: drawn behind the page during the
+    // transition, under the robots once in the box.
     const gridScene = new THREE.Scene();
     gridScene.fog = fog;
     const grid = new THREE.GridHelper(16, 160, gridColor, gridColor);
@@ -321,12 +320,10 @@ export async function createRobotPageScene(
     const heroPayload = createPayload(shape, materials.logo, accent);
     heroPayload.shown = false;
     scene.add(boxPayload.group, heroPayload.group);
-    // InMoov's eye lights are there from the start, dark until it shows (see
-    // createPayload: the scene's lights never change in number).
+    // InMoov's eye lights exist from the start, dark until it shows (constant light count).
     const eyeLights = Array.from({ length: EYES }, () => new THREE.PointLight(accent, 0, 0.35, 2));
     scene.add(...eyeLights);
-    // On every layer too: the glow pass (infinities only) then sees the same
-    // lights as the main one, and reuses its compiled materials.
+    // Lights on every layer: the glow pass reuses the main pass's shaders.
     scene.traverse((object) => {
         if (object instanceof THREE.Light) object.layers.enableAll();
     });
@@ -406,8 +403,7 @@ export async function createRobotPageScene(
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.autoClear = false;
     container.appendChild(renderer.domElement);
-    // The grid is drawn straight onto the layer behind the page, by its own
-    // renderer: no copying it out of the robots' canvas every frame.
+    // The grid's own renderer, on the layer behind the page: no per-frame copy.
     const gridRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     gridRenderer.setPixelRatio(renderer.getPixelRatio());
     page.backdrop.appendChild(gridRenderer.domElement);
@@ -811,7 +807,7 @@ export async function createRobotPageScene(
     };
 
     /* A caught logo: shake, fly in, grip; or let go, fly back, rest. */
-    let wristTwist = 0; // added to the wrist roll while it strains for the logo (reset every frame)
+    let wristTwist = 0; // added to the wrist roll while it strains for the logo
     const catchStep = (dt: number) => {
         const plan = heroTarget ? heroPlans.get(heroTarget) : null;
         if (!plan?.flight) return false;
@@ -1027,9 +1023,7 @@ export async function createRobotPageScene(
         renderer.setViewport(0, 0, window.innerWidth, height);
         camera.setViewOffset(drawRect.width, drawRect.height, -drawRect.left, -drawRect.top, window.innerWidth, height);
 
-        // The grid lives behind the page: it never crosses the page's text,
-        // and in the box (whose inside is see-through) it stays under the
-        // caption. Drawn once more when it goes, to clear it.
+        // Behind the page, the grid never crosses its text. Drawn once more when it goes, to clear it.
         if (grid.visible || gridDrawn) gridRenderer.render(gridScene, camera);
         gridDrawn = grid.visible;
 
@@ -1205,16 +1199,13 @@ export async function createRobotPageScene(
         else last = 0;
     };
 
-    /* Compile the materials of everything, shown or not, so none compiles in
-       the middle of a scroll the first time it shows. Only where the browser
-       compiles in the background: elsewhere that would just move the stall
-       from the first scroll to the page load. */
+    /* Compile every material ahead, so none compiles mid-scroll. Only with parallel
+       compiling: otherwise it just moves the stall to the page load. */
     const precompile = (target: THREE.WebGLRenderer, world: THREE.Scene) => {
         if (!target.extensions.has("KHR_parallel_shader_compile")) return;
         target.compileAsync(world, camera).catch(() => {}); // else compiled when first drawn
         if (target !== renderer) return;
-        // The glow pass draws the robots with depthOnly, an override material
-        // compileAsync doesn't see: draw that pass once, on a single pixel.
+        // compileAsync skips depthOnly (an override material): draw it once, on one pixel.
         const humanoidVisible = humanoid?.visible ?? false;
         if (humanoid) humanoid.visible = true;
         renderer.setScissorTest(true);
@@ -1341,13 +1332,11 @@ export async function createRobotPageScene(
         if (robot) activate(robot);
     };
 
-    // Scrolling moves the box: the next frame draws the arm there (scroll
-    // events come just before animation frames, so it keeps up).
+    // Scrolling moves the box: the next frame (right after the scroll event) follows.
     const onScroll = wake;
 
     // Logos move once the fonts load, and on resize: lay the hero out again,
-    // but never while the arm is moving (that would drop what it carries):
-    // wait, the canvas following the window meanwhile.
+    // but not while the arm moves (it would drop what it carries): wait.
     let disposed = false;
     let relayoutTimer = 0;
     const relayout = () => {
@@ -1361,8 +1350,7 @@ export async function createRobotPageScene(
                 relayout();
                 return;
             }
-            // Laying out puts the arm back at rest: if it's holding the box's
-            // infinity (and the page logo it brought along), it gets them back.
+            // The layout resets the arm: give back what it held (and the logo it carried).
             const held = boxPick.state.holding;
             const carried = held ? logoOut : null;
             // Before the hero is up, stay light: the plans come after the rise.

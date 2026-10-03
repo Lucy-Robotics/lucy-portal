@@ -1,8 +1,5 @@
-/*
- * Stands in for three's STLLoader and ColladaLoader, which urdf-loader imports
- * for its default mesh loading. robotModel.ts replaces that (meshes come from
- * one GLB), so vite.config.ts aliases them here instead of bundling them.
- */
+/* Stub for urdf-loader's STL / Collada loaders (aliased in vite.config.ts):
+   robotModel.ts loads the meshes from a GLB instead. */
 class UnusedMeshLoader {
     constructor() {
         throw new Error("STL / Collada meshes are not bundled: set URDFLoader.loadMeshCb");
