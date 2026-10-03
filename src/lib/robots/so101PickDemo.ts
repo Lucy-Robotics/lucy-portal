@@ -21,13 +21,10 @@ import {
     APPROACH_AT, ATTACH_AT, CLOSE_START, DURATION, HOLD_OFFSET, LIFT_AT, LOOK, LOOK_OFFSET, LOOK_SPEED,
 } from "./config.ts";
 import { LookFollow } from "./lookFollow.ts";
-import { clamp, damp, easeInOutCubic, smoothstep } from "./math.ts";
+import { measureJaws, findServoSide } from "./gripper.ts";
+import { clamp, damp, easeInOutCubic, smoothstep, solveLinear } from "./math.ts";
 
 const CHAIN = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex"] as const;
-/* Height of the fingers' contact faces above their tips, and how deep
-   between the fingers the payload's grasp point sits. */
-const CONTACT_BAND = 0.017;
-const GRIP_DEPTH = 0.01;
 /* Above this many metres of residual, a pose counts as out of reach. */
 const REACH_TOLERANCE = 0.006;
 
@@ -163,8 +160,13 @@ export class So101PickDemo {
         };
 
         base.updateMatrixWorld(true);
-        this.servoSide = this.findServo();
-        this.measureJaws();
+        this.servoSide = findServoSide(robot);
+        const jaws = measureJaws(robot, payload.gripWidth);
+        this.gripOpen = jaws.open;
+        this.gripClosed = jaws.closed;
+        this.grip.position.copy(jaws.grip);
+        robot.links.gripper_link.add(this.grip);
+        robot.updateMatrixWorld(true);
         if (plan.gripperOffset) {
             const opening = Math.sign(this.gripOpen - this.gripClosed) || 1;
             this.gripOpen += opening * plan.gripperOffset.open;
@@ -284,10 +286,7 @@ export class So101PickDemo {
             this.holding = true;
             this.onHoldChange?.(true);
         } else if (this.holding && this.progress < ATTACH_AT) {
-            this.home.parent.add(object);
-            object.position.copy(this.home.position);
-            object.quaternion.copy(this.home.quaternion);
-            this.holding = false;
+            this.putHome();
             this.onHoldChange?.(false);
         }
 
@@ -333,15 +332,19 @@ export class So101PickDemo {
     release() {
         this.goal = 0;
         this.progress = 0;
-        if (this.holding) {
-            const { object } = this.payload;
-            this.home.parent.add(object);
-            object.position.copy(this.home.position);
-            object.quaternion.copy(this.home.quaternion);
-            object.scale.copy(this.home.scale);
-            this.holding = false;
-        }
+        if (this.holding) this.putHome({ scale: true });
         this.pose(0, 1);
+    }
+
+    /* The payload back where it was before it was taken (its size too, when
+       handed over: the page may have grown it in hand). */
+    private putHome({ scale = false } = {}) {
+        const { object } = this.payload;
+        this.home.parent.add(object);
+        object.position.copy(this.home.position);
+        object.quaternion.copy(this.home.quaternion);
+        if (scale) object.scale.copy(this.home.scale);
+        this.holding = false;
     }
 
     /* Put the payload back home without animating, and detach from the robot. */
@@ -432,91 +435,7 @@ export class So101PickDemo {
         return chosen;
     }
 
-    /* Where the gripper's servo is, seen down the roll axis (null if not found). */
-    private findServo() {
-        const body = this.robot.links.gripper_link;
-        const servo = body.children.flatMap((child) => {
-            const meshes: THREE.Mesh[] = [];
-            child.traverse((object) => {
-                if (object instanceof THREE.Mesh && object.name.startsWith("sts3215")) meshes.push(object);
-            });
-            return meshes;
-        })[0];
-        if (!servo) return null;
-        servo.geometry.computeBoundingBox();
-        const center = servo.geometry.boundingBox!.getCenter(new THREE.Vector3()).applyMatrix4(servo.matrixWorld);
-        const side = body.worldToLocal(center);
-        side.z = 0; // across the roll axis, the gripper's z
-        return side.lengthSq() > 0 ? side.normalize() : null;
-    }
 
-    /*
-     * Find the jaws in the gripper's own frame (x: the axis the moving jaw
-     * closes along, -z: towards the fingertips). Sets `grip`, the point a
-     * held payload's grasp point sits at, and the open / closed gripper values that
-     * clear the payload and just touch it.
-     */
-    private measureJaws() {
-        const body = this.robot.links.gripper_link;
-        const jaw = this.robot.links.moving_jaw_so101_v1_link;
-
-        const points = (root: THREE.Object3D, skip?: THREE.Object3D) => {
-            body.updateMatrixWorld(true); // the joint's rotation sits above the jaw link
-            const toBody = body.matrixWorld.clone().invert();
-            const out: THREE.Vector3[] = [];
-            root.traverse((object) => {
-                if (!(object instanceof THREE.Mesh)) return;
-                for (let p: THREE.Object3D | null = object; p; p = p.parent) if (p === skip) return;
-                const m = new THREE.Matrix4().multiplyMatrices(toBody, object.matrixWorld);
-                const position = object.geometry.attributes.position;
-                for (let i = 0; i < position.count; i++) {
-                    out.push(new THREE.Vector3().fromBufferAttribute(position, i).applyMatrix4(m));
-                }
-            });
-            return out;
-        };
-
-        const fixed = points(body, jaw);
-        const tip = Math.min(...fixed.map((v) => v.z));
-        // The faces that touch the payload: the bottom of both fingers.
-        const band = (v: THREE.Vector3) => v.z > tip + 0.002 && v.z < tip + CONTACT_BAND;
-        const toBody = body.matrixWorld.clone().invert();
-        const side = jaw.getWorldPosition(new THREE.Vector3()).applyMatrix4(toBody).x > 0 ? 1 : -1;
-        const fixedFace = fixed.filter(band)
-            .reduce((a, v) => (side > 0 ? Math.max(a, v.x) : Math.min(a, v.x)), -side * Infinity);
-        const ys = fixed.filter(band).map((v) => v.y);
-        const midY = (Math.min(...ys) + Math.max(...ys)) / 2;
-
-        // The moving finger swings up as it opens, so take its own tip.
-        const jawFace = (q: number) => {
-            this.set("gripper", q);
-            const pts = points(jaw);
-            const low = Math.min(...pts.map((v) => v.z));
-            return pts.filter((v) => v.z < low + CONTACT_BAND)
-                .reduce((a, v) => (side > 0 ? Math.min(a, v.x) : Math.max(a, v.x)), side * Infinity);
-        };
-        // Gap between the faces for a joint value; the jaw opens with q.
-        const gap = (q: number) => side * (jawFace(q) - fixedFace);
-        const { lower, upper } = this.robot.joints.gripper.limit;
-        const solve = (want: number) => {
-            let lo = lower;
-            let hi = upper;
-            if (gap(lo) > gap(hi)) [lo, hi] = [hi, lo];
-            for (let i = 0; i < 24; i++) {
-                const mid = (lo + hi) / 2;
-                if (gap(mid) < want) lo = mid;
-                else hi = mid;
-            }
-            return (lo + hi) / 2;
-        };
-        const width = this.payload.gripWidth;
-        this.gripClosed = solve(width * 0.98);
-        this.gripOpen = solve(width + 0.022);
-
-        this.grip.position.set(fixedFace + (side * width) / 2, midY, tip + GRIP_DEPTH);
-        body.add(this.grip);
-        this.robot.updateMatrixWorld(true);
-    }
 
     /* Set the chain, and return the values actually reached (after joint limits). */
     private apply(q: Pose) {
@@ -567,7 +486,7 @@ export class So101PickDemo {
             const A = J.map((ja) => J.map((jb) => ja.reduce((s, x, k) => s + x * jb[k], 0)));
             A.forEach((row, i) => (row[i] += lambda * lambda));
             const b = J.map((column) => column.reduce((s, x, k) => s + x * e[k], 0));
-            const dq = gauss(A, b);
+            const dq = solveLinear(A, b);
             const biggest = Math.max(...dq.map(Math.abs));
             const k = biggest > 0.4 ? 0.4 / biggest : 1;
             q = this.apply(q.map((v, i) => v + dq[i] * k));
@@ -605,26 +524,4 @@ export class So101PickDemo {
         yield;
         return polished.error < best.error ? polished : best;
     }
-}
-
-/* Solve A x = b by Gaussian elimination with partial pivoting. */
-function gauss(A: number[][], b: number[]) {
-    const n = b.length;
-    const M = A.map((row, i) => [...row, b[i]]);
-    for (let c = 0; c < n; c++) {
-        let p = c;
-        for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
-        [M[c], M[p]] = [M[p], M[c]];
-        for (let r = c + 1; r < n; r++) {
-            const f = M[r][c] / M[c][c];
-            for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
-        }
-    }
-    const x = new Array<number>(n).fill(0);
-    for (let r = n - 1; r >= 0; r--) {
-        let s = M[r][n];
-        for (let k = r + 1; k < n; k++) s -= M[r][k] * x[k];
-        x[r] = s / M[r][r];
-    }
-    return x;
 }
