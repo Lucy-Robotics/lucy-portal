@@ -181,29 +181,47 @@ const RESTING_GLOW = 0.35;
 /* The infinities are drawn on their own layer as well, for their glow. */
 const INFINITY_LAYER = 1;
 
+/* InMoov's eyes, each with a faint green light. */
+const EYES = 2;
+const EYE_LIGHT = 0.03;
+
 function createPayload(shape: InfinityShape, material: THREE.Material, accent: string) {
     const infinity = createLucyInfinity(shape, material);
     infinity.layers.set(INFINITY_LAYER);
     const light = new THREE.PointLight(accent, 0.1, 0.6, 2);
     const group = new THREE.Group();
     group.add(infinity, light);
+    let shown = true;
+    let glow = 1;
     return {
         group,
         infinity,
+        /* Hidden, only the infinity goes and its light goes dark: the scene
+           keeps the same lights (a change in number recompiles every material). */
+        get shown() {
+            return shown;
+        },
+        set shown(value: boolean) {
+            shown = value;
+            infinity.visible = value;
+            light.intensity = value ? 0.1 * glow : 0;
+        },
         setPinch(x: number) {
             infinity.position.x = -x;
         },
         /* 0..1: how lit it is (its own colour and the light it casts). */
         setGlow(level: number) {
+            glow = level;
             const uniforms = (material as THREE.ShaderMaterial).uniforms;
             if (uniforms?.glow) uniforms.glow.value = level;
-            light.intensity = 0.1 * level;
+            light.intensity = shown ? 0.1 * level : 0;
         },
     };
 }
 
 /* InMoov, in Blender units: scaled to its real height, stood on the grid,
-   white with glowing green eyes. */
+   white with glowing green eyes. Returns it, and its eyes' halos (where their
+   lights go). */
 function standInMoov(inmoov: URDFRobot, materials: ReturnType<typeof createMaterials>, accent: string) {
     const eyes: THREE.Object3D[] = [];
     for (const [name, link] of Object.entries(inmoov.links)) {
@@ -222,18 +240,17 @@ function standInMoov(inmoov: URDFRobot, materials: ReturnType<typeof createMater
     base.position.set(INMOOV_X, -raw.min.y * scale, 0);
     base.updateMatrixWorld(true);
 
-    // A small halo and a faint green light on each eye, sized in metres.
-    for (const eye of eyes) {
+    // A small halo on each eye, sized in metres.
+    const halos = eyes.map((eye) => {
         const bounds = new THREE.Box3();
         forEachOwnMesh(eye, (mesh) => bounds.expandByObject(mesh));
         const unscale = 1 / eye.getWorldScale(new THREE.Vector3()).x;
         const halo = createHalo(accent, 0.07 * unscale, 0.6);
         halo.position.copy(eye.worldToLocal(bounds.getCenter(new THREE.Vector3())));
-        const light = new THREE.PointLight(accent, 0.03, 0.35, 2);
-        light.position.copy(halo.position);
-        eye.add(halo, light);
-    }
-    return base;
+        eye.add(halo);
+        return halo;
+    });
+    return { body: base, halos };
 }
 
 /* An element's rectangle in the viewport, as the page is at the top. */
@@ -302,12 +319,22 @@ export async function createRobotPageScene(
     const boxPayload = createPayload(shape, createLucyGlowMaterial(), accent);
     boxPayload.group.position.copy(boxInfinity);
     const heroPayload = createPayload(shape, materials.logo, accent);
-    heroPayload.group.visible = false;
+    heroPayload.shown = false;
     scene.add(boxPayload.group, heroPayload.group);
+    // InMoov's eye lights are there from the start, dark until it shows (see
+    // createPayload: the scene's lights never change in number).
+    const eyeLights = Array.from({ length: EYES }, () => new THREE.PointLight(accent, 0, 0.35, 2));
+    scene.add(...eyeLights);
+    // On every layer too: the glow pass (infinities only) then sees the same
+    // lights as the main one, and reuses its compiled materials.
+    scene.traverse((object) => {
+        if (object instanceof THREE.Light) object.layers.enableAll();
+    });
 
     // InMoov, once loaded (after the hero is up and running).
     let inmoov: URDFRobot | null = null;
     let humanoid: THREE.Group | null = null;
+    let eyeHalos: THREE.Object3D[] = [];
     let head: THREE.Object3D | null = null;
     let wave: InMoovWave | null = null;
 
@@ -468,7 +495,7 @@ export async function createRobotPageScene(
         heroPlans.clear();
         heroTarget = null;
         logoOut = null;
-        heroPayload.group.visible = false;
+        heroPayload.shown = false;
     };
 
     let landScroll = 0; // scroll position where the hero has scrolled past
@@ -601,7 +628,7 @@ export async function createRobotPageScene(
                 object: heroPayload.group,
                 gripWidth: shape.depth * markScale,
             }, { ...common, grasp: pinch.clone(), lean: towards, approach: 0.05 }, (holding) => {
-                heroPayload.group.visible = holding;
+                heroPayload.shown = holding;
                 markVisible(logo, !holding);
                 logoOut = holding ? logo : null;
             });
@@ -670,7 +697,7 @@ export async function createRobotPageScene(
             add("header", page.headerLogo, headerLogo);
             add("hero", page.heroLogo, heroLogo);
         }
-        heroPayload.group.visible = false;
+        heroPayload.shown = false;
 
         layoutMs = performance.now() - started;
         if (!compact) return;
@@ -732,7 +759,7 @@ export async function createRobotPageScene(
             fromPlan.phase = "idle";
         }
         from.release();
-        heroPayload.group.visible = false;
+        heroPayload.shown = false;
         if (holding) {
             const entry = planOf(to);
             if (entry) {
@@ -740,7 +767,7 @@ export async function createRobotPageScene(
                 heroTarget = name;
                 placeHeroPayload(plan.home.position, plan.home.scale, plan.home.pinch);
                 to.takeOver();
-                heroPayload.group.visible = true;
+                heroPayload.shown = true;
                 markVisible(plan.logo, false);
                 if (logoOut && logoOut !== plan.logo) markVisible(logoOut, true);
                 logoOut = plan.logo;
@@ -815,7 +842,7 @@ export async function createRobotPageScene(
                     logo.classList.remove("robot-shake");
                     markVisible(logo, false);
                     logoOut = logo;
-                    heroPayload.group.visible = true;
+                    heroPayload.shown = true;
                     plan.phase = "fly";
                     plan.timer = 0;
                     place(0);
@@ -837,14 +864,14 @@ export async function createRobotPageScene(
                 if (progress <= 0.5 + 1e-3) {
                     plan.phase = "flyback";
                     plan.timer = 0;
-                    heroPayload.group.visible = true;
+                    heroPayload.shown = true;
                 }
                 break;
             case "flyback": {
                 const e = instant ? 1 : smoothstep(plan.timer, 0, FLIGHT_TIME);
                 place(1 - e);
                 if (e >= 1) {
-                    heroPayload.group.visible = false;
+                    heroPayload.shown = false;
                     markVisible(logo, true);
                     logoOut = null;
                     logo.classList.add("robot-shake"); // settling back in
@@ -951,10 +978,15 @@ export async function createRobotPageScene(
         // arm settles (unless the arm brought one along: it's lit already).
         const held = boxPick.state.holding;
         const arrive = held ? 1 : THREE.MathUtils.smoothstep(enter, 0.35, 0.95);
-        boxPayload.group.visible = arrive > 0;
+        boxPayload.shown = arrive > 0;
         boxPayload.setGlow(held ? 1 : THREE.MathUtils.smoothstep(enter, 0.55, 1));
         if (!held && boxPick.idle) boxPayload.group.position.x = boxInfinity.x - (1 - arrive) * BOX_SLIDE;
         if (humanoid) humanoid.visible = enter >= 1;
+        eyeLights.forEach((light, i) => {
+            const halo = humanoid?.visible ? eyeHalos[i] : undefined;
+            light.intensity = halo ? EYE_LIGHT : 0;
+            halo?.getWorldPosition(light.position);
+        });
         page.frame.toggleAttribute("data-landed", enter >= 1);
 
         const screen: Rect = { left: -1, top: -1, width: window.innerWidth + 2, height: height + 2 };
@@ -970,7 +1002,7 @@ export async function createRobotPageScene(
         // Where the infinities are on screen, for their glow (measured before
         // the camera gets its view offset for drawing).
         scene.updateMatrixWorld();
-        const payloads = [boxPayload, heroPayload].filter(({ group }) => group.visible);
+        const payloads = [boxPayload, heroPayload].filter(({ shown }) => shown);
         // Like the page logo's glow: its reach follows the mark's size on
         // screen; full when the arm has it (or it's flying), dim at rest.
         let glowFilter = "none";
@@ -1068,7 +1100,7 @@ export async function createRobotPageScene(
     /* Which robot, if any, is drawn at a screen point (forgiving: also a ring around it). */
     const hitAt = (x: number, y: number): RobotName | null => {
         const raycaster = rayFrom(x, y);
-        const armParts = [arm, ...(heroPayload.group.visible ? [heroPayload.group] : [])];
+        const armParts = [arm, ...(heroPayload.shown ? [heroPayload.group] : [])];
         if (raycaster.intersectObjects(armParts, true).length) return "so101";
         if (humanoid?.visible && raycaster.intersectObject(humanoid, true).length) return "inmoov";
         return null;
@@ -1147,6 +1179,8 @@ export async function createRobotPageScene(
         // was already downloading).
         if (rise >= 1 && !inmoovRequested) {
             inmoovRequested = true;
+            precompile(gridRenderer, gridScene);
+            precompile(renderer, scene);
             loadInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
         } else if (rise >= 1 && !plansReady && !relayoutTimer) {
             layoutHero();
@@ -1169,6 +1203,26 @@ export async function createRobotPageScene(
         const working = rise < 1 || !plansReady || time < armAttention + 50 || time < inmoovAttention + 50;
         if (picking || catching || waving || panning || smoothing > 0 || working) raf = requestAnimationFrame(tick);
         else last = 0;
+    };
+
+    /* Compile the materials of everything, shown or not, so none compiles in
+       the middle of a scroll the first time it shows. */
+    const precompile = (target: THREE.WebGLRenderer, world: THREE.Scene) => {
+        target.compileAsync(world, camera).catch(() => {}); // else compiled when first drawn
+        if (target !== renderer) return;
+        // The glow pass draws the robots with depthOnly, an override material
+        // compileAsync doesn't see: draw that pass once, on a single pixel.
+        const humanoidVisible = humanoid?.visible ?? false;
+        if (humanoid) humanoid.visible = true;
+        renderer.setScissorTest(true);
+        renderer.setScissor(0, 0, 1, 1);
+        camera.layers.set(0);
+        scene.overrideMaterial = depthOnly;
+        renderer.render(scene, camera);
+        scene.overrideMaterial = null;
+        camera.layers.enable(INFINITY_LAYER);
+        renderer.setScissorTest(false);
+        if (humanoid) humanoid.visible = humanoidVisible;
     };
 
     const wake = () => {
@@ -1348,7 +1402,9 @@ export async function createRobotPageScene(
         const robot = await loadRobot(ROBOT_ASSETS.inmoov.urdf, ROBOT_ASSETS.inmoov.glb, () => materials.inmoov);
         if (disposed) return;
         inmoov = robot;
-        humanoid = standInMoov(robot, materials, accent);
+        const stood = standInMoov(robot, materials, accent);
+        humanoid = stood.body;
+        eyeHalos = stood.halos;
         humanoid.visible = enter >= 1;
         scene.add(humanoid);
         head = robot.links["i01.head.rothead_link"];
@@ -1358,6 +1414,7 @@ export async function createRobotPageScene(
         shots.inmoov = new THREE.Box3().setFromObject(humanoid)
             .expandByVector(new THREE.Vector3(0, 0.15, 0))
             .union(armShot);
+        precompile(renderer, scene);
         timings.inmoov = performance.now() - started;
         wake();
     };
