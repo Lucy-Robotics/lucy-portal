@@ -77,9 +77,18 @@ export const HOLD_OFFSET = { pan: -0.7, wrist: 0.6, roll: 0 };
 /* Head turn at the screen edges, and follow speed. */
 export const HEAD_TURN = { yaw: 0.32, pitch: 0.12, roll: 0.06 };
 export const HEAD_LOOK_SPEED = 2.5;
-/* Forearm turn that shows the palm, and wave duration. */
-export const PALM_OUT = 1.45;
-export const WAVE_TIME = 3.4;
+/* The wave (radians unless noted). */
+export const WAVE = {
+    // The raised right arm: forward, sideways, and the elbow's bend.
+    raise: { forward: 1.7, side: 0.3, elbow: 1.1 },
+    // Wrist roll that turns the palm toward the viewer (the joint stops at ±1.57),
+    // complete once the arm is this much raised (0..1).
+    palmRoll: 4.05,
+    palmRollBy: 0.714,
+    // The hand's swing side to side: its centre, amplitude and number of waves.
+    swing: { center: -0.3, amplitude: 0.25, count: 3 },
+    time: 3.4, // seconds
+};
 
 /* ---------------- timing and input ---------------- */
 /* Rise into view on load. */

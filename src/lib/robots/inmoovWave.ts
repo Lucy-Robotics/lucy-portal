@@ -1,7 +1,7 @@
 /* InMoov (Lucy URDF, meshes by Gael Langevin, CC BY-NC 4.0). */
 import type { URDFRobot } from "urdf-loader";
 
-import { HEAD_LOOK_SPEED, HEAD_TURN, PALM_OUT, WAVE_TIME } from "./config.ts";
+import { HEAD_LOOK_SPEED, HEAD_TURN, WAVE } from "./config.ts";
 import { LookFollow } from "./lookFollow.ts";
 import { clamp, smoothstep } from "./math.ts";
 
@@ -51,17 +51,17 @@ export class InMoovWave {
         set(HEAD.pitch, -y * HEAD_TURN.pitch);
         set(HEAD.roll, x * HEAD_TURN.roll);
 
-        // Raise over 0-0.2, three waves over 0.2-0.8, lower over 0.8-1.
+        // Raise over 0-0.2, wave over 0.2-0.8, lower over 0.8-1.
         if (this.progress < 1) {
-            this.progress = instant ? 1 : Math.min(1, this.progress + dt / WAVE_TIME);
+            this.progress = instant ? 1 : Math.min(1, this.progress + dt / WAVE.time);
             const w = this.progress;
             const up = smoothstep(w, 0, 0.2) * (1 - smoothstep(w, 0.8, 1));
-            const swing = Math.sin(clamp((w - 0.2) / 0.6, 0, 1) * Math.PI * 6);
-            set(ARM.x, 1.7 * up);
-            set(ARM.y, 0.3 * up);
-            set(ARM.elbow, 1.1 * up);
-            set(ARM.z, (-0.3 + 0.25 * swing) * up);
-            set(ARM.wrist, PALM_OUT * smoothstep(up * 1.4, 0, 1));
+            const swing = Math.sin(clamp((w - 0.2) / 0.6, 0, 1) * Math.PI * 2 * WAVE.swing.count);
+            set(ARM.x, WAVE.raise.forward * up);
+            set(ARM.y, WAVE.raise.side * up);
+            set(ARM.elbow, WAVE.raise.elbow * up);
+            set(ARM.z, (WAVE.swing.center + WAVE.swing.amplitude * swing) * up);
+            set(ARM.wrist, WAVE.palmRoll * smoothstep(up, 0, WAVE.palmRollBy));
             set(HEAD.jaw, w > 0.2 && w < 0.45 ? 0.18 * Math.abs(Math.sin(w * 60)) : 0);
         }
 
