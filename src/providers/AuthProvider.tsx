@@ -1,5 +1,5 @@
-import { AuthProvider as OidcAuthProvider, useAuth as useOidcAuth } from "react-oidc-context";
-import type { ReactNode } from "react";
+import { AuthContext, AuthProvider as OidcAuthProvider } from "react-oidc-context";
+import { useContext, type ReactNode } from "react";
 
 import { oidcConfig, authUrls } from "../config/oidc.ts";
 
@@ -11,8 +11,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 }
 
+const signedOut = {
+    isAuthenticated: false,
+    isLoading: false,
+    user: null,
+    displayName: null,
+    accessToken: null,
+    login: () => {},
+    logout: () => {},
+};
+
 export function useAuth() {
-    const auth = useOidcAuth();
+    const auth = useContext(AuthContext);
+    if (!auth) return signedOut;
 
     const login = () => {
         void auth.signinRedirect({

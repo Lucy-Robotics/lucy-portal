@@ -1,5 +1,8 @@
 @import "./themes.css";
-@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
+@import "@fontsource/orbitron/700.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/700.css";
 
 /* ==============================
    App layout
@@ -74,14 +77,41 @@
 
 
 .header__brand {
+    display: inline-flex;
+
     color: var(--color-highlight);
 
     font-size: 2rem;
     font-weight: var(--font-weight-bold);
 
     text-decoration: none;
+}
 
-    letter-spacing: 0.1em;
+/* ==============================
+   Logo
+   ============================== */
+
+/* Proportions follow the brand lockup: the mark sits slightly above the
+   baseline and is a bit taller than the x-height. */
+.logo {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.16em;
+
+    line-height: 1;
+}
+
+.logo__mark {
+    position: relative;
+    bottom: 0.05em;
+
+    height: 0.68em;
+}
+
+.logo__text {
+    color: var(--color-text-pri);
+    font-family: var(--font-brand);
+    font-weight: 700;
 }
 
 
@@ -347,6 +377,7 @@
     margin-top: .75rem;
     line-height: 1.5;
     color: var(--color-text-muted);
+    font-size: .9rem;
 }
 
 .footer__column {
@@ -399,6 +430,7 @@
 
 .footer__bottom p {
     margin: 0;
+    font-size: .8rem;
 }
 
 .footer__bottom-right {

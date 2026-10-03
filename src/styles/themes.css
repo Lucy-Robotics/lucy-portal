@@ -3,7 +3,7 @@
        Colors
        ============================== */
 
-    --color-bg-page: #000000;
+    --color-bg-page: #141414;
     --color-bg-comp: #141414;
 
     --color-highlight: #00ff41;
@@ -36,7 +36,8 @@
        Typography
        ============================== */
 
-    --font-primary: "Roboto", sans-serif;
+    --font-primary: "IBM Plex Mono", monospace;
+    --font-brand: "Orbitron", sans-serif;
 
     --font-size-base: 16px;
 

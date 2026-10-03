@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
+import Logo from "./Logo.tsx";
 import { FaGithub, FaLinkedin, FaDiscord } from "react-icons/fa";
 import { useAuth } from "../providers/AuthProvider.tsx";
+import { isAuthConfigured } from "../config/env.ts";
 
 type FooterProps = {
     children?: ReactNode;
@@ -56,7 +58,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
         ],
     },
     {
-        title: "Sentience Robotics",
+        title: "Lucy Robotics",
         links: [
             {
                 text: "LinkedIn",
@@ -124,13 +126,8 @@ export default function Footer({ children }: FooterProps) {
                     <div className="footer__grid">
                         <div className="footer__brand">
                             <a href="/" className="footer__logo">
-                                LUCY
+                                <Logo />
                             </a>
-
-                            <p className="footer__description">
-                                An open-source humanoid robot by Lucy.org.
-                                Built on InMoov &amp; ROS 2.
-                            </p>
                         </div>
 
                         {columns.map((column) => (
@@ -195,7 +192,7 @@ export default function Footer({ children }: FooterProps) {
                                         type="button"
                                         className="footer__admin-button"
                                         onClick={login}
-                                        disabled={isLoading}
+                                        disabled={!isAuthConfigured || isLoading}
                                     >
                                         {isLoading ? "Loading..." : "Admin sign in"}
                                     </button>

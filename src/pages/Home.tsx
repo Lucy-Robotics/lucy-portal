@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import {
+    FaChevronDown,
     FaCodeBranch,
     FaCogs,
     FaCube,
@@ -12,6 +14,7 @@ import {
 import type { IconType } from "react-icons";
 
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
+import Logo from "../components/Logo.tsx";
 import "../styles/home.css";
 
 const FEATURES: { icon: IconType; title: string; description: string }[] = [
@@ -93,59 +96,86 @@ function ExternalIcon() {
 }
 
 const Home = () => {
+    const quickstartRef = useRef<HTMLElement>(null);
+    const [isAtTop, setIsAtTop] = useState(true);
+
+    useEffect(() => {
+        const onScroll = () => setIsAtTop(window.scrollY < 40);
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    const scrollToContent = () => {
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        quickstartRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+    };
+
     return (
         <div className="home">
             <div className="home__content">
-                <h1 className="home__title">LUCY</h1>
+                <div className="home__hero">
+                    <h1 className="home__title">
+                        <Logo />
+                    </h1>
 
-                <p className="home__tagline">One platform, any robot.</p>
+                    <p className="home__tagline">
+                        <span className="home__tagline-accent">&gt;</span> One platform{" "}
+                        <span className="home__tagline-accent">//</span> Any robot.
+                    </p>
 
-                <p className="home__headline">
-                    <span className="home__headline-highlight">
-                        Simulated and controled
-                    </span>
-                    <br />
-                    <span className="home__headline-sub">from you browser</span>
-                </p>
+                    <p className="home__description">
+                        Lucy is an open-source framework powered by ROS 2. It
+                        controls and simulates robotic platforms and integrates with
+                        many tools, such as Gazebo simulation, RViz and a web control
+                        panel. Lucy is multiplatform and runs from a Python + Pixi
+                        environment.
+                    </p>
 
-                <p className="home__description">
-                    Lucy is an open-source framework powered by ROS 2. It
-                    controls and simulates robotic platforms and integrates with
-                    many tools, such as Gazebo simulation, RViz and a web control
-                    panel. Lucy is multiplatform and runs from a Python + Pixi
-                    environment.
-                </p>
+                    <div className="home__actions">
+                        <a
+                            href="/download"
+                            className="header__button header__button--main home__button"
+                        >
+                            Download
+                        </a>
 
-                <div className="home__actions">
+                        <a
+                            href={EXTERNAL_LINKS.LIVE_DEMO}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="header__button header__button--primary home__button"
+                        >
+                            Live Demo
+                            <ExternalIcon />
+                        </a>
+                    </div>
+
                     <a
-                        href="/download"
-                        className="header__button header__button--main home__button"
-                    >
-                        Download
-                    </a>
-
-                    <a
-                        href={EXTERNAL_LINKS.LIVE_DEMO}
+                        href={EXTERNAL_LINKS.DISCORD}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="header__button header__button--primary home__button"
+                        className="home__discord"
                     >
-                        Live Demo
-                        <ExternalIcon />
+                        <FaDiscord aria-hidden="true" />
+                        Join our Discord
                     </a>
+
+                    <button
+                        type="button"
+                        className={`home__scroll-hint ${isAtTop ? "" : "home__scroll-hint--hidden"}`}
+                        onClick={scrollToContent}
+                        aria-label="Scroll to quickstart"
+                    >
+                        <FaChevronDown aria-hidden="true" />
+                    </button>
                 </div>
 
-                <a
-                    href={EXTERNAL_LINKS.DISCORD}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="home__discord"
+                <section
+                    ref={quickstartRef}
+                    className="home__quickstart"
+                    aria-label="Lucy quickstart"
                 >
-                    <FaDiscord aria-hidden="true" />
-                    Join our Discord
-                </a>
-
-                <section className="home__quickstart" aria-label="Lucy quickstart">
                     <div className="home__terminal">
                         <div className="home__terminal-header">
                             Lucy quickstart
@@ -157,7 +187,7 @@ const Home = () => {
                                         ${" "}
                                     </span>
                                     git clone
-                                    https://github.com/Sentience-Robotics/lucy_ws.git
+                                    https://github.com/Lucy-Robotics/lucy_ws.git
                                 </span>
                                 <span className="home__terminal-line">
                                     <span className="home__terminal-prompt">

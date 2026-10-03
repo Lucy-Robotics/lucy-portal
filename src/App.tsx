@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import MainLayout from "./layouts/MainLayout";
+import { isAuthConfigured } from "./config/env";
 
 import Home from "./pages/Home";
 import Download from "./pages/Download";
@@ -20,8 +21,12 @@ const App = () => {
         <BrowserRouter>
     <Suspense fallback={<div role="status" aria-live="polite">Loading...</div>}>
                 <Routes>
-                    <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/auth/front-channel-logout" element={<FrontChannelLogout />} />
+                    {isAuthConfigured && (
+                        <>
+                            <Route path="/auth/callback" element={<AuthCallback />} />
+                            <Route path="/auth/front-channel-logout" element={<FrontChannelLogout />} />
+                        </>
+                    )}
 
                     <Route element={<MainLayout />}>
                         <Route path="/" element={<Home />} />
