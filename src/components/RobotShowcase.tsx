@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaChevronDown, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 import { prefetchHeroAssets } from "../lib/robotAssets.ts";
 import type { RobotName, RobotPageScene } from "../lib/robotPageScene.ts";
@@ -48,6 +48,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
     const layerRef = useRef<HTMLDivElement>(null);
     const backdropRef = useRef<HTMLDivElement>(null);
     const glowRef = useRef<HTMLDivElement>(null);
+    const hintRef = useRef<HTMLButtonElement>(null);
     const frameRef = useRef<HTMLElement>(null);
     const sceneRef = useRef<RobotPageScene | null>(null);
     const [webGl] = useState(hasWebGl);
@@ -80,6 +81,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                     frame,
                     backdrop,
                     glow,
+                    hint: hintRef.current,
                 }, {
                     compact: () => compact.matches,
                     onActiveChange: (robot) => {
@@ -182,6 +184,17 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                     <div ref={backdropRef} className="robot-backdrop" aria-hidden="true" />
                     <div ref={glowRef} className="robot-glow" aria-hidden="true" />
                     <div ref={layerRef} className="robot-layer" aria-hidden="true" />
+                    <button
+                        ref={hintRef}
+                        type="button"
+                        className="robot-click-hint"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                        onClick={() => sceneRef.current?.activate("so101")}
+                    >
+                        Click me!
+                        <FaChevronDown />
+                    </button>
                 </>,
                 document.body,
             )}

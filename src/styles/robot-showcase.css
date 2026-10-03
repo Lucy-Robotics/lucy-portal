@@ -38,9 +38,61 @@
     height: 100%;
 }
 
+/* Above the arm while it waits in the hero (placed by the scene, then
+   moved by --hint-x / --hint-y: positive is right / down). */
+.robot-click-hint {
+    --hint-x: 50px;
+    --hint-y: -55px;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 21;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+
+    padding: 0.25rem 0.5rem 0.5rem;
+    border: 0;
+
+    background: none;
+    color: var(--color-text-pri);
+
+    font-family: var(--font-primary);
+    font-size: 0.8rem;
+    font-weight: var(--font-weight-bold);
+    white-space: nowrap;
+
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.robot-click-hint[data-shown] {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.robot-click-hint:hover:not(:disabled) {
+    background: none;
+    color: var(--color-highlight);
+}
+
+/* Phones (the home's single-column layout) get their own nudge. */
+@media (max-width: 959px) {
+    .robot-click-hint {
+        --hint-x: -20px;
+        --hint-y: -20px;
+    }
+}
+
 /* Out of the way while the phone menu is open. */
 html:has(.header--menu-open) .robot-layer,
-html:has(.header--menu-open) .robot-glow {
+html:has(.header--menu-open) .robot-glow,
+html:has(.header--menu-open) .robot-click-hint {
     visibility: hidden;
 }
 

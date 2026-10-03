@@ -52,6 +52,8 @@ type Page = {
     /* A layer just under the robots: the infinities' visible parts are drawn
        there, and the page gives them the logo's glow (a CSS drop-shadow). */
     glow: HTMLElement;
+    /* "Click me!", placed above the arm while it waits in the hero. */
+    hint: HTMLElement | null;
 };
 
 type Options = {
@@ -544,6 +546,7 @@ export async function createRobotPageScene(
         const height = window.innerHeight;
         disposeHeroPlans();
         fitCanvas();
+        hintPlaced = false;
         yield;
         chamferSize = parseFloat(getComputedStyle(page.frame).getPropertyValue("--chamfer")) * 16 || 24;
 
@@ -979,6 +982,39 @@ export async function createRobotPageScene(
         return { left, top, width: right - left, height: bottom - top };
     };
 
+    /* "Click me!" above the arm, in the hero while it waits for a click. It
+       stays put: placed once the arm is up, again after each layout. */
+    const placeHint = () => {
+        const hint = page.hint;
+        if (!hint) return;
+        const shown = rise >= 1 && enter < 0.02 && logoOut === null && driver().idle;
+        hint.toggleAttribute("data-shown", shown);
+        if (!shown || hintPlaced) return;
+        hintPlaced = true;
+        // Each part's own box, projected: much tighter than the arm's box in
+        // world space (axis-aligned, it overshoots a lot once the arm turns).
+        let top = Infinity;
+        let left = Infinity;
+        let right = -Infinity;
+        arm.traverse((object) => {
+            if (!(object instanceof THREE.Mesh)) return;
+            if (!object.geometry.boundingBox) object.geometry.computeBoundingBox();
+            const { min, max } = object.geometry.boundingBox!;
+            for (let corner = 0; corner < 8; corner++) {
+                hintCorner.set(corner & 1 ? max.x : min.x, corner & 2 ? max.y : min.y, corner & 4 ? max.z : min.z);
+                const p = toScreen(hintCorner.applyMatrix4(object.matrixWorld));
+                top = Math.min(top, p.y);
+                left = Math.min(left, p.x);
+                right = Math.max(right, p.x);
+            }
+        });
+        // Centred above the arm, then nudged by --hint-x / --hint-y (robot-showcase.css).
+        hint.style.transform = `translate(${((left + right) / 2).toFixed(1)}px, ${top.toFixed(1)}px) `
+            + "translate(-50%, -100%) translate(var(--hint-x), var(--hint-y))";
+    };
+    const hintCorner = new THREE.Vector3();
+    let hintPlaced = false;
+
     /* The canvas's visible area: a rectangle (kept below the header) with the
        box's chamfer, scaled by `chamfer` (0 square, 1 the box's). */
     const HIDDEN = "inset(100%)";
@@ -1040,11 +1076,15 @@ export async function createRobotPageScene(
         container.style.clipPath = clip;
         page.backdrop.style.clipPath = clip;
         page.glow.style.clipPath = clip;
-        if (clip === HIDDEN) return; // scrolled out of sight (phones), nothing to draw
+        if (clip === HIDDEN) {
+            page.hint?.removeAttribute("data-shown");
+            return; // scrolled out of sight (phones), nothing to draw
+        }
 
         // Where the infinities are on screen, for their glow (measured before
         // the camera gets its view offset for drawing).
         scene.updateMatrixWorld();
+        placeHint();
         const payloads = [boxPayload, heroPayload].filter(({ shown }) => shown);
         // Like the page logo's glow: its reach follows the mark's size on
         // screen; full when the arm has it (or it's flying), dim at rest.
@@ -1552,6 +1592,7 @@ export async function createRobotPageScene(
             document.removeEventListener("visibilitychange", wake);
             document.documentElement.classList.remove("robot-hover");
             page.frame.removeAttribute("data-landed");
+            page.hint?.removeAttribute("data-shown");
             disposeHeroPlans();
             boxPick.dispose();
             scene.traverse((object) => {
