@@ -1206,8 +1206,11 @@ export async function createRobotPageScene(
     };
 
     /* Compile the materials of everything, shown or not, so none compiles in
-       the middle of a scroll the first time it shows. */
+       the middle of a scroll the first time it shows. Only where the browser
+       compiles in the background: elsewhere that would just move the stall
+       from the first scroll to the page load. */
     const precompile = (target: THREE.WebGLRenderer, world: THREE.Scene) => {
+        if (!target.extensions.has("KHR_parallel_shader_compile")) return;
         target.compileAsync(world, camera).catch(() => {}); // else compiled when first drawn
         if (target !== renderer) return;
         // The glow pass draws the robots with depthOnly, an override material
