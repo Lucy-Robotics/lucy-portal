@@ -1,5 +1,8 @@
 @import "./themes.css";
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=IBM+Plex+Mono:wght@400;500;700&display=swap");
+@import "@fontsource/orbitron/700.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/700.css";
 
 /* ==============================
    App layout

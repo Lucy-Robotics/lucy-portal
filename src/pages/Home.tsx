@@ -124,14 +124,6 @@ const Home = () => {
                         <span className="home__tagline-accent">//</span> Any robot.
                     </p>
 
-                    {/* <p className="home__headline">
-                        <span className="home__headline-highlight">
-                            Simulated and controled
-                        </span>
-                        <br />
-                        <span className="home__headline-sub">from you browser</span>
-                    </p> */}
-
                     <p className="home__description">
                         Lucy is an open-source framework powered by ROS 2. It
                         controls and simulates robotic platforms and integrates with
