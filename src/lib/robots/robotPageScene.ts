@@ -24,7 +24,7 @@
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
-import { InMoovWave } from "./inmoovWave.ts";
+import { HEAD_TURN, InMoovWave } from "./inmoovWave.ts";
 import {
     createHalo,
     createLucyGlowMaterial,
@@ -33,6 +33,7 @@ import {
     type InfinityShape,
 } from "./lucyInfinity.ts";
 import { prefetchOtherAssets, ROBOT_ASSETS } from "./robotAssets.ts";
+import { clamp, damp, degToRad, smoothstep, smootherstep } from "./math.ts";
 import { forEachOwnMesh, loadRobot } from "./robotModel.ts";
 import { So101PickDemo } from "./so101PickDemo.ts";
 
@@ -154,7 +155,6 @@ const HIT_SLOP = 20; // px: thin robots, so a click in a gap still counts
 
 type Rect = { left: number; top: number; width: number; height: number };
 
-const { clamp, damp, smoothstep } = THREE.MathUtils;
 /* The fixed layers' width: the window's less a classic scrollbar. innerWidth
    counts the scrollbar, and a canvas that wide is squeezed into the layer
    (the robots then miss their glow, the hit tests and the box by a few px). */
@@ -400,7 +400,7 @@ export async function createRobotPageScene(
     /* Distance that fits a box in the frame at the camera's aspect ratio. */
     const fitDistance = (box: THREE.Box3) => {
         const size = box.getSize(new THREE.Vector3());
-        const tan = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
+        const tan = Math.tan(degToRad(FOV / 2));
         const halfDepth = Math.max(size.x, size.z) / 2;
         return Math.max(size.y / 2 / tan, halfDepth / (tan * camera.aspect)) * 1.25 + halfDepth;
     };
@@ -411,8 +411,8 @@ export async function createRobotPageScene(
     const placeCamera = (view: number, aspect: number, level = 0) => {
         camera.aspect = aspect;
         camera.updateProjectionMatrix();
-        const lead = THREE.MathUtils.smootherstep(view * 2, 0, 1);
-        const trail = THREE.MathUtils.smootherstep(view, 0, 1);
+        const lead = smootherstep(view * 2, 0, 1);
+        const trail = smootherstep(view, 0, 1);
         const box = new THREE.Box3(
             shots.so101.min.clone().lerp(shots.inmoov.min, trail),
             shots.so101.max.clone().lerp(shots.inmoov.max, lead),
@@ -866,7 +866,7 @@ export async function createRobotPageScene(
     const growHeld = () => {
         const plan = heroTarget ? heroPlans.get(heroTarget) : null;
         if (!plan || plan.flight || !plan.pick.state.holding) return;
-        const grown = THREE.MathUtils.smoothstep(plan.pick.state.progress, 0.7, 1);
+        const grown = smoothstep(plan.pick.state.progress, 0.7, 1);
         const payload = heroPayload.group;
         payload.scale.setScalar(plan.home.scale + (1 - plan.home.scale) * grown);
         // Held at its centre on phones: it stays upright and facing the
@@ -885,8 +885,7 @@ export async function createRobotPageScene(
         const to = camera.position.clone().sub(from);
         const yaw = Math.atan2(to.x, to.z);
         const pitch = Math.atan2(to.y, Math.hypot(to.x, to.z));
-        // InMoovWave turns the head by look.x * 0.32 and tilts it by look.y * 0.12.
-        return { x: THREE.MathUtils.clamp(yaw / 0.32, -1, 1), y: THREE.MathUtils.clamp(pitch / 0.12, -1, 1) };
+        return { x: clamp(yaw / HEAD_TURN.yaw, -1, 1), y: clamp(pitch / HEAD_TURN.pitch, -1, 1) };
     };
 
     /* A caught logo: shake, fly in, grip; or let go, fly back, rest. */
@@ -997,7 +996,7 @@ export async function createRobotPageScene(
        scaled to a mark `size` px wide. */
     const glowColor = new THREE.Color(accent);
     const glowRgb = [glowColor.r, glowColor.g, glowColor.b]
-        .map((c) => Math.round(THREE.MathUtils.clamp(c, 0, 1) * 255)).join(" ");
+        .map((c) => Math.round(clamp(c, 0, 1) * 255)).join(" ");
     const glowReach = (size: number) => ({ near: 0.025 * size, far: 0.075 * size });
     const logoGlow = (size: number, strength: number) => {
         const { near, far } = glowReach(size);
@@ -1094,16 +1093,16 @@ export async function createRobotPageScene(
         const level = options.compact() ? 1 - settle : 0;
         placeCamera(enter >= 1 ? view : 0, drawRect.width / drawRect.height, level);
 
-        const grid01 = THREE.MathUtils.smoothstep(enter, 0.05, 0.4);
+        const grid01 = smoothstep(enter, 0.05, 0.4);
         gridMaterial.opacity = 0.6 * grid01;
         grid.visible = grid01 > 0;
 
         // The Stage's infinity slides in from the left and lights up as the
         // arm settles (unless the arm brought one along: it's lit already).
         const held = boxPick.state.holding;
-        const arrive = held ? 1 : THREE.MathUtils.smoothstep(enter, 0.35, 0.95);
+        const arrive = held ? 1 : smoothstep(enter, 0.35, 0.95);
         boxPayload.shown = arrive > 0;
-        boxPayload.setGlow(held ? 1 : THREE.MathUtils.smoothstep(enter, 0.55, 1));
+        boxPayload.setGlow(held ? 1 : smoothstep(enter, 0.55, 1));
         if (!held && boxPick.idle) boxPayload.group.position.x = boxInfinity.x - (1 - arrive) * BOX_SLIDE;
         if (humanoid) humanoid.visible = enter >= 1;
         eyeLights.forEach((light, i) => {

@@ -5,10 +5,9 @@
  * along y, its thickness along z (it faces +z). The origin is the crossing.
  */
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
-import { fetchBuffer, ROBOT_ASSETS } from "./robotAssets.ts";
+import { loadGltf } from "./gltf.ts";
+import { ROBOT_ASSETS } from "./robotAssets.ts";
 
 /* Overall width of the mark, loop end to loop end, in metres. */
 const WIDTH = 0.09;
@@ -47,8 +46,7 @@ function dequantize(source: THREE.BufferGeometry) {
 }
 
 export async function loadLucyInfinity(url: string = ROBOT_ASSETS.infinity): Promise<InfinityShape> {
-    const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(await fetchBuffer(url), "");
-    gltf.scene.updateMatrixWorld(true);
+    const gltf = await loadGltf(url);
     let geometry: THREE.BufferGeometry | null = null;
     gltf.scene.traverse((object) => {
         if (!geometry && object instanceof THREE.Mesh) {

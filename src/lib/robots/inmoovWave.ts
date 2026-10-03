@@ -3,8 +3,10 @@
  * slowly toward the cursor with a slight tilt; activated, it raises its
  * right hand and waves.
  */
-import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
+
+import { LookFollow } from "./lookFollow.ts";
+import { clamp, smoothstep } from "./math.ts";
 
 const HEAD = {
     yaw: "i01.head.rothead_link_joint",
@@ -22,12 +24,12 @@ const ARM = {
 const PALM_OUT = 1.45;
 const WAVE_TIME = 3.4;
 
-const { clamp, damp, smoothstep } = THREE.MathUtils;
+/* How far the head turns, tilts and rolls with the look, at its edges, in radians. */
+export const HEAD_TURN = { yaw: 0.32, pitch: 0.12, roll: 0.06 };
 
 export class InMoovWave {
     private readonly robot: URDFRobot;
-    private readonly look = new THREE.Vector2();
-    private readonly lookGoal = new THREE.Vector2();
+    private readonly look = new LookFollow(2.5);
     private progress = 1; // 0..1 through a wave, 1 = idle
 
     constructor(robot: URDFRobot) {
@@ -45,7 +47,7 @@ export class InMoovWave {
 
     /* Cursor direction in [-1, 1], or null to look straight ahead. */
     setLook(look: { x: number; y: number } | null) {
-        this.lookGoal.set(look?.x ?? 0, look?.y ?? 0);
+        this.look.setGoal(look);
     }
 
     /* Advance by dt seconds; returns true while anything is still moving. */
@@ -53,12 +55,11 @@ export class InMoovWave {
         const set = (name: string, value: number) => this.robot.joints[name]?.setJointValue(value);
 
         // Head: slow and small, with a slight tilt toward the side the cursor is on.
-        if (instant) this.look.copy(this.lookGoal);
-        this.look.x = damp(this.look.x, this.lookGoal.x, 2.5, dt);
-        this.look.y = damp(this.look.y, this.lookGoal.y, 2.5, dt);
-        set(HEAD.yaw, this.look.x * 0.32);
-        set(HEAD.pitch, -this.look.y * 0.12);
-        set(HEAD.roll, this.look.x * 0.06);
+        this.look.step(dt, instant);
+        const { x, y } = this.look.current;
+        set(HEAD.yaw, x * HEAD_TURN.yaw);
+        set(HEAD.pitch, -y * HEAD_TURN.pitch);
+        set(HEAD.roll, x * HEAD_TURN.roll);
 
         // Wave: raise (0-0.2), three waves (0.2-0.8), lower (0.8-1).
         if (this.progress < 1) {
@@ -74,6 +75,6 @@ export class InMoovWave {
             set(HEAD.jaw, w > 0.2 && w < 0.45 ? 0.18 * Math.abs(Math.sin(w * 60)) : 0);
         }
 
-        return this.progress < 1 || this.look.distanceTo(this.lookGoal) > 0.002;
+        return this.progress < 1 || this.look.moving;
     }
 }

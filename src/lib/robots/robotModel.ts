@@ -4,11 +4,10 @@
  * source mesh, named after the STL file without its extension.
  */
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import URDFLoader, { type URDFRobot } from "urdf-loader";
 
-import { fetchBuffer, fetchText } from "./robotAssets.ts";
+import { loadGltf } from "./gltf.ts";
+import { fetchText } from "./robotAssets.ts";
 
 type MeshEntry = {
     geometry: THREE.BufferGeometry;
@@ -21,8 +20,7 @@ type MeshEntry = {
  * comes from the parent and the transform from the mesh's full path.
  */
 async function loadMeshes(url: string) {
-    const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(await fetchBuffer(url), "");
-    gltf.scene.updateMatrixWorld(true);
+    const gltf = await loadGltf(url);
 
     const meshes = new Map<string, MeshEntry>();
     gltf.scene.traverse((object) => {

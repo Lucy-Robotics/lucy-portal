@@ -17,6 +17,9 @@
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
+import { LookFollow } from "./lookFollow.ts";
+import { clamp, damp, easeInOutCubic, smoothstep } from "./math.ts";
+
 const CHAIN = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex"] as const;
 /* Height of the fingers' contact faces above their tips, and how deep
    between the fingers the payload's grasp point sits. */
@@ -75,8 +78,6 @@ const HOLD_OFFSET = { pan: -0.7, wrist: 0.6, roll: 0 };
 
 type Pose = number[];
 
-const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-const { clamp, damp, smoothstep } = THREE.MathUtils;
 
 export class So101PickDemo {
     /* False when the plan's grasp is out of the arm's reach: toggle() does nothing. */
@@ -123,8 +124,7 @@ export class So101PickDemo {
     private holding = false;
     private follow = 1;
     private atRest = true;
-    private readonly look = new THREE.Vector2();
-    private readonly lookGoal = new THREE.Vector2();
+    private readonly look = new LookFollow(4);
 
     /*
      * Solves the plan's poses a little at a time (a generator: drive it to
@@ -247,7 +247,7 @@ export class So101PickDemo {
 
     /* The look offset in use now (see setLook). */
     get looking() {
-        return { x: this.look.x, y: this.look.y };
+        return { x: this.look.current.x, y: this.look.current.y };
     }
 
     /* The chain's joint values at rest, to share with other plans. */
@@ -267,24 +267,21 @@ export class So101PickDemo {
 
     /* Look where another pick on the same arm was looking (handing over to this one). */
     lookLike(other: So101PickDemo) {
-        this.look.copy(other.look);
-        this.lookGoal.copy(other.lookGoal);
+        this.look.copyFrom(other.look);
         this.follow = other.follow;
     }
 
     /* Cursor direction in [-1, 1], or null when it leaves. */
     setLook(look: { x: number; y: number } | null) {
-        this.lookGoal.set(look?.x ?? 0, look?.y ?? 0);
+        this.look.setGoal(look);
     }
 
     /* Advance by dt seconds; returns true while anything is still moving. */
     update(dt: number, { instant = false } = {}) {
+        this.look.step(dt, instant);
         if (instant) {
             this.progress = this.goal;
-            this.look.copy(this.lookGoal);
         } else {
-            this.look.x = damp(this.look.x, this.lookGoal.x, 4, dt);
-            this.look.y = damp(this.look.y, this.lookGoal.y, 4, dt);
             const step = Math.min(Math.abs(this.goal - this.progress), dt / DURATION);
             this.progress += Math.sign(this.goal - this.progress) * step;
         }
@@ -306,17 +303,17 @@ export class So101PickDemo {
         }
 
         return Math.abs(this.goal - this.progress) > 1e-4
-            || this.look.distanceTo(this.lookGoal) > 0.002
+            || this.look.moving
             || Math.abs(this.follow - (this.atRest ? 1 : 0)) > 0.01;
     }
 
     /* Back to rest at once, the payload put back home. The cursor following
        carries on easing from where it is (an instant update would snap it). */
     reset() {
-        const look = this.look.clone();
+        const look = this.look.current.clone();
         this.goal = 0;
         this.update(0, { instant: true });
-        this.look.copy(look);
+        this.look.current.copy(look);
         this.pose(this.progress, 0);
     }
 
@@ -380,7 +377,7 @@ export class So101PickDemo {
             const a = this.keys[i - 1];
             const b = this.keys[i];
             if (t <= b.at) {
-                const k = ease(clamp((t - a.at) / (b.at - a.at), 0, 1));
+                const k = easeInOutCubic(clamp((t - a.at) / (b.at - a.at), 0, 1));
                 q = a.q.map((v, n) => v + (b.q[n] - v) * k);
                 break;
             }
@@ -393,12 +390,12 @@ export class So101PickDemo {
         const rest = 1 - smoothstep(t, 0, APPROACH_AT);
         const hold = smoothstep(t, LIFT_AT, 1);
         const offset = (joint: keyof typeof LOOK) => LOOK_OFFSET[joint] * rest + HOLD_OFFSET[joint] * hold;
-        this.set("shoulder_pan", q[0] + offset("pan") - this.look.x * LOOK.pan * f);
+        this.set("shoulder_pan", q[0] + offset("pan") - this.look.current.x * LOOK.pan * f);
         this.set("shoulder_lift", q[1]);
         this.set("elbow_flex", q[2]);
-        this.set("wrist_flex", q[3] + offset("wrist") - this.look.y * LOOK.wrist * f);
-        this.set("wrist_roll", this.roll + offset("roll") - this.look.x * LOOK.roll * f);
-        const g = ease(clamp((t - CLOSE_START) / (ATTACH_AT - CLOSE_START), 0, 1));
+        this.set("wrist_flex", q[3] + offset("wrist") - this.look.current.y * LOOK.wrist * f);
+        this.set("wrist_roll", this.roll + offset("roll") - this.look.current.x * LOOK.roll * f);
+        const g = easeInOutCubic(clamp((t - CLOSE_START) / (ATTACH_AT - CLOSE_START), 0, 1));
         this.set("gripper", this.gripOpen + (this.gripClosed - this.gripOpen) * g);
     }
 
