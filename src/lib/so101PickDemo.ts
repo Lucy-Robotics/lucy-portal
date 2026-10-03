@@ -327,11 +327,11 @@ export class So101PickDemo {
         this.atRest = t < 0.02 || t > 0.98;
         this.follow = damp(this.follow, this.atRest ? 1 : 0, 6, dt);
         const f = this.follow;
-        this.set("shoulder_pan", q[0] + this.look.x * LOOK.pan * f);
+        this.set("shoulder_pan", q[0] - this.look.x * LOOK.pan * f);
         this.set("shoulder_lift", q[1]);
         this.set("elbow_flex", q[2]);
         this.set("wrist_flex", q[3] - this.look.y * LOOK.wrist * f);
-        this.set("wrist_roll", this.roll + this.look.x * LOOK.roll * f);
+        this.set("wrist_roll", this.roll - this.look.x * LOOK.roll * f);
         const g = ease(clamp((t - CLOSE_START) / (ATTACH_AT - CLOSE_START), 0, 1));
         this.set("gripper", this.gripOpen + (this.gripClosed - this.gripOpen) * g);
     }
