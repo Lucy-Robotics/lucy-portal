@@ -80,9 +80,16 @@ const { clamp, damp, smoothstep } = THREE.MathUtils;
 
 export class So101PickDemo {
     /* False when the plan's grasp is out of the arm's reach: toggle() does nothing. */
-    reachable = false;
+    get reachable() {
+        return this.inReach;
+    }
     /* Metres off target for each taught pose, to see why a plan isn't reachable. */
-    misses: Record<"grasp" | "approach" | "rest" | "carry", number> = { grasp: NaN, approach: NaN, rest: NaN, carry: NaN };
+    get misses() {
+        return this.missed;
+    }
+
+    private inReach = false;
+    private missed: Record<"grasp" | "approach" | "rest" | "carry", number> = { grasp: NaN, approach: NaN, rest: NaN, carry: NaN };
 
     private readonly payload: Payload;
     private readonly robot: URDFRobot;
@@ -134,8 +141,14 @@ export class So101PickDemo {
         onHoldChange?: (holding: boolean) => void,
     ): Generator<void, So101PickDemo> {
         const pick = new So101PickDemo(robot, base, payload, plan, onHoldChange);
-        yield* pick.solve(plan);
-        return pick;
+        let solved = false;
+        try {
+            yield* pick.solve(plan);
+            solved = true;
+            return pick;
+        } finally {
+            if (!solved) pick.dispose(); // abandoned half way: off the gripper
+        }
     }
 
     private constructor(
@@ -187,8 +200,8 @@ export class So101PickDemo {
         let grasp = yield* this.solveFor(plan.grasp, [0, 0, 0.5, 0.5], { square });
         if (grasp.error >= REACH_TOLERANCE) {
             // Out of reach: don't spend time on the other poses.
-            this.misses = { grasp: grasp.error, approach: NaN, rest: NaN, carry: NaN };
-            this.reachable = false;
+            this.missed = { grasp: grasp.error, approach: NaN, rest: NaN, carry: NaN };
+            this.inReach = false;
             this.keys = [{ at: 0, q: grasp.q }, { at: 1, q: grasp.q }];
             return;
         }
@@ -205,9 +218,9 @@ export class So101PickDemo {
         const rest = plan.restPose
             ? { q: plan.restPose.slice(), error: 0 }
             : yield* this.solveFor(plan.rest, approach.q, { square: false });
-        this.misses = { grasp: grasp.error, approach: approach.error, rest: rest.error, carry: carry.error };
+        this.missed = { grasp: grasp.error, approach: approach.error, rest: rest.error, carry: carry.error };
         // Rest is only where the arm waits, so it needn't be exact.
-        this.reachable = [grasp, approach, carry].every((solution) => solution.error < REACH_TOLERANCE);
+        this.inReach = [grasp, approach, carry].every((solution) => solution.error < REACH_TOLERANCE);
 
         // Where the payload ends up in the gripper: at the grasp, jaws closed.
         this.apply(grasp.q);
@@ -348,7 +361,7 @@ export class So101PickDemo {
     /* Put the payload back home without animating, and detach from the robot. */
     dispose() {
         this.goal = 0;
-        this.update(0, { instant: true });
+        if (this.keys.length) this.update(0, { instant: true }); // else never solved, never posed
         this.grip.removeFromParent();
     }
 

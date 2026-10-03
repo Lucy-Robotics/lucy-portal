@@ -4,18 +4,33 @@ import type { Connect, Plugin } from "vite";
 type KeycloakEnv = {
     keycloakUrl: string;
     keycloakRealm: string;
+    keycloakClientId: string;
     keycloakClientSecret: string;
 };
+
+/* The browser's sign-in only needs these: anything else (client_credentials,
+   password...) would hand out tokens to whoever asks, on the secret's behalf. */
+const ALLOWED_GRANTS = new Set(["authorization_code", "refresh_token"]);
+const MAX_BODY = 16 * 1024; // bytes; a token request is well under 1 KB
 
 function trimTrailingSlash(value: string): string {
     return value.replace(/\/+$/, "");
 }
 
-function readBody(req: IncomingMessage): Promise<string> {
+/* The body, or null when it's larger than MAX_BODY. */
+function readBody(req: IncomingMessage): Promise<string | null> {
     return new Promise((resolve, reject) => {
         const chunks: Buffer[] = [];
+        let size = 0;
 
-        req.on("data", (chunk: Buffer) => chunks.push(chunk));
+        req.on("data", (chunk: Buffer) => {
+            size += chunk.length;
+            if (size > MAX_BODY) {
+                resolve(null); // the rest is drained, not kept
+                return;
+            }
+            chunks.push(chunk);
+        });
         req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
         req.on("error", reject);
     });
@@ -38,8 +53,24 @@ async function proxyTokenExchange(
         return;
     }
 
+    // Tokens must never be cached, errors included.
+    res.setHeader("Cache-Control", "no-store");
+
     const body = await readBody(req);
+    if (body === null) {
+        res.statusCode = 413;
+        res.setHeader("Connection", "close");
+        res.end("Payload Too Large");
+        return;
+    }
     const params = new URLSearchParams(body);
+    if (!ALLOWED_GRANTS.has(params.get("grant_type") ?? "")) {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ error: "unsupported_grant_type" }));
+        return;
+    }
+    params.set("client_id", env.keycloakClientId);
     params.set("client_secret", env.keycloakClientSecret);
 
     const tokenUrl =
@@ -69,9 +100,11 @@ export function keycloakTokenProxy(env: KeycloakEnv): Plugin {
     const route = (server: { middlewares: Connect.Server }) => {
         server.middlewares.use("/api/auth/token", (req, res) => {
             void proxyTokenExchange(req, res, env).catch((error: unknown) => {
-                const message = error instanceof Error ? error.message : "Token exchange failed";
-                res.statusCode = 500;
-                res.end(message);
+                // Details stay in the server's log, not in the response.
+                console.error("Keycloak token exchange failed", error);
+                if (res.headersSent) return;
+                res.statusCode = 502;
+                res.end("Token exchange failed");
             });
         });
     };

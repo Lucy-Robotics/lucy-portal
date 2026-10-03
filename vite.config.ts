@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv, type Plugin } from "vite";
@@ -10,8 +11,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const cacheHashedAssets = (): Plugin => ({
   name: "cache-hashed-assets",
   configurePreviewServer(server) {
-    server.middlewares.use("/assets/", (_req, res, next) => {
-      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    const assets = path.resolve(server.config.root, server.config.build.outDir, "assets");
+    server.middlewares.use("/assets/", (req, res, next) => {
+      // Only files that exist: a 404 (mid-deploy, say) mustn't be cached for good.
+      const name = decodeURIComponent((req.url ?? "").split("?")[0]);
+      if (fs.existsSync(path.join(assets, name))) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      }
       next();
     });
   },
@@ -32,6 +38,7 @@ export default defineConfig(({ mode }) => {
       keycloakTokenProxy({
         keycloakUrl: env.KEYCLOAK_URL ?? "",
         keycloakRealm: env.KEYCLOAK_REALM ?? "",
+        keycloakClientId: env.KEYCLOAK_CLIENT_ID ?? "",
         keycloakClientSecret: env.KEYCLOAK_CLIENT_SECRET ?? "",
       }),
       cacheHashedAssets(),
