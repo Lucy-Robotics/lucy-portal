@@ -155,6 +155,11 @@ const HIT_SLOP = 20; // px: thin robots, so a click in a gap still counts
 type Rect = { left: number; top: number; width: number; height: number };
 
 const { clamp, damp, smoothstep } = THREE.MathUtils;
+/* The fixed layers' width: the window's less a classic scrollbar. innerWidth
+   counts the scrollbar, and a canvas that wide is squeezed into the layer
+   (the robots then miss their glow, the hit tests and the box by a few px). */
+const viewWidth = () => document.documentElement.clientWidth;
+
 /* Background work (generators): a few ms of it at a time, the page drawing
    its frames in between. Slower overall, but nothing stalls. */
 const SLICE_MS = 5;
@@ -529,9 +534,9 @@ export async function createRobotPageScene(
     /* The canvases cover the window. */
     const fitCanvas = () => {
         const size = renderer.getSize(new THREE.Vector2());
-        if (size.x === window.innerWidth && size.y === window.innerHeight) return;
-        renderer.setSize(window.innerWidth, window.innerHeight, false);
-        gridRenderer.setSize(window.innerWidth, window.innerHeight, false);
+        if (size.x === viewWidth() && size.y === window.innerHeight) return;
+        renderer.setSize(viewWidth(), window.innerHeight, false);
+        gridRenderer.setSize(viewWidth(), window.innerHeight, false);
     };
 
     // The box's chamfer, in px (read on layout, not every frame).
@@ -542,7 +547,7 @@ export async function createRobotPageScene(
     // A generator: the plans are worked out a step at a time (see runFor).
     const layoutHero = function* (reachIndex = 0, withPlans = true): Generator<void, void> {
         const started = performance.now();
-        const width = window.innerWidth;
+        const width = viewWidth();
         const height = window.innerHeight;
         laidOutFor = layoutKey();
         disposeHeroPlans();
@@ -773,7 +778,7 @@ export async function createRobotPageScene(
             const at = logo ? topRect(logo) : null;
             return at ? [at.centerX, at.centerY, at.width] : [];
         });
-        return [window.innerWidth, window.innerHeight, frame.width, frame.height, ...logos]
+        return [viewWidth(), window.innerHeight, frame.width, frame.height, ...logos]
             .map(Math.round).join() + (options.compact() ? "c" : "");
     };
     let laidOutFor = "";
@@ -1108,7 +1113,7 @@ export async function createRobotPageScene(
         });
         page.frame.toggleAttribute("data-landed", enter >= 1);
 
-        const screen: Rect = { left: -1, top: -1, width: window.innerWidth + 2, height: height + 2 };
+        const screen: Rect = { left: -1, top: -1, width: viewWidth() + 2, height: height + 2 };
         // The grid's window closes in on the box slowly, from 55% of the way:
         // always wider than the box while the arm is still flying in (to 80%).
         const close = smoothstep(enter, CLOSE_FROM, 1);
@@ -1138,7 +1143,7 @@ export async function createRobotPageScene(
             glowFilter = logoGlow(size, strength);
             // Room for the wider shadow to fade out entirely.
             const margin = Math.ceil(3 * glowReach(size).far) + 4;
-            area = glowArea(payloads.map(({ infinity }) => infinity), margin, window.innerWidth, height);
+            area = glowArea(payloads.map(({ infinity }) => infinity), margin, viewWidth(), height);
         }
 
         renderer.setScissorTest(false);
@@ -1147,8 +1152,8 @@ export async function createRobotPageScene(
         // The camera frames the draw rectangle, which may cover only part of
         // the screen (or overflow it): render the whole screen as a window onto
         // that framing, so a logo flying in from the header is still drawn.
-        renderer.setViewport(0, 0, window.innerWidth, height);
-        camera.setViewOffset(drawRect.width, drawRect.height, -drawRect.left, -drawRect.top, window.innerWidth, height);
+        renderer.setViewport(0, 0, viewWidth(), height);
+        camera.setViewOffset(drawRect.width, drawRect.height, -drawRect.left, -drawRect.top, viewWidth(), height);
 
         // Behind the page, the grid never crosses its text. Drawn once more when it goes, to clear it.
         if (grid.visible || gridDrawn) gridRenderer.render(gridScene, camera);
@@ -1213,7 +1218,7 @@ export async function createRobotPageScene(
         if (!pointer) return null;
         const from = toScreen(object.getWorldPosition(new THREE.Vector3()));
         return {
-            x: Math.tanh(((pointer.x - from.x) / (window.innerWidth / 2)) * 1.6),
+            x: Math.tanh(((pointer.x - from.x) / (viewWidth() / 2)) * 1.6),
             y: Math.tanh((-(pointer.y - from.y) / (window.innerHeight / 2)) * 1.6),
         };
     };
