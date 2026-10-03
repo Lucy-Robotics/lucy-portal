@@ -83,7 +83,7 @@ export const WAVE = {
     raise: { forward: 1.7, side: 0.3, elbow: 1.1 },
     // Wrist roll that turns the palm toward the viewer (the joint turns freely),
     // complete once the arm is this much raised (0..1).
-    palmRoll: 4.05,
+    palmRoll: 2.05,
     palmRollBy: 0.714,
     // The hand's swing side to side: its centre, amplitude and number of waves.
     swing: { center: -0.3, amplitude: 0.25, count: 3 },
