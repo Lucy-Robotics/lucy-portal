@@ -153,6 +153,24 @@ const HIT_SLOP = 20; // px: thin robots, so a click in a gap still counts
 type Rect = { left: number; top: number; width: number; height: number };
 
 const { clamp, damp, smoothstep } = THREE.MathUtils;
+/* Background work (generators): a few ms of it at a time, the page drawing
+   its frames in between. Slower overall, but nothing stalls. */
+const SLICE_MS = 5;
+function runFor<T>(steps: Generator<void, T>, ms = SLICE_MS) {
+    const end = performance.now() + ms;
+    let step = steps.next();
+    while (!step.done && performance.now() < end) step = steps.next();
+    return step;
+}
+const nextTask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+async function inBackground<T>(steps: Generator<void, T>): Promise<T> {
+    for (;;) {
+        const step = runFor(steps);
+        if (step.done) return step.value;
+        await nextTask();
+    }
+}
+
 const lerpRect = (a: Rect, b: Rect, t: number): Rect => ({
     left: a.left + (b.left - a.left) * t,
     top: a.top + (b.top - a.top) * t,
@@ -345,7 +363,7 @@ export async function createRobotPageScene(
 
     /* The box's pick: the infinity on the grid, from above by its crossing.
        Its rest pose is the one every other plan shares. */
-    const boxPick = new So101PickDemo(so101, arm, { object: boxPayload.group, gripWidth: shape.depth }, {
+    const boxPick = await inBackground(So101PickDemo.create(so101, arm, { object: boxPayload.group, gripWidth: shape.depth }, {
         grasp: boxInfinity.clone(),
         lean: DOWN,
         rest: REST.clone(),
@@ -359,7 +377,7 @@ export async function createRobotPageScene(
             markVisible(logoOut, true);
             logoOut = null;
         }
-    });
+    }));
     const restPose = boxPick.restPose;
 
     // Each robot's shot is fitted to its bounds at rest. Until InMoov is
@@ -408,6 +426,7 @@ export async function createRobotPageScene(
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.autoClear = false;
     container.appendChild(renderer.domElement);
+    await nextTask(); // each WebGL context takes a while to create
     // The grid has its own renderer on the layer behind the page (no per-frame copy).
     const gridRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     gridRenderer.setPixelRatio(renderer.getPixelRatio());
@@ -518,12 +537,14 @@ export async function createRobotPageScene(
 
     let layoutMs = 0; // TEST-HOOK: main-thread cost of laying out the hero
     let plansReady = false;
-    const layoutHero = (reachIndex = 0, withPlans = true) => {
+    // A generator: the plans are worked out a step at a time (see runFor).
+    const layoutHero = function* (reachIndex = 0, withPlans = true): Generator<void, void> {
         const started = performance.now();
         const width = window.innerWidth;
         const height = window.innerHeight;
         disposeHeroPlans();
         fitCanvas();
+        yield;
         chamferSize = parseFloat(getComputedStyle(page.frame).getPropertyValue("--chamfer")) * 16 || 24;
 
         const hero = page.hero.getBoundingClientRect();
@@ -576,16 +597,19 @@ export async function createRobotPageScene(
         // arm until its lowest point just touches the bottom edge.
         boxPick.reset();
         arm.updateMatrixWorld(true);
-        let lowest = -Infinity;
+        yield;
+        // Lowest on screen is lowest in clip space: project in place, no copies.
+        let lowestNdc = Infinity;
         const vertex = new THREE.Vector3();
         forEachOwnMesh(so101.links.base_link, (mesh) => {
             const position = mesh.geometry.attributes.position;
             for (let i = 0; i < position.count; i++) {
-                vertex.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld);
-                lowest = Math.max(lowest, toScreen(vertex, heroRect).y);
+                lowestNdc = Math.min(lowestNdc, vertex.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld).project(camera).y);
             }
         });
+        const lowest = heroRect.top + ((1 - lowestNdc) / 2) * heroRect.height;
         if (Number.isFinite(lowest)) heroRect.top -= lowest - height;
+        yield;
 
         // Screen points become world points on the plane through the shoulder
         // that faces the camera, where the gripper can stay square to them.
@@ -610,7 +634,7 @@ export async function createRobotPageScene(
          * arm reaches toward it as far as it comfortably can, and the logo
          * flies into its gripper.
          */
-        const planFor = (logo: HTMLElement, rect: ReturnType<typeof topRect>): HeroPlan | null => {
+        const planFor = function* (logo: HTMLElement, rect: ReturnType<typeof topRect>): Generator<void, HeroPlan | null> {
             const center = toWorld(rect.centerX, rect.centerY);
             const markScale = (rect.width * metresPerPixel(center)) / shape.width;
             // Wide screens, pinched by the far end of its right loop, which the
@@ -625,7 +649,7 @@ export async function createRobotPageScene(
                 : { rest: REST.clone(), restLean: DOWN, carry, carryLean: UP, square: false, restPose, rollOffset: HERO_ROLL, gripperOffset: HERO_GRIPPER };
 
             placeHeroPayload(pinch, markScale, pinchAt);
-            const reach = new So101PickDemo(so101, arm, {
+            const reach = yield* So101PickDemo.create(so101, arm, {
                 object: heroPayload.group,
                 gripWidth: shape.depth * markScale,
             }, { ...common, grasp: pinch.clone(), lean: compact ? towards : towards.clone().add(DOWN).normalize(), approach: 0.05 }, (holding) => {
@@ -649,11 +673,11 @@ export async function createRobotPageScene(
                 const p = toScreen(point, heroRect);
                 return p.x - 2 * halfWidth >= margin && p.x + margin <= width && p.y - halfWidth >= headerBottom + margin;
             };
-            const tryCatch = (distance: number) => {
+            const tryCatch = function* (distance: number): Generator<void, { at: THREE.Vector3; pick: So101PickDemo } | null> {
                 const at = from.clone().addScaledVector(towards, distance);
                 if (!onScreen(at)) return null;
                 placeHeroPayload(at, 1, pinchAt);
-                const catching = new So101PickDemo(so101, arm, {
+                const catching = yield* So101PickDemo.create(so101, arm, {
                     object: heroPayload.group,
                     gripWidth: shape.depth,
                 }, { ...common, grasp: at.clone(), lean: towards, approach: 0 });
@@ -662,12 +686,12 @@ export async function createRobotPageScene(
                 return null;
             };
             // The longest reach that works: binary search, keeping the best.
-            let best = tryCatch(CATCH_RANGE.min);
+            let best = yield* tryCatch(CATCH_RANGE.min);
             let low = CATCH_RANGE.min;
             let high = CATCH_RANGE.max;
             for (let i = 0; best && i < CATCH_RANGE.steps; i++) {
                 const middle = (low + high) / 2;
-                const attempt = tryCatch(middle);
+                const attempt = yield* tryCatch(middle);
                 if (attempt) {
                     best.pick.dispose();
                     best = attempt;
@@ -683,9 +707,9 @@ export async function createRobotPageScene(
             };
         };
 
-        const add = (name: "hero" | "header", logo: HTMLElement | null, rect: ReturnType<typeof topRect> | null) => {
+        const add = function* (name: "hero" | "header", logo: HTMLElement | null, rect: ReturnType<typeof topRect> | null) {
             if (!logo || !rect?.width) return;
-            const plan = planFor(logo, rect);
+            const plan = yield* planFor(logo, rect);
             if (!plan) return;
             heroPlans.set(name, plan);
             logo.classList.add("robot-target");
@@ -693,10 +717,11 @@ export async function createRobotPageScene(
         // Wide screens can show the arm first and plan once it's up (the
         // layout doesn't depend on the plans there); phones need the plan to
         // know how big to draw the arm.
-        plansReady = withPlans || compact;
-        if (plansReady) {
-            add("header", page.headerLogo, headerLogo);
-            add("hero", page.heroLogo, heroLogo);
+        plansReady = false;
+        if (withPlans || compact) {
+            yield* add("hero", page.heroLogo, heroLogo);
+            yield* add("header", page.headerLogo, headerLogo);
+            plansReady = true;
         }
         heroPayload.shown = false;
 
@@ -704,8 +729,15 @@ export async function createRobotPageScene(
         if (!compact) return;
         const plan = heroPlans.get("header");
         // Out of reach at this size: a bit bigger.
-        if (!plan && reachIndex < HEADER_REACHES.length - 1) layoutHero(reachIndex + 1);
+        if (!plan && reachIndex < HEADER_REACHES.length - 1) yield* layoutHero(reachIndex + 1);
     };
+    /* All at once (on resize). */
+    const layoutNow = (withPlans: boolean) => {
+        const steps = layoutHero(0, withPlans);
+        while (!steps.next().done);
+    };
+    let planning: Generator<void, void> | null = null; // the first plans, in the background
+    let settingUp = true; // laid out in the background too: nothing draws meanwhile
 
     /* ---------------- state ---------------- */
     let enter = 0; // 0: the arm free in the hero, 1: in the box
@@ -759,6 +791,7 @@ export async function createRobotPageScene(
             }
             fromPlan.phase = "idle";
         }
+        to.lookLike(from);
         from.release();
         heroPayload.shown = false;
         if (holding) {
@@ -1190,15 +1223,18 @@ export async function createRobotPageScene(
             precompile(gridRenderer, gridScene);
             precompile(renderer, scene);
             loadInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
-        } else if (rise >= 1 && !plansReady && !relayoutTimer) {
-            layoutHero();
-            showShown();
-            timings.plans = performance.now() - started;
-            if (pending) {
-                const action = pending;
-                pending = null;
-                action();
+        } else if (rise >= 1 && !plansReady && !planning && !relayoutTimer && !boxPick.state.holding) {
+            planning = layoutHero();
+        }
+        // The plans are worked out in the background, a slice per frame: the arm
+        // keeps following the cursor (paused while it holds the box's infinity,
+        // which would be measured as a jaw).
+        if (planning && !boxPick.state.holding) {
+            if (runFor(planning).done) {
+                planning = null;
+                plansDone();
             }
+            showShown();
         }
 
         draw();
@@ -1235,7 +1271,7 @@ export async function createRobotPageScene(
     };
 
     const wake = () => {
-        if (!raf) raf = requestAnimationFrame(tick);
+        if (!raf && !settingUp) raf = requestAnimationFrame(tick);
     };
 
     /* ---------------- actions ---------------- */
@@ -1273,6 +1309,14 @@ export async function createRobotPageScene(
     };
 
     let pending: (() => void) | null = null; // asked for before the plans were ready
+    function plansDone() {
+        timings.plans = performance.now() - started;
+        if (pending) {
+            const action = pending;
+            pending = null;
+            action();
+        }
+    }
     const activate = (robot: RobotName) => {
         // A click: the visitor, not the cursor, has their attention now.
         if (robot === "inmoov") inmoovAttention = performance.now() + ATTENTION_TIME;
@@ -1359,6 +1403,10 @@ export async function createRobotPageScene(
         window.clearTimeout(relayoutTimer);
         relayoutTimer = window.setTimeout(() => {
             relayoutTimer = 0;
+            if (settingUp) {
+                relayout();
+                return;
+            }
             if (inMotion(boxPick) || [...heroPlans.values()].some((plan) => !plan.pick.idle)) {
                 fitCanvas();
                 draw();
@@ -1369,7 +1417,8 @@ export async function createRobotPageScene(
             const held = boxPick.state.holding;
             const carried = held ? logoOut : null;
             // Before the hero is up, stay light: the plans come after the rise.
-            layoutHero(0, plansReady);
+            planning = null;
+            layoutNow(plansReady);
             if (held) {
                 boxPick.takeOver();
                 if (carried) {
@@ -1426,7 +1475,10 @@ export async function createRobotPageScene(
         wake();
     };
 
-    layoutHero(0, false);
+    await inBackground(layoutHero(0, false));
+    // With parallel compiling, the first frame needn't stall on it either.
+    if (renderer.extensions.has("KHR_parallel_shader_compile")) await renderer.compileAsync(scene, camera);
+    settingUp = false;
     enter = enterGoal();
     draw();
     wake();

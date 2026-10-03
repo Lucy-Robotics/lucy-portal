@@ -80,9 +80,9 @@ const { clamp, damp, smoothstep } = THREE.MathUtils;
 
 export class So101PickDemo {
     /* False when the plan's grasp is out of the arm's reach: toggle() does nothing. */
-    readonly reachable: boolean;
+    reachable = false;
     /* Metres off target for each taught pose, to see why a plan isn't reachable. */
-    readonly misses: Record<"grasp" | "approach" | "rest" | "carry", number>;
+    misses: Record<"grasp" | "approach" | "rest" | "carry", number> = { grasp: NaN, approach: NaN, rest: NaN, carry: NaN };
 
     private readonly payload: Payload;
     private readonly robot: URDFRobot;
@@ -93,7 +93,7 @@ export class So101PickDemo {
     // The side of the gripper its servo is on, across the roll axis (gripper frame).
     private readonly servoSide: THREE.Vector3 | null;
     private readonly panOrigin: THREE.Vector3;
-    private readonly keys: { at: number; q: Pose }[];
+    private keys: { at: number; q: Pose }[] = [];
     private readonly onHoldChange?: (holding: boolean) => void;
     private readonly home: {
         parent: THREE.Object3D;
@@ -120,11 +120,25 @@ export class So101PickDemo {
     private readonly lookGoal = new THREE.Vector2();
 
     /*
-     * `base` is the robot's parent, already placed in the scene. The payload
-     * must already be in the scene at plan.grasp; it's returned there when
-     * put back.
+     * Solves the plan's poses a little at a time (a generator: drive it to
+     * completion, all at once or a few steps per frame), then returns the
+     * pick. `base` is the robot's parent, already placed in the scene. The
+     * payload must already be in the scene at plan.grasp, and stay there
+     * meanwhile; it's returned there when put back.
      */
-    constructor(
+    static *create(
+        robot: URDFRobot,
+        base: THREE.Object3D,
+        payload: Payload,
+        plan: PickPlan,
+        onHoldChange?: (holding: boolean) => void,
+    ): Generator<void, So101PickDemo> {
+        const pick = new So101PickDemo(robot, base, payload, plan, onHoldChange);
+        yield* pick.solve(plan);
+        return pick;
+    }
+
+    private constructor(
         robot: URDFRobot,
         base: THREE.Object3D,
         payload: Payload,
@@ -160,12 +174,17 @@ export class So101PickDemo {
             for (const object of path.reverse()) if (!this.chain.includes(object)) this.chain.push(object);
         }
         this.panOrigin = robot.links.shoulder_link.getWorldPosition(new THREE.Vector3());
+    }
 
+    /* The taught poses. Each solver run is a step: in between, the page may
+       move the arm (each run starts from its own pose and puts it back). */
+    private *solve(plan: PickPlan): Generator<void, void> {
+        const { object } = this.payload;
         // Roll the wrist so the jaws close along the payload's local z, then
         // solve the taught poses with that roll.
         this.set("gripper", this.gripOpen);
         const square = plan.square ?? true;
-        let grasp = this.solveFor(plan.grasp, [0, 0, 0.5, 0.5], { square });
+        let grasp = yield* this.solveFor(plan.grasp, [0, 0, 0.5, 0.5], { square });
         if (grasp.error >= REACH_TOLERANCE) {
             // Out of reach: don't spend time on the other poses.
             this.misses = { grasp: grasp.error, approach: NaN, rest: NaN, carry: NaN };
@@ -174,18 +193,18 @@ export class So101PickDemo {
             return;
         }
         this.roll = this.alignRoll(grasp.q) + (plan.rollOffset ?? 0);
-        grasp = this.solveFor(plan.grasp, grasp.q, { square });
+        grasp = yield* this.solveFor(plan.grasp, grasp.q, { square });
         // Approach and retreat straight along the gripper's axis at the grasp.
         this.apply(grasp.q);
         const axis = this.toolAxis();
-        const approach = this.solveFor(plan.grasp.clone().addScaledVector(axis, -plan.approach), grasp.q, { square });
+        const approach = yield* this.solveFor(plan.grasp.clone().addScaledVector(axis, -plan.approach), grasp.q, { square });
         this.lean = plan.carryLean.clone().normalize();
-        const carry = this.solveFor(plan.carry, approach.q, { square });
+        const carry = yield* this.solveFor(plan.carry, approach.q, { square });
         // At rest it holds nothing, so it may turn out of square.
         this.lean = plan.restLean.clone().normalize();
         const rest = plan.restPose
             ? { q: plan.restPose.slice(), error: 0 }
-            : this.solveFor(plan.rest, approach.q, { square: false });
+            : yield* this.solveFor(plan.rest, approach.q, { square: false });
         this.misses = { grasp: grasp.error, approach: approach.error, rest: rest.error, carry: carry.error };
         // Rest is only where the arm waits, so it needn't be exact.
         this.reachable = [grasp, approach, carry].every((solution) => solution.error < REACH_TOLERANCE);
@@ -233,6 +252,13 @@ export class So101PickDemo {
         if (this.reachable) this.goal = this.goal > 0.5 ? 0 : 1;
     }
 
+    /* Look where another pick on the same arm was looking (handing over to this one). */
+    lookLike(other: So101PickDemo) {
+        this.look.copy(other.look);
+        this.lookGoal.copy(other.lookGoal);
+        this.follow = other.follow;
+    }
+
     /* Cursor direction in [-1, 1], or null when it leaves. */
     setLook(look: { x: number; y: number } | null) {
         this.lookGoal.set(look?.x ?? 0, look?.y ?? 0);
@@ -271,10 +297,14 @@ export class So101PickDemo {
             || Math.abs(this.follow - (this.atRest ? 1 : 0)) > 0.01;
     }
 
-    /* Back to rest at once, the payload put back home. */
+    /* Back to rest at once, the payload put back home. The cursor following
+       carries on easing from where it is (an instant update would snap it). */
     reset() {
+        const look = this.look.clone();
         this.goal = 0;
         this.update(0, { instant: true });
+        this.look.copy(look);
+        this.pose(this.progress, 0);
     }
 
     /* Run the sequence to a point on its timeline (0 rest, 0.5 at the grasp
@@ -552,9 +582,10 @@ export class So101PickDemo {
 
     /* Best solution for a goal: refine from `start`, and if that stalls,
        search a coarse grid of starting poses (forward-leaning preferred). */
-    private solveFor(goal: THREE.Vector3, start: Pose, { square = true } = {}) {
+    private *solveFor(goal: THREE.Vector3, start: Pose, { square = true } = {}): Generator<void, { q: Pose; error: number }> {
         const preference = (q: Pose) => 0.004 * (Math.abs(q[1] - 0.4) + Math.abs(q[2] + 0.2));
         let best = this.ik(goal, start, 20, square);
+        yield;
         if (best.error > 0.004) {
             const toGoal = this.base.worldToLocal(goal.clone()).sub(this.base.worldToLocal(this.panOrigin.clone()));
             const pan = Math.atan2(-toGoal.z, toGoal.x);
@@ -562,6 +593,7 @@ export class So101PickDemo {
                 for (const elbow of [-1.2, -0.4, 0.4, 1.2]) {
                     for (const wrist of [-1.4, -0.6, 0.6, 1.4]) {
                         const candidate = this.ik(goal, [pan, lift, elbow, wrist], 20, square);
+                        yield;
                         if (candidate.error + preference(candidate.q) < best.error + preference(best.q) - 1e-4) {
                             best = candidate;
                         }
@@ -571,6 +603,7 @@ export class So101PickDemo {
         }
         // The lean is only a preference: polish without it so position wins.
         const polished = this.ik(goal, best.q, 20, square, 0);
+        yield;
         return polished.error < best.error ? polished : best;
     }
 }
