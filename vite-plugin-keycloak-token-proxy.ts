@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { Plugin } from "vite";
+import type { Connect, Plugin } from "vite";
 
 type KeycloakEnv = {
     keycloakUrl: string;
@@ -64,17 +64,23 @@ async function proxyTokenExchange(
     res.end(responseBody);
 }
 
+/*
+ * POST /api/auth/token, with the client secret added, on the dev server and
+ * on `vite preview` (`npm start`, how the built site is served).
+ */
 export function keycloakTokenProxy(env: KeycloakEnv): Plugin {
+    const route = (server: { middlewares: Connect.Server }) => {
+        server.middlewares.use("/api/auth/token", (req, res) => {
+            void proxyTokenExchange(req, res, env).catch((error: unknown) => {
+                const message = error instanceof Error ? error.message : "Token exchange failed";
+                res.statusCode = 500;
+                res.end(message);
+            });
+        });
+    };
     return {
         name: "keycloak-token-proxy",
-        configureServer(server) {
-            server.middlewares.use("/api/auth/token", (req, res) => {
-                void proxyTokenExchange(req, res, env).catch((error: unknown) => {
-                    const message = error instanceof Error ? error.message : "Token exchange failed";
-                    res.statusCode = 500;
-                    res.end(message);
-                });
-            });
-        },
+        configureServer: route,
+        configurePreviewServer: route,
     };
 }

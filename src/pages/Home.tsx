@@ -230,21 +230,21 @@ const Home = () => {
                                 http://localhost:4004
                             </a>
                             .
-                            <p className="home__quickstart-note">
-                                Only{" "}
-                                <a href="https://git-scm.com/downloads" target="_blank" rel="noopener noreferrer" className="home__highlight">
-                                    Git
-                                </a>
-                                ,{" "}
-                                <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" className="home__highlight">
-                                    Python
-                                </a>
-                                {" "}and{" "}
-                                <a href="https://pixi.sh/latest/installation/" target="_blank" rel="noopener noreferrer" className="home__highlight">
-                                    Pixi
-                                </a>{" "}
-                                are required.
-                            </p>
+                        </p>
+                        <p className="home__quickstart-note">
+                            Only{" "}
+                            <a href="https://git-scm.com/downloads" target="_blank" rel="noopener noreferrer" className="home__highlight">
+                                Git
+                            </a>
+                            ,{" "}
+                            <a href="https://www.python.org/downloads/" target="_blank" rel="noopener noreferrer" className="home__highlight">
+                                Python
+                            </a>
+                            {" "}and{" "}
+                            <a href="https://pixi.sh/latest/installation/" target="_blank" rel="noopener noreferrer" className="home__highlight">
+                                Pixi
+                            </a>{" "}
+                            are required.
                         </p>
 
                         <hr className="home__separator" />
