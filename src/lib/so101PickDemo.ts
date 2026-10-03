@@ -52,20 +52,31 @@ export type PickPlan = {
     /* Whether the gripper must be square to the payload's face (default), or
        only reach it: fine for a thin round part, and it reaches much more. */
     square?: boolean;
+    /* Added to the wrist roll that lines the jaws up with the payload, in radians. */
+    rollOffset?: number;
+    /* Jaws opened wider on the way in, and closed tighter on the payload, than
+       measured (gripper joint radians, negative for less). */
+    gripperOffset?: { open: number; closed: number };
 };
 
 /* Pick timeline, 0 -> 1 (played backwards to put the payload back). */
 const CLOSE_START = 0.5;
 const ATTACH_AT = 0.64;
-const DURATION = 2.8;
+const APPROACH_AT = 0.3; // in front of the payload, from rest
+const LIFT_AT = 0.8; // back at the approach, from where it lifts the payload to carry it
+const DURATION = 3.3;
 
-/* How far the arm turns toward the cursor at the screen edges, in radians. */
-const LOOK = { pan: 0.55, wrist: 0.35, roll: 0.25 };
+/* How far the arm turns toward the cursor at the screen edges, in radians,
+   and an angle added to each joint at rest, empty-handed (positive or negative). */
+const LOOK = { pan: 0.75, wrist: 0.95, roll: 0.25 };
+const LOOK_OFFSET = { pan: -0.7, wrist: -0.2, roll: -1.3 };
+/* Added instead while it holds the payload (blended in as it lifts it), in radians. */
+const HOLD_OFFSET = { pan: -0.7, wrist: 0.6, roll: 0 };
 
 type Pose = number[];
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-const { clamp, damp } = THREE.MathUtils;
+const { clamp, damp, smoothstep } = THREE.MathUtils;
 
 export class So101PickDemo {
     /* False when the plan's grasp is out of the arm's reach: toggle() does nothing. */
@@ -79,6 +90,8 @@ export class So101PickDemo {
     private readonly tcp: THREE.Object3D;
     private lean: THREE.Vector3;
     private readonly facing: THREE.Vector3;
+    // The side of the gripper its servo is on, across the roll axis (gripper frame).
+    private readonly servoSide: THREE.Vector3 | null;
     private readonly panOrigin: THREE.Vector3;
     private readonly keys: { at: number; q: Pose }[];
     private readonly onHoldChange?: (holding: boolean) => void;
@@ -134,7 +147,13 @@ export class So101PickDemo {
         };
 
         base.updateMatrixWorld(true);
+        this.servoSide = this.findServo();
         this.measureJaws();
+        if (plan.gripperOffset) {
+            const opening = Math.sign(this.gripOpen - this.gripClosed) || 1;
+            this.gripOpen += opening * plan.gripperOffset.open;
+            this.gripClosed -= opening * plan.gripperOffset.closed;
+        }
         for (const end of [this.grip, this.tcp]) {
             const path: THREE.Object3D[] = [];
             for (let object: THREE.Object3D | null = end; object && object !== base; object = object.parent) path.push(object);
@@ -154,7 +173,7 @@ export class So101PickDemo {
             this.keys = [{ at: 0, q: grasp.q }, { at: 1, q: grasp.q }];
             return;
         }
-        this.roll = this.alignRoll(grasp.q);
+        this.roll = this.alignRoll(grasp.q) + (plan.rollOffset ?? 0);
         grasp = this.solveFor(plan.grasp, grasp.q, { square });
         // Approach and retreat straight along the gripper's axis at the grasp.
         this.apply(grasp.q);
@@ -180,10 +199,10 @@ export class So101PickDemo {
 
         this.keys = [
             { at: 0, q: rest.q },
-            { at: 0.3, q: approach.q },
+            { at: APPROACH_AT, q: approach.q },
             { at: CLOSE_START, q: grasp.q },
             { at: ATTACH_AT, q: grasp.q }, // hold still while the jaws close
-            { at: 0.8, q: approach.q },
+            { at: LIFT_AT, q: approach.q },
             { at: 1, q: carry.q },
         ];
         this.update(0);
@@ -225,8 +244,8 @@ export class So101PickDemo {
             this.progress = this.goal;
             this.look.copy(this.lookGoal);
         } else {
-            this.look.x = damp(this.look.x, this.lookGoal.x, 5, dt);
-            this.look.y = damp(this.look.y, this.lookGoal.y, 5, dt);
+            this.look.x = damp(this.look.x, this.lookGoal.x, 4, dt);
+            this.look.y = damp(this.look.y, this.lookGoal.y, 4, dt);
             const step = Math.min(Math.abs(this.goal - this.progress), dt / DURATION);
             this.progress += Math.sign(this.goal - this.progress) * step;
         }
@@ -327,11 +346,15 @@ export class So101PickDemo {
         this.atRest = t < 0.02 || t > 0.98;
         this.follow = damp(this.follow, this.atRest ? 1 : 0, 6, dt);
         const f = this.follow;
-        this.set("shoulder_pan", q[0] - this.look.x * LOOK.pan * f);
+        // The offsets blend gently over the moves (rest <-> approach, lift <-> carry).
+        const rest = 1 - smoothstep(t, 0, APPROACH_AT);
+        const hold = smoothstep(t, LIFT_AT, 1);
+        const offset = (joint: keyof typeof LOOK) => LOOK_OFFSET[joint] * rest + HOLD_OFFSET[joint] * hold;
+        this.set("shoulder_pan", q[0] + offset("pan") - this.look.x * LOOK.pan * f);
         this.set("shoulder_lift", q[1]);
         this.set("elbow_flex", q[2]);
-        this.set("wrist_flex", q[3] - this.look.y * LOOK.wrist * f);
-        this.set("wrist_roll", this.roll - this.look.x * LOOK.roll * f);
+        this.set("wrist_flex", q[3] + offset("wrist") - this.look.y * LOOK.wrist * f);
+        this.set("wrist_roll", this.roll + offset("roll") - this.look.x * LOOK.roll * f);
         const g = ease(clamp((t - CLOSE_START) / (ATTACH_AT - CLOSE_START), 0, 1));
         this.set("gripper", this.gripOpen + (this.gripClosed - this.gripOpen) * g);
     }
@@ -365,7 +388,37 @@ export class So101PickDemo {
                 bestScore = score;
             }
         }
-        return best;
+        // Half a turn away aligns as well. Of the two, keep the one with the
+        // gripper's servo toward the viewer (+z), when the joint allows it.
+        const servo = this.servoSide;
+        if (!servo) return best;
+        const towardViewer = (roll: number) => {
+            this.set("wrist_roll", roll);
+            this.updateChain();
+            return servo.clone().transformDirection(this.robot.links.gripper_link.matrixWorld).z;
+        };
+        const chosen = [best, best + Math.PI, best - Math.PI]
+            .filter((roll) => roll >= lower && roll <= upper)
+            .reduce((a, b) => (towardViewer(b) > towardViewer(a) ? b : a));
+        return chosen;
+    }
+
+    /* Where the gripper's servo is, seen down the roll axis (null if not found). */
+    private findServo() {
+        const body = this.robot.links.gripper_link;
+        const servo = body.children.flatMap((child) => {
+            const meshes: THREE.Mesh[] = [];
+            child.traverse((object) => {
+                if (object instanceof THREE.Mesh && object.name.startsWith("sts3215")) meshes.push(object);
+            });
+            return meshes;
+        })[0];
+        if (!servo) return null;
+        servo.geometry.computeBoundingBox();
+        const center = servo.geometry.boundingBox!.getCenter(new THREE.Vector3()).applyMatrix4(servo.matrixWorld);
+        const side = body.worldToLocal(center);
+        side.z = 0; // across the roll axis, the gripper's z
+        return side.lengthSq() > 0 ? side.normalize() : null;
     }
 
     /*

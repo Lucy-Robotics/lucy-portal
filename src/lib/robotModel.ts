@@ -58,6 +58,7 @@ export async function loadRobot(
             return;
         }
         const mesh = new THREE.Mesh(entry.geometry, materialFor(urdfMaterial.name));
+        mesh.name = name;
         mesh.applyMatrix4(entry.matrix);
         // urdf-loader resets the returned object's position and rotation,
         // so the GLB transform lives on the mesh inside a plain group.

@@ -114,6 +114,10 @@ const INMOOV_HEIGHT = 1.8;
    and the arm's footprint takes at most this share of the width. Phones: the
    header logo sits this far from the shoulder. */
 const LOGO_HEIGHT = 0.27;
+/* Wide screens, taking the hero's logo: extra wrist roll, and jaws opened
+   wider / closed tighter than measured (radians, negative for less). */
+const HERO_ROLL = 0.3;
+const HERO_GRIPPER = { open: 0, closed: 0 };
 const ARM_INSET = 0.09;
 const ARM_MAX_WIDTH_SHARE = 0.4;
 /* Phones: how far the header logo may be from the shoulder, longest first:
@@ -128,6 +132,7 @@ const RISE_TIME = 1.3;
 /* After a click, the robots turn to the visitor (the camera) instead of the
    cursor, for their animation and this long after it, in ms. */
 const ATTENTION_TIME = 2500;
+const ARM_ATTENTION_TIME = 800; // the arm's, back to the cursor sooner
 const SHAKE_TIME = 0.9;
 /* Meanwhile the wrist twists back and forth (radians, twists per second):
    trying to get it, and showing the open jaws. */
@@ -608,8 +613,8 @@ export async function createRobotPageScene(
         const planFor = (logo: HTMLElement, rect: ReturnType<typeof topRect>): HeroPlan | null => {
             const center = toWorld(rect.centerX, rect.centerY);
             const markScale = (rect.width * metresPerPixel(center)) / shape.width;
-            // Wide screens: pinched by the far end of its right loop, which the
-            // arm reaches from the right. Phones: taken by its centre.
+            // Wide screens, pinched by the far end of its right loop, which the
+            // arm reaches from above right (over the text). Phones, taken by its centre.
             const pinchAt = compact ? 0 : shape.rightEnd;
             const pinch = center.clone().addScaledVector(right, pinchAt * markScale);
             const towards = pinch.clone().sub(from).normalize();
@@ -617,13 +622,13 @@ export async function createRobotPageScene(
             // to it: it reaches much further that way.
             const common = compact
                 ? { rest: REST_COMPACT.clone(), restLean: DOWN, carry, carryLean: UP, square: false }
-                : { rest: REST.clone(), restLean: DOWN, carry, carryLean: UP, square: false, restPose };
+                : { rest: REST.clone(), restLean: DOWN, carry, carryLean: UP, square: false, restPose, rollOffset: HERO_ROLL, gripperOffset: HERO_GRIPPER };
 
             placeHeroPayload(pinch, markScale, pinchAt);
             const reach = new So101PickDemo(so101, arm, {
                 object: heroPayload.group,
                 gripWidth: shape.depth * markScale,
-            }, { ...common, grasp: pinch.clone(), lean: towards, approach: 0.05 }, (holding) => {
+            }, { ...common, grasp: pinch.clone(), lean: compact ? towards : towards.clone().add(DOWN).normalize(), approach: 0.05 }, (holding) => {
                 heroPayload.shown = holding;
                 markVisible(logo, !holding);
                 logoOut = holding ? logo : null;
@@ -885,6 +890,15 @@ export async function createRobotPageScene(
                 return false;
         }
         return plan.phase !== "idle" && plan.phase !== "held";
+    };
+
+    /* Back to the pose on screen: planning moves the arm, and the switch to
+       the new plans is eased from there (see handOver). */
+    const showShown = () => {
+        for (const name of ARM_JOINTS) {
+            const value = shown.get(name);
+            if (value !== undefined) so101.joints[name].setJointValue(value);
+        }
     };
 
     const smoothJoints = (dt: number) => {
@@ -1149,7 +1163,7 @@ export async function createRobotPageScene(
             hovered = pointer ? hitTest(pointer.x, pointer.y) : null;
             document.documentElement.classList.toggle("robot-hover", hovered !== null);
         }
-        if (inMotion(pick)) armAttention = time + ATTENTION_TIME;
+        if (inMotion(pick)) armAttention = time + ARM_ATTENTION_TIME;
         if (!reduceMotion) {
             // After a click the arm attends to the visitor: it stops following
             // the cursor and holds its pose (it presents the logo it took).
@@ -1178,6 +1192,7 @@ export async function createRobotPageScene(
             loadInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
         } else if (rise >= 1 && !plansReady && !relayoutTimer) {
             layoutHero();
+            showShown();
             timings.plans = performance.now() - started;
             if (pending) {
                 const action = pending;
@@ -1194,7 +1209,7 @@ export async function createRobotPageScene(
         }
         // Keep going while a robot attends to the visitor, so it turns back to
         // the cursor on its own when that ends.
-        const working = rise < 1 || !plansReady || time < armAttention + 50 || time < inmoovAttention + 50;
+        const working = rise < 1 || !plansReady || driver() !== lastDriver || time < armAttention + 50 || time < inmoovAttention + 50;
         if (picking || catching || waving || panning || smoothing > 0 || working) raf = requestAnimationFrame(tick);
         else last = 0;
     };
@@ -1261,7 +1276,7 @@ export async function createRobotPageScene(
     const activate = (robot: RobotName) => {
         // A click: the visitor, not the cursor, has their attention now.
         if (robot === "inmoov") inmoovAttention = performance.now() + ATTENTION_TIME;
-        else armAttention = performance.now() + ATTENTION_TIME;
+        else armAttention = performance.now() + ARM_ATTENTION_TIME;
         if (robot === "so101" && enter < 0.02 && !plansReady) {
             pending = () => activate(robot);
         } else if (robot === "inmoov") {
@@ -1362,6 +1377,7 @@ export async function createRobotPageScene(
                     logoOut = carried;
                 }
             }
+            showShown();
             draw();
             wake();
         }, 150);
