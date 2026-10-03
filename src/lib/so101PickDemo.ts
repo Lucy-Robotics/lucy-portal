@@ -90,6 +90,8 @@ export class So101PickDemo {
     };
 
     private readonly grip = new THREE.Object3D();
+    // The robot's root down to the gripper (see updateChain).
+    private readonly chain: THREE.Object3D[] = [];
     // Where the payload sits in the gripper once taken, for takeOver().
     private heldOffset = new THREE.Matrix4();
     private gripOpen = 0;
@@ -133,6 +135,11 @@ export class So101PickDemo {
 
         base.updateMatrixWorld(true);
         this.measureJaws();
+        for (const end of [this.grip, this.tcp]) {
+            const path: THREE.Object3D[] = [];
+            for (let object: THREE.Object3D | null = end; object && object !== base; object = object.parent) path.push(object);
+            for (const object of path.reverse()) if (!this.chain.includes(object)) this.chain.push(object);
+        }
         this.panOrigin = robot.links.shoulder_link.getWorldPosition(new THREE.Vector3());
 
         // Roll the wrist so the jaws close along the payload's local z, then
@@ -329,9 +336,10 @@ export class So101PickDemo {
         this.set("gripper", this.gripOpen + (this.gripClosed - this.gripOpen) * g);
     }
 
-    /* Direction the gripper points (towards the fingertips), in world space. */
+    /* Direction the gripper points (towards the fingertips), in world space,
+       as of the last updateChain. */
     private toolAxis() {
-        return new THREE.Vector3(0, 0, 1).applyQuaternion(this.tcp.getWorldQuaternion(new THREE.Quaternion()));
+        return new THREE.Vector3().setFromMatrixColumn(this.tcp.matrixWorld, 2).normalize();
     }
 
     /*
@@ -345,7 +353,7 @@ export class So101PickDemo {
         const { lower, upper } = this.robot.joints.wrist_roll.limit;
         const alignment = (roll: number) => {
             this.set("wrist_roll", roll);
-            this.robot.updateMatrixWorld(true);
+            this.updateChain();
             const across = new THREE.Vector3().setFromMatrixColumn(this.robot.links.gripper_link.matrixWorld, 0);
             return Math.abs(across.normalize().dot(target)); // the jaws are symmetric
         };
@@ -433,8 +441,20 @@ export class So101PickDemo {
     private apply(q: Pose) {
         CHAIN.forEach((name, i) => this.set(name, q[i]));
         this.set("wrist_roll", this.roll);
-        this.robot.updateMatrixWorld(true);
+        this.updateChain();
         return CHAIN.map((name) => this.angle(name));
+    }
+
+    /*
+     * World matrices of the chain to the gripper only: all the solver reads.
+     * Much cheaper than the whole robot (every mesh) at each solver step; the
+     * rest catches up at the next full update, at the latest before drawing.
+     */
+    private updateChain() {
+        for (const object of this.chain) {
+            object.updateMatrix();
+            object.matrixWorld.multiplyMatrices(object.parent!.matrixWorld, object.matrix);
+        }
     }
 
     /*
@@ -444,7 +464,7 @@ export class So101PickDemo {
     private ik(goal: THREE.Vector3, start: Pose, iterations: number, keepSquare: boolean, lean = 0.04) {
         const saved = CHAIN.map((name) => this.angle(name));
         const residual = () => {
-            const p = this.grip.getWorldPosition(new THREE.Vector3());
+            const p = new THREE.Vector3().setFromMatrixPosition(this.grip.matrixWorld);
             const a = this.toolAxis();
             // 0.08 m of position error is worth one unit of tilt.
             const square = keepSquare ? -a.dot(this.facing) * 0.08 : 0;
