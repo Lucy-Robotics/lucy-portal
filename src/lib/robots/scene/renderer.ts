@@ -9,7 +9,7 @@ import { nextTask } from "../../background.ts";
 import { INFINITY_LAYER } from "./parts.ts";
 import { viewWidth, type Rect } from "./screen.ts";
 
-export type Frame = {
+type Frame = {
     scene: THREE.Scene;
     gridScene: THREE.Scene;
     gridVisible: boolean;
@@ -70,7 +70,7 @@ export class SceneRenderer {
     /* Compiles every material ahead so none compiles mid-scroll. `alsoShown` is
        shown for the depth pass. Skipped without parallel compiling, where it
        would only move the stall to page load. */
-    precompile(scene: THREE.Scene, gridScene: THREE.Scene, camera: THREE.Camera, alsoShown: THREE.Object3D | null = null) {
+    precompile(scene: THREE.Scene, gridScene: THREE.Scene, camera: THREE.Camera, alsoShown?: THREE.Object3D) {
         if (!this.parallelCompile) return;
         this.grid.compileAsync(gridScene, camera).catch(() => {});
         this.main.compileAsync(scene, camera).catch(() => {});

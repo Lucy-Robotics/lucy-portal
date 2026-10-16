@@ -7,7 +7,7 @@ import { clamp, smoothstep, UP } from "../math.ts";
 import type { HeroPlan } from "./heroLayout.ts";
 import type { Payload } from "./parts.ts";
 
-export type CatchScene = {
+type CatchScene = {
     heroPayload: Payload;
     /* No animation: every phase is over at once. */
     instant: boolean;
@@ -87,8 +87,6 @@ export function stepCatch(plan: HeroPlan, dt: number, s: CatchScene) {
             if (plan.timer >= SHAKE_TIME) logo.classList.remove("robot-shake");
             if (progress <= 0 && plan.timer >= SHAKE_TIME) plan.phase = "idle";
             break;
-        default:
-            return { moving: false, wristTwist };
     }
     return { moving: plan.phase !== "idle" && plan.phase !== "held", wristTwist };
 }

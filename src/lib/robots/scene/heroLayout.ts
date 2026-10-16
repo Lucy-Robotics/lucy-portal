@@ -20,7 +20,7 @@ import { rayFrom, toScreen, topRect, viewWidth, type Rect, type TopRect } from "
 export type HeroTarget = "hero" | "header";
 
 // A caught logo's steps. The pick is at 0.5 with the jaws open, at 1 once gripped.
-export type CatchPhase = "idle" | "reach" | "shake" | "fly" | "grip" | "held" | "letgo" | "flyback" | "return";
+type CatchPhase = "idle" | "reach" | "shake" | "fly" | "grip" | "held" | "letgo" | "flyback" | "return";
 
 export type HeroPlan = {
     logo: HTMLElement;
@@ -33,7 +33,7 @@ export type HeroPlan = {
     timer: number;
 };
 
-export type HeroLayoutScene = {
+type HeroLayoutScene = {
     page: { hero: HTMLElement; heroLogo: HTMLElement | null; headerLogo: HTMLElement | null; frame: HTMLElement; header: HTMLElement | null };
     compact: boolean;
     so101: URDFRobot;
@@ -50,7 +50,7 @@ export type HeroLayoutScene = {
     onHeroHold: (logo: HTMLElement, holding: boolean) => void;
 };
 
-export type HeroLayout = {
+type HeroLayout = {
     heroRect: Rect;
     // Scroll position (px) once past the hero.
     landScroll: number;
@@ -87,9 +87,8 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
     heroCamera();
 
     // Pixels per metre at the arm, per pixel of the draw rectangle's height.
-    const base = new THREE.Vector3(0, 0, 0);
-    const ndcBase = base.clone().project(camera);
-    const ndcUp = base.clone().add(new THREE.Vector3(0, 0.1, 0)).project(camera);
+    const ndcBase = new THREE.Vector3().project(camera);
+    const ndcUp = new THREE.Vector3(0, 0.1, 0).project(camera);
     const perPixel = (ndcUp.y - ndcBase.y) / 2 / 0.1;
 
     // Page scale in px per metre, and where the base stands on the bottom edge.

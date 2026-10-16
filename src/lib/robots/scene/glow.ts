@@ -25,7 +25,6 @@ export function logoGlow(size: number, strength: number, rgb: string) {
 /* The screen rectangle around some bounds, with `margin` px of room for their
    glow, clipped to the screen. Null if they're off it. */
 export function glowArea(all: ScreenBounds[], margin: number, width: number, height: number): Rect | null {
-    if (!all.length) return null;
     let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
     for (const bounds of all) {
         left = Math.min(left, bounds.left);
