@@ -14,19 +14,19 @@
  * Renders on demand, only while something moves.
  */
 import * as THREE from "three";
-import type { URDFRobot } from "urdf-loader";
 
 import { inBackground, runFor } from "../background.ts";
 import { listen } from "../listen.ts";
-import { ARM_ATTENTION_TIME, ATTENTION_TIME, FOV, HEAD_TURN, REST, RISE_TIME } from "./config.ts";
-import { InMoovWave } from "./inmoovWave.ts";
+import { ARM_ATTENTION_TIME, ATTENTION_TIME, FOV, REST, RISE_TIME } from "./config.ts";
 import { loadLucyInfinity } from "./lucyInfinity.ts";
 import { clamp, damp, DOWN } from "./math.ts";
 import { prefetchOtherAssets, ROBOT_ASSETS } from "./robotAssets.ts";
 import { loadRobot } from "./robotModel.ts";
+import { ArmEasing } from "./scene/armEasing.ts";
 import { Framing } from "./scene/framing.ts";
 import { createHero } from "./scene/hero.ts";
-import { createMaterials, INFINITY_LAYER, standInMoov } from "./scene/parts.ts";
+import { loadInMoov } from "./scene/inmoov.ts";
+import { createMaterials, INFINITY_LAYER } from "./scene/parts.ts";
 import { createPointer } from "./scene/pointer.ts";
 import { SceneRenderer } from "./scene/renderer.ts";
 import { cssColor, screenBounds, type Rect } from "./scene/screen.ts";
@@ -94,10 +94,7 @@ export async function createRobotPageScene(
     const world = createWorld(so101, shape, materials, accent);
     const { scene, fog, gridScene, arm, boxInfinity, boxPayload, heroPayload } = world;
 
-    let inmoov: URDFRobot | null = null;
-    let humanoid: THREE.Group | null = null;
-    let head: THREE.Object3D | null = null;
-    let wave: InMoovWave | null = null;
+    let inmoov: Awaited<ReturnType<typeof loadInMoov>> | null = null;
 
     scene.updateMatrixWorld(true);
     const shoulder = () => so101.links.shoulder_link.getWorldPosition(new THREE.Vector3());
@@ -124,7 +121,7 @@ export async function createRobotPageScene(
     const renderer = await SceneRenderer.create(container, page.backdrop, page.glow);
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const painter = createView({ container, page, world, camera, framing, renderer, boxPick, accent, humanoid: () => humanoid });
+    const painter = createView({ container, page, world, camera, framing, renderer, boxPick, accent, humanoid: () => inmoov?.humanoid ?? null });
     const hero = createHero({
         page,
         compact: options.compact,
@@ -160,9 +157,7 @@ export async function createRobotPageScene(
     let view = 0;
     let viewGoal = 0;
     let active: RobotName = "so101";
-    let smoothing = 0; // seconds left of easing the arm toward its pose
-    const shown = new Map<string, number>(); // joint values on screen while smoothing
-    const ARM_JOINTS = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"];
+    const armEasing = new ArmEasing(so101);
 
     /* Hero -> Stage over the first half of the hero's scroll. */
     const enterGoal = () => {
@@ -176,47 +171,16 @@ export async function createRobotPageScene(
     let lastDriver: So101PickDemo | null = null;
     const driver = () => hero.driver(inHero());
 
-    const lookAtViewer = () => {
-        if (!head) return null;
-        const from = head.getWorldPosition(new THREE.Vector3());
-        const to = camera.position.clone().sub(from);
-        const yaw = Math.atan2(to.x, to.z);
-        const pitch = Math.atan2(to.y, Math.hypot(to.x, to.z));
-        return { x: clamp(yaw / HEAD_TURN.yaw, -1, 1), y: clamp(pitch / HEAD_TURN.pitch, -1, 1) };
-    };
-
-    /* Planning moves the arm, so it's put back to the pose on screen. */
-    const showShown = () => {
-        for (const name of ARM_JOINTS) {
-            const value = shown.get(name);
-            if (value !== undefined) so101.joints[name].setJointValue(value);
-        }
-    };
-
-    const smoothJoints = (dt: number) => {
-        for (const name of ARM_JOINTS) {
-            const joint = so101.joints[name];
-            const target = joint.angle;
-            const from = shown.get(name) ?? target;
-            const value = smoothing > 0 ? damp(from, target, 10, dt) : target;
-            shown.set(name, value);
-            joint.setJointValue(value);
-        }
-        smoothing = Math.max(0, smoothing - dt);
-    };
-
     const draw = () => {
-        const { heroRect, chamferSize } = hero.layout;
         drawRect = painter.draw({
+            ...hero.layout,
             enter,
             rise,
             view,
-            heroRect,
-            chamferSize,
             compact: options.compact(),
             hint: {
                 shown: rise >= 1 && inHero() && hero.logo.at === "page" && driver().idle,
-                settled: smoothing === 0 && driver() === lastDriver,
+                settled: !armEasing.easing && driver() === lastDriver,
             },
         });
     };
@@ -226,7 +190,7 @@ export async function createRobotPageScene(
         drawRect: () => drawRect,
         arm,
         heroPayload,
-        humanoid: () => humanoid,
+        humanoid: () => inmoov?.humanoid ?? null,
         frame: page.frame,
         landed,
         onChange: () => wake(),
@@ -264,7 +228,7 @@ export async function createRobotPageScene(
         const pick = driver();
         if (lastDriver && pick !== lastDriver) {
             hero.handOver(lastDriver, pick);
-            smoothing = 0.6;
+            armEasing.start(0.6);
         }
         lastDriver = pick;
 
@@ -275,23 +239,23 @@ export async function createRobotPageScene(
             if (time < armAttention) pick.setLook(null);
             else if (hovered !== "so101") pick.setLook(pointer.lookFrom(so101.links.shoulder_link));
             // While waving and a little after, InMoov looks the visitor in the eyes.
-            if (wave?.waving) inmoovAttention = time + ATTENTION_TIME;
-            if (time < inmoovAttention) wave?.setLook(lookAtViewer());
-            else if (hovered !== "inmoov" && wave && head) wave.setLook(pointer.lookFrom(head));
+            if (inmoov?.wave.waving) inmoovAttention = time + ATTENTION_TIME;
+            if (inmoov && time < inmoovAttention) inmoov.wave.setLook(inmoov.lookAt(camera));
+            else if (inmoov && hovered !== "inmoov") inmoov.wave.setLook(pointer.lookFrom(inmoov.head));
         }
         const picking = pick.update(dt, { instant: reduceMotion });
         const caught = inHero() ? hero.catchStep(dt) : null;
         hero.growHeld();
         // The wrist twists while it strains for the logo.
         if (caught?.wristTwist) so101.joints.wrist_roll.setJointValue(so101.joints.wrist_roll.angle + caught.wristTwist);
-        smoothJoints(dt);
-        const waving = wave?.update(dt, { instant: reduceMotion }) ?? false;
+        armEasing.step(dt);
+        const waving = inmoov?.wave.update(dt, { instant: reduceMotion }) ?? false;
 
         // Once the hero is up, the slower work runs one piece per frame.
         if (rise >= 1 && !inmoovRequested) {
             inmoovRequested = true;
             renderer.precompile(scene, gridScene, camera);
-            loadInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
+            showInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
         } else if (rise >= 1 && plans.status === "none" && !relayoutTimer && boxPick.idle) {
             plans = { status: "planning", steps: hero.layOut() };
         }
@@ -300,7 +264,7 @@ export async function createRobotPageScene(
         if (plans.status === "planning" && boxPick.idle) {
             const step = runFor(plans.steps);
             if (step.done) plansMade(step.value);
-            showShown();
+            armEasing.restore();
         }
 
         draw();
@@ -313,7 +277,7 @@ export async function createRobotPageScene(
         const working = rise < 1 || (!plansReady() && boxPick.idle) || driver() !== lastDriver
             || time < armAttention + 50 || time < inmoovAttention + 50;
         // A click handled in this frame may have woken the loop already.
-        if (picking || caught?.moving || waving || panning || smoothing > 0 || working) {
+        if (picking || caught?.moving || waving || panning || armEasing.easing || working) {
             if (!raf) raf = requestAnimationFrame(tick);
         }
         else last = 0;
@@ -342,7 +306,7 @@ export async function createRobotPageScene(
         if (robot === "so101" && inHero() && !plansReady()) {
             pending = () => activate(robot);
         } else if (robot === "inmoov") {
-            wave?.wave();
+            inmoov?.wave.wave();
         } else if (landed()) {
             boxPick.toggle();
         } else if (inHero()) {
@@ -416,7 +380,7 @@ export async function createRobotPageScene(
                 boxPick.takeOver();
                 if (carried) hero.setLogo(carried);
             }
-            showShown();
+            armEasing.restore();
             draw();
             wake();
         }, 150);
@@ -453,16 +417,13 @@ export async function createRobotPageScene(
     void document.fonts?.ready.then(relayout);
 
     let inmoovRequested = false;
-    const loadInMoov = async () => {
-        // InMoov's URDF colours are Blender leftovers, so its parts are coloured by link.
-        const robot = await loadRobot(ROBOT_ASSETS.inmoov.urdf, ROBOT_ASSETS.inmoov.glb, () => materials.inmoov);
+    const showInMoov = async () => {
+        const loaded = await loadInMoov(materials, accent);
         if (disposed) return;
-        inmoov = robot;
-        humanoid = standInMoov(robot, materials, accent);
+        inmoov = loaded;
+        const { humanoid } = loaded;
         humanoid.visible = landed();
         scene.add(humanoid);
-        head = robot.links["i01.head.rothead_link"];
-        wave = new InMoovWave(robot);
         // Headroom for the raised hand when it waves, with the arm still in the shot.
         framing.shots.inmoov = new THREE.Box3().setFromObject(humanoid)
             .expandByVector(new THREE.Vector3(0, 0.15, 0))
@@ -498,12 +459,12 @@ export async function createRobotPageScene(
                 pick: plan.pick.state,
             }])),
             box: boxPick.state,
-            waving: wave?.waving ?? false,
+            waving: inmoov?.wave.waving ?? false,
             armPan: so101.joints.shoulder_pan.angle,
             armLook: lastDriver ? lastDriver.looking : null,
-            headYaw: inmoov?.joints["i01.head.rothead_link_joint"].angle ?? null,
+            headYaw: inmoov?.robot.joints["i01.head.rothead_link_joint"].angle ?? null,
             so101: screenRect(arm),
-            inmoov: humanoid?.visible ? screenRect(humanoid) : null,
+            inmoov: inmoov?.humanoid.visible ? screenRect(inmoov.humanoid) : null,
             timings: Object.fromEntries(Object.entries(timings).map(([k, v]) => [k, Math.round(v)])),
             heroRect: hero.layout.heroRect,
             drawRect,
