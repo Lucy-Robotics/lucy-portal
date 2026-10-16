@@ -238,6 +238,9 @@ export async function createRobotPageScene(
     let settingUp = true; // nothing draws while the first layout runs in the background
 
     let enter = 0; // 0 is the arm free in the hero, 1 is the arm in the box
+    // Still in the hero, where the arm can take the page's logo, and landed in the box.
+    const inHero = () => enter < 0.02;
+    const landed = () => enter >= 1;
     let rise = 0; // 0 -> 1 as the robots rise into view on load
     let view = 0;
     let viewGoal = 0;
@@ -259,7 +262,7 @@ export async function createRobotPageScene(
 
     /* In the hero, the pick in use or else the default logo's. The box's otherwise. */
     const driver = () => {
-        if (enter >= 0.02) return boxPick;
+        if (!inHero()) return boxPick;
         const preferred = heroPlans.get(options.compact() ? "header" : "hero") ?? heroPlans.get("header");
         return heroPick() ?? preferred?.pick ?? boxPick;
     };
@@ -366,7 +369,7 @@ export async function createRobotPageScene(
     const placeHint = () => {
         const hint = page.hint;
         if (!hint) return;
-        const visible = rise >= 1 && enter < 0.02 && logo.at === "page" && driver().idle;
+        const visible = rise >= 1 && inHero() && logo.at === "page" && driver().idle;
         // Wait for the arm to settle, as it eases from the pose on screen after a layout.
         if (visible && !hintPlaced && smoothing === 0 && driver() === lastDriver) {
             hintPlaced = true;
@@ -394,7 +397,7 @@ export async function createRobotPageScene(
         // Rises into view on load from a screen lower.
         drawRect.top += (1 - rise) ** 3 * height;
         const level = options.compact() ? 1 - settle : 0;
-        framing.place(enter >= 1 ? view : 0, drawRect.width / drawRect.height, level);
+        framing.place(landed() ? view : 0, drawRect.width / drawRect.height, level);
 
         const grid01 = smoothstep(enter, 0.05, 0.4);
         gridMaterial.opacity = 0.6 * grid01;
@@ -406,8 +409,8 @@ export async function createRobotPageScene(
         boxPayload.shown = arrive > 0;
         boxPayload.setGlow(held ? 1 : smoothstep(enter, 0.55, 1));
         if (!held && boxPick.idle) boxPayload.group.position.x = boxInfinity.x - (1 - arrive) * BOX_SLIDE;
-        if (humanoid) humanoid.visible = enter >= 1;
-        page.frame.toggleAttribute("data-landed", enter >= 1);
+        if (humanoid) humanoid.visible = landed();
+        page.frame.toggleAttribute("data-landed", landed());
 
         const screen: Rect = { left: -1, top: -1, width: viewWidth() + 2, height: height + 2 };
         const close = smoothstep(enter, CLOSE_FROM, 1);
@@ -479,7 +482,7 @@ export async function createRobotPageScene(
     };
     const hitTest = (x: number, y: number): RobotName | null => {
         // In the box, only what's inside the box counts.
-        if (enter >= 1 && !contains(frameRect(), x, y)) return null;
+        if (landed() && !contains(frameRect(), x, y)) return null;
         const exact = hitAt(x, y);
         if (exact) return exact;
         for (let i = 0; i < 8; i++) {
@@ -507,7 +510,7 @@ export async function createRobotPageScene(
         if (Math.abs(view - viewGoal) < 1e-4) view = viewGoal;
         const panning = view !== viewGoal;
 
-        const closest: RobotName = enter >= 1 && view >= 0.5 ? "inmoov" : "so101";
+        const closest: RobotName = landed() && view >= 0.5 ? "inmoov" : "so101";
         if (closest !== active) {
             active = closest;
             options.onActiveChange?.(active);
@@ -536,7 +539,7 @@ export async function createRobotPageScene(
         }
         const picking = pick.update(dt, { instant: reduceMotion });
         wristTwist = 0;
-        const catching = enter < 0.02 && catchStep(dt);
+        const catching = inHero() && catchStep(dt);
         growHeld();
         if (wristTwist) so101.joints.wrist_roll.setJointValue(so101.joints.wrist_roll.angle + wristTwist);
         smoothJoints(dt);
@@ -625,13 +628,13 @@ export async function createRobotPageScene(
         // After a click the visitor, not the cursor, has the robot's attention.
         if (robot === "inmoov") inmoovAttention = performance.now() + ATTENTION_TIME;
         else armAttention = performance.now() + ARM_ATTENTION_TIME;
-        if (robot === "so101" && enter < 0.02 && !plansReady) {
+        if (robot === "so101" && inHero() && !plansReady) {
             pending = () => activate(robot);
         } else if (robot === "inmoov") {
             wave?.wave();
-        } else if (enter >= 1) {
+        } else if (landed()) {
             boxPick.toggle();
-        } else if (enter < 0.02) {
+        } else if (inHero()) {
             // The arm goes for the logo it can see (the header's on phones), or gives back the one it has.
             const busy = heroTarget ? heroPlans.get(heroTarget) : null;
             if (busy && !busy.pick.idle) togglePlan(busy);
@@ -641,7 +644,7 @@ export async function createRobotPageScene(
     };
 
     const onLogoClick = (target: "hero" | "header") => (event: MouseEvent) => {
-        if (enter >= 0.02) return; // a plain link once scrolled
+        if (!inHero()) return; // a plain link once scrolled
         if (plansReady && !heroPlans.has(target)) return; // out of the arm's reach
         // The header's infinity is part of the home link. The arm takes it instead,
         // and "lucy" next to it still goes home.
@@ -649,7 +652,7 @@ export async function createRobotPageScene(
         event.stopPropagation();
         if (plansReady) toggleHero(target);
         else pending = () => {
-            if (enter < 0.02) toggleHero(target); // still in the hero by then
+            if (inHero()) toggleHero(target); // still in the hero by then
         };
         wake();
     };
@@ -658,12 +661,12 @@ export async function createRobotPageScene(
     const heroText = [...page.hero.querySelectorAll<HTMLElement>(".home__title")];
     const invited = () => (options.compact() ? page.headerLogo : page.heroLogo);
     const onTextEnter = () => {
-        if (enter < 0.02) invited()?.classList.add("robot-invite");
+        if (inHero()) invited()?.classList.add("robot-invite");
     };
     const onTextLeave = () => invited()?.classList.remove("robot-invite");
     const onTextClick = (event: MouseEvent) => {
         // The logo's mark has its own listener.
-        if (event.target === page.heroLogo || enter >= 0.02 || window.getSelection()?.toString()) return;
+        if (event.target === page.heroLogo || !inHero() || window.getSelection()?.toString()) return;
         event.stopPropagation();
         activate("so101");
     };
@@ -765,7 +768,7 @@ export async function createRobotPageScene(
         if (disposed) return;
         inmoov = robot;
         humanoid = standInMoov(robot, materials, accent);
-        humanoid.visible = enter >= 1;
+        humanoid.visible = landed();
         scene.add(humanoid);
         head = robot.links["i01.head.rothead_link"];
         wave = new InMoovWave(robot);
