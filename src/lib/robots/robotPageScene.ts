@@ -182,16 +182,14 @@ export async function createRobotPageScene(
     let chamferSize = 24;
 
     let layoutMs = 0; // TEST-HOOK: ms to lay out the hero, across frames when in the background
-    let plansReady = false;
     /* Plans are made only when asked, but always on phones. A generator, so it
-       can run a step at a time. */
-    const layoutHero = function* (withPlans = true): Generator<void, void> {
+       can run a step at a time. Returns whether it made them. */
+    const layoutHero = function* (withPlans = true): Generator<void, boolean> {
         const started = performance.now();
         laidOutFor = layoutKey();
         disposeHeroPlans();
         renderer.fit();
         hintPlaced = false;
-        plansReady = false;
         yield;
         const layout = yield* layOutHero({
             page,
@@ -216,14 +214,19 @@ export async function createRobotPageScene(
             heroPlans.set(name, plan);
             plan.logo.classList.add("robot-target");
         }
-        plansReady = layout.plans !== null;
         layoutMs = performance.now() - started;
+        return layout.plans !== null;
     };
     const layoutNow = (withPlans: boolean) => {
         const steps = layoutHero(withPlans);
-        while (!steps.next().done);
+        let step = steps.next();
+        while (!step.done) step = steps.next();
+        return step.value;
     };
-    let planning: Generator<void, void> | null = null; // the first plans, in the background
+    // The hero's plans: not made, being made in the background a step per frame, or ready.
+    let plans: { status: "none" } | { status: "planning"; steps: Generator<void, boolean> } | { status: "ready" } =
+        { status: "none" };
+    const plansReady = () => plans.status === "ready";
     /* What the layout depends on. If none of it changed, there's nothing to redo. */
     const layoutKey = () => {
         const frame = page.frame.getBoundingClientRect();
@@ -550,16 +553,14 @@ export async function createRobotPageScene(
             inmoovRequested = true;
             renderer.precompile(scene, gridScene, camera);
             loadInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
-        } else if (rise >= 1 && !plansReady && !planning && !relayoutTimer && boxPick.idle) {
-            planning = layoutHero();
+        } else if (rise >= 1 && plans.status === "none" && !relayoutTimer && boxPick.idle) {
+            plans = { status: "planning", steps: layoutHero() };
         }
         // Paused while the arm is busy in the box. The layout would reset it, and
         // a held infinity would be measured as a jaw.
-        if (planning && boxPick.idle) {
-            if (runFor(planning).done) {
-                planning = null;
-                plansDone();
-            }
+        if (plans.status === "planning" && boxPick.idle) {
+            const step = runFor(plans.steps);
+            if (step.done) plansMade(step.value);
             showShown();
         }
 
@@ -570,7 +571,7 @@ export async function createRobotPageScene(
             prefetchOtherAssets();
         }
         // Keep going while a robot attends to the visitor, so it turns back to the cursor on its own.
-        const working = rise < 1 || (!plansReady && boxPick.idle) || driver() !== lastDriver
+        const working = rise < 1 || (!plansReady() && boxPick.idle) || driver() !== lastDriver
             || time < armAttention + 50 || time < inmoovAttention + 50;
         // A click handled in this frame may have woken the loop already.
         if (picking || catching || waving || panning || smoothing > 0 || working) {
@@ -616,19 +617,19 @@ export async function createRobotPageScene(
     };
 
     let pending: (() => void) | null = null; // asked for before the plans were ready
-    function plansDone() {
+    function plansMade(ready: boolean) {
+        plans = ready ? { status: "ready" } : { status: "none" };
+        if (!ready) return;
         timings.plans = performance.now() - started;
-        if (pending) {
-            const action = pending;
-            pending = null;
-            action();
-        }
+        const action = pending;
+        pending = null;
+        action?.();
     }
     const activate = (robot: RobotName) => {
         // After a click the visitor, not the cursor, has the robot's attention.
         if (robot === "inmoov") inmoovAttention = performance.now() + ATTENTION_TIME;
         else armAttention = performance.now() + ARM_ATTENTION_TIME;
-        if (robot === "so101" && inHero() && !plansReady) {
+        if (robot === "so101" && inHero() && !plansReady()) {
             pending = () => activate(robot);
         } else if (robot === "inmoov") {
             wave?.wave();
@@ -645,12 +646,12 @@ export async function createRobotPageScene(
 
     const onLogoClick = (target: "hero" | "header") => (event: MouseEvent) => {
         if (!inHero()) return; // a plain link once scrolled
-        if (plansReady && !heroPlans.has(target)) return; // out of the arm's reach
+        if (plansReady() && !heroPlans.has(target)) return; // out of the arm's reach
         // The header's infinity is part of the home link. The arm takes it instead,
         // and "lucy" next to it still goes home.
         event.preventDefault();
         event.stopPropagation();
-        if (plansReady) toggleHero(target);
+        if (plansReady()) toggleHero(target);
         else pending = () => {
             if (inHero()) toggleHero(target); // still in the hero by then
         };
@@ -717,10 +718,8 @@ export async function createRobotPageScene(
             const held = boxPick.state.holding;
             const carried = logo.at === "box" ? logo : null;
             // Before the hero is up, stay light. The plans come after the rise.
-            planning?.return(); // what it had half built goes
-            planning = null;
-            layoutNow(plansReady);
-            if (plansReady) plansDone();
+            if (plans.status === "planning") plans.steps.return(false); // what it had half built goes
+            plansMade(layoutNow(plansReady()));
             if (held) {
                 boxPick.takeOver();
                 if (carried) setLogo(carried);
@@ -732,12 +731,12 @@ export async function createRobotPageScene(
     };
 
     // Before anything listens to the page.
-    await inBackground(layoutHero(false));
+    const planned = await inBackground(layoutHero(false));
     // With parallel compiling, the first frame needn't stall on it either.
     await renderer.compileFirst(scene, camera);
     settingUp = false;
     enter = enterGoal();
-    if (plansReady) plansDone(); // phones plan with the layout
+    plansMade(planned); // phones plan with the layout
 
     const unlisten = [
         listen(window, "scroll", wake, { passive: true }),
