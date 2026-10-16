@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "start": "vite preview",
+    "test": "node --test 'src/**/*.test.ts'",
     "test:e2e": "playwright test"
   },
   "dependencies": {
