@@ -160,9 +160,9 @@ const siteWide = {
 const Accessibility = () => {
   return (
     <div className="a11y-page">
-      <header className="a11y-page__header">
-        <h1 className="a11y-page__title">Accessibility report</h1>
-        <p className="a11y-page__subtitle">
+      <header className="page-header">
+        <h1 className="page-title"><span className="page-title__accent" aria-hidden="true">&gt;</span> Accessibility report</h1>
+        <p className="page-subtitle">
           A quick status of how each public page on the Lucy portal supports
           keyboard use, screen readers, and readable structure — and what still
           needs work.
@@ -176,7 +176,7 @@ const Accessibility = () => {
 
       <section className="a11y-section" aria-labelledby="a11y-sitewide">
         <h2 id="a11y-sitewide">Site-wide</h2>
-        <div className="a11y-card">
+        <div className="chamfer a11y-card">
           <p className="a11y-card__summary">
             Shared chrome (header, main content, footer) and document setup.
           </p>
@@ -205,7 +205,7 @@ const Accessibility = () => {
         <h2 id="a11y-pages">Per page</h2>
         <div className="a11y-list">
           {pages.map((page) => (
-            <article key={page.path} className="a11y-card">
+            <article key={page.path} className="chamfer a11y-card">
               <div className="a11y-card__top">
                 <div>
                   <h3 className="a11y-card__name">

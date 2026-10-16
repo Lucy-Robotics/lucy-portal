@@ -64,7 +64,9 @@ const Download = () => {
     return (
         <div className="download">
             <div className="download__content">
-                <h1 className="download__title">Download</h1>
+                <h1 className="page-title">
+                    <span className="page-title__accent" aria-hidden="true">&gt;</span> Download
+                </h1>
 
                 <p className="download__subtext">
                     Get Lucy running on your machine with a Python + Pixi
@@ -85,7 +87,7 @@ const Download = () => {
                             href={href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="download__requirement-card"
+                            className="chamfer download__requirement-card"
                         >
                             <Icon aria-hidden="true" />
                             <span className="download__requirement-name">
@@ -103,7 +105,7 @@ const Download = () => {
                 </p>
 
                 <div className="download__install-grid">
-                    <article className="download__install-card">
+                    <article className="chamfer download__install-card">
                         <h3 className="download__install-card-title">
                             <FaLinux aria-hidden="true" />
                             Linux &amp; macOS
@@ -167,7 +169,7 @@ const Download = () => {
                         </div>
                     </article>
 
-                    <article className="download__install-card">
+                    <article className="chamfer download__install-card">
                         <h3 className="download__install-card-title">
                             <FaWindows aria-hidden="true" />
                             Windows
@@ -206,7 +208,7 @@ const Download = () => {
                     </article>
                 </div>
 
-                <div className="download__curl-panel">
+                <div className="chamfer download__curl-panel">
                     <h3 className="download__curl-title">OR use the curl installer</h3>
 
                     <div className="download__terminal download__terminal--wide">

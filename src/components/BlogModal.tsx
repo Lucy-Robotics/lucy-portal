@@ -23,13 +23,15 @@ const BlogModal: React.FC<BlogModalProps> = ({ isOpen, post, onSave, onClose }) 
 
   return (
     <div className="blog-modal-overlay" {...overlayProps}>
-      <div className="blog-modal-content" {...dialogProps}>
-        <BlogForm
-          post={post}
-          titleId={titleId}
-          onSave={onSave}
-          onClose={onClose}
-        />
+      <div className="chamfer blog-modal-content" {...dialogProps}>
+        <div className="blog-modal-body">
+          <BlogForm
+            post={post}
+            titleId={titleId}
+            onSave={onSave}
+            onClose={onClose}
+          />
+        </div>
       </div>
     </div>
   );

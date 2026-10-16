@@ -185,7 +185,7 @@
     padding: 0.5rem 1rem;
 
     border-bottom: var(--border-width) solid var(--color-border);
-    background: #1a1a1a;
+    background: var(--color-bg-raised);
 
     color: var(--color-text-sec);
 
@@ -202,7 +202,7 @@
 
     color: var(--color-text-pri);
 
-    font-family: "Consolas", "Courier New", monospace;
+    font-family: var(--font-primary);
     font-size: 0.85rem;
     line-height: 1.7;
 }
@@ -281,45 +281,8 @@ a.home__highlight:hover {
     text-align: left;
 }
 
-/* Chamfered top-right and bottom-left corners. The card background paints the
-   border colour; ::before fills the inside, its chamfer shortened so the
-   diagonal edges keep the same border width. */
 .home__feature-card {
-    --chamfer: 1rem;
-
-    position: relative;
-    isolation: isolate;
-
     padding: 1.25rem;
-
-    background: var(--color-border);
-    clip-path: polygon(
-        0 0,
-        calc(100% - var(--chamfer)) 0,
-        100% var(--chamfer),
-        100% 100%,
-        var(--chamfer) 100%,
-        0 calc(100% - var(--chamfer))
-    );
-}
-
-.home__feature-card::before {
-    --inner-chamfer: calc(var(--chamfer) - 0.586 * var(--border-width));
-
-    content: "";
-    position: absolute;
-    inset: var(--border-width);
-    z-index: -1;
-
-    background: var(--color-bg-comp);
-    clip-path: polygon(
-        0 0,
-        calc(100% - var(--inner-chamfer)) 0,
-        100% var(--inner-chamfer),
-        100% 100%,
-        var(--inner-chamfer) 100%,
-        0 calc(100% - var(--inner-chamfer))
-    );
 }
 
 .home__feature-card-title {

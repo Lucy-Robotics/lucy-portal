@@ -8,30 +8,6 @@
   margin: 0 auto;
 }
 
-.roadmap-page-header {
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-border, #3f3f3f);
-}
-
-.roadmap-page-title {
-  margin: 0;
-  color: var(--color-highlight, #00ff41);
-  font-size: clamp(2rem, 5vw, 2.75rem);
-  font-weight: var(--font-weight-bold, 700);
-  letter-spacing: 0.06em;
-  line-height: 1.1;
-}
-
-.roadmap-page-subtitle {
-  margin: 0.75rem 0 0;
-  max-width: 40rem;
-  color: var(--color-text-sec, #b7b7b7);
-  font-size: var(--font-size-caption, 1rem);
-  font-weight: var(--font-weight-regular, 400);
-  line-height: 1.5;
-}
-
 .roadmap-toolbar {
   display: flex;
   justify-content: flex-end;
@@ -98,8 +74,6 @@
 
 .checkbox {
   background-color: var(--timeline-subtle-bg);
-  border-color: var(--color-highlight);
-  border-radius: 1px;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
@@ -120,7 +94,6 @@
   width: 1.25rem;
   height: 1.25rem;
   border: 1px solid var(--color-border);
-  border-radius: 1px;
   background-color: var(--timeline-subtle-bg);
   z-index: 1;
   flex-shrink: 0;
@@ -182,23 +155,35 @@
   background-color: var(--timeline-subtle-bg);
 }
 
-.line.rounded-t-full { border-top-left-radius: 9999px; border-top-right-radius: 9999px; }
-.line.rounded-b-full { border-bottom-left-radius: 9999px; border-bottom-right-radius: 9999px; }
 .line.h-half { height: 50%; }
 .line.h-full { height: 100%; }
 
 .card {
-  background-color: var(--color-bg-comp);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  --chamfer: 0.75rem;
+
   flex: 1;
-  position: relative;
   z-index: 2;
   margin-bottom: 1rem; /* Added for spacing between cards */
 }
 
+.card:focus-within {
+  --chamfer-border: var(--color-highlight);
+}
+
 .card-body {
-  padding: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.card .title {
+  margin: 0;
+  color: var(--color-highlight);
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.35;
+}
+
+.card .title.text-secondary {
+  color: var(--color-text-sec);
 }
 
 .card-content {
@@ -238,13 +223,20 @@
 }
 
 .link {
-  color: var(--color-primary);
+  color: var(--color-highlight);
+  font-weight: var(--font-weight-bold);
   text-decoration: none;
 }
 
+.link:hover {
+  text-decoration: underline;
+}
+
 .description {
-  color: var(--color-text-muted);
+  margin: 0;
+  color: var(--color-text-sec);
   font-size: var(--font-size-caption);
+  line-height: 1.6;
 }
 
 .card-footer {

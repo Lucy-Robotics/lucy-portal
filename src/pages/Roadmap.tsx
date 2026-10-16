@@ -193,9 +193,9 @@ const Roadmap: React.FC = () => {
         <p>Are you sure you want to delete this item?</p>
       </ConfirmModal>
 
-      <header className="roadmap-page-header">
-        <h1 className="roadmap-page-title">Roadmap</h1>
-        <p className="roadmap-page-subtitle">
+      <header className="page-header">
+        <h1 className="page-title"><span className="page-title__accent" aria-hidden="true">&gt;</span> Roadmap</h1>
+        <p className="page-subtitle">
           A quick overview of what we have planned. For more detail, visit our{' '}
           <a
             className="link"
@@ -271,7 +271,7 @@ const Roadmap: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="card">
+                    <div className="chamfer card">
                       <div className="card-body">
                         <div className="card-content">
                           <div className="card-header">
