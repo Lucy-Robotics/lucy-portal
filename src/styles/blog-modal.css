@@ -12,8 +12,6 @@
   z-index: 1000;
 }
 
-/* The chamfer fill is absolutely positioned, so scrolling happens in
-   .blog-modal-body rather than on the chamfered element itself. */
 .blog-modal-content {
   display: flex;
   flex-direction: column;
