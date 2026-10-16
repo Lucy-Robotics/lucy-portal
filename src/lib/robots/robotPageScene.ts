@@ -359,7 +359,7 @@ export async function createRobotPageScene(
     };
 
     const lookAtViewer = () => {
-        if (!head || !humanoid) return null;
+        if (!head) return null;
         const from = head.getWorldPosition(new THREE.Vector3());
         const to = camera.position.clone().sub(from);
         const yaw = Math.atan2(to.x, to.z);
@@ -435,7 +435,7 @@ export async function createRobotPageScene(
         const settle = smoothstep(enter, 0, 0.8);
         drawRect = lerpRect(heroRect, box, settle);
         // Rises into view on load from a screen lower.
-        drawRect.top += (1 - (1 - (1 - rise) ** 3)) * height;
+        drawRect.top += (1 - rise) ** 3 * height;
         const level = options.compact() ? 1 - settle : 0;
         framing.place(enter >= 1 ? view : 0, drawRect.width / drawRect.height, level);
 
@@ -696,8 +696,6 @@ export async function createRobotPageScene(
         };
         wake();
     };
-    const onHeroLogo = onLogoClick("hero");
-    const onHeaderLogo = onLogoClick("header");
 
     /* Hovering the hero's title makes the infinity the arm would take glow, and clicking takes it. */
     const heroText = [...page.hero.querySelectorAll<HTMLElement>(".home__title")];
@@ -735,8 +733,6 @@ export async function createRobotPageScene(
         const robot = hitTest(event.clientX, event.clientY);
         if (robot) activate(robot);
     };
-
-    const onScroll = wake;
 
     // Fonts and resizes move the logos. Wait while the arm moves, or it would drop what it carries.
     let disposed = false;
@@ -783,16 +779,15 @@ export async function createRobotPageScene(
     // With parallel compiling, the first frame needn't stall on it either.
     await renderer.compileFirst(scene, camera);
     settingUp = false;
-    enter = enterGoal();
     if (plansReady) plansDone(); // phones plan with the layout
 
     const unlisten = [
-        listen(window, "scroll", onScroll, { passive: true }),
+        listen(window, "scroll", wake, { passive: true }),
         listen(window, "click", onClick),
         listen(window, "resize", relayout),
         listen(document, "visibilitychange", wake),
-        ...(page.heroLogo ? [listen(page.heroLogo, "click", onHeroLogo)] : []),
-        ...(page.headerLogo ? [listen(page.headerLogo, "click", onHeaderLogo, { capture: true })] : []),
+        ...(page.heroLogo ? [listen(page.heroLogo, "click", onLogoClick("hero"))] : []),
+        ...(page.headerLogo ? [listen(page.headerLogo, "click", onLogoClick("header"), { capture: true })] : []),
         ...heroText.flatMap((element) => [
             listen(element, "pointerenter", onTextEnter),
             listen(element, "pointerleave", onTextLeave),
@@ -871,7 +866,7 @@ export async function createRobotPageScene(
     };
 
     return {
-        activate: (robot) => activate(robot),
+        activate,
         setView(t) {
             viewGoal = clamp(t, 0, 1);
             wake();
