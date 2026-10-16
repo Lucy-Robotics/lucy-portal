@@ -51,7 +51,6 @@
     gap: 0.15rem;
 
     padding: 0.25rem 0.5rem 0.5rem;
-    border: 0;
 
     background: none;
     color: var(--color-text-pri);
@@ -61,7 +60,6 @@
     font-weight: var(--font-weight-bold);
     white-space: nowrap;
 
-    cursor: pointer;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s;
@@ -159,7 +157,10 @@ html.robot-hover * {
     margin: 0;
 }
 
+/* See-through so the grid shows inside, with the border drawn as a ring instead
+   of the usual filled chamfer. */
 .robot-showcase__frame[data-live] {
+    background: none;
     opacity: 0;
 
     transition: opacity 0.5s ease;
@@ -167,12 +168,6 @@ html.robot-hover * {
 
 .robot-showcase__frame[data-live][data-landed] {
     opacity: 1;
-}
-
-/* See-through so the grid shows inside, with the border drawn as a ring instead
-   of the usual filled chamfer. */
-.robot-showcase__frame[data-live] {
-    background: none;
 }
 
 .robot-showcase__frame[data-live]::before {
@@ -281,7 +276,6 @@ html.robot-hover * {
 
     font-size: 1.1rem;
 
-    cursor: pointer;
     transition: border-color 0.2s, color 0.2s;
 }
 
@@ -298,8 +292,6 @@ html.robot-hover * {
 
 .robot-showcase__arrow:disabled {
     background: transparent;
-    border-color: var(--color-border);
-    color: var(--disabled-text);
 }
 
 @media (max-width: 959px) {
