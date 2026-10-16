@@ -8,8 +8,7 @@ type KeycloakEnv = {
     keycloakClientSecret: string;
 };
 
-/* The browser's sign-in only needs these. Other grants (client_credentials, password)
-   would hand out tokens to anyone, on the secret's behalf. */
+/* Other grants (client_credentials, password) would hand anyone tokens on the secret's behalf. */
 const ALLOWED_GRANTS = new Set(["authorization_code", "refresh_token"]);
 const MAX_BODY = 16 * 1024; // bytes, a token request is well under 1 KB
 
@@ -17,7 +16,6 @@ function trimTrailingSlash(value: string): string {
     return value.replace(/\/+$/, "");
 }
 
-/* The body, or null when it's larger than MAX_BODY. */
 function readBody(req: IncomingMessage): Promise<string | null> {
     return new Promise((resolve, reject) => {
         const chunks: Buffer[] = [];

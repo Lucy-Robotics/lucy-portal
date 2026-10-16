@@ -81,8 +81,7 @@ export class So101Ik {
                 bestScore = score;
             }
         }
-        // Half a turn away aligns as well. Of the two, keep the one with the
-        // gripper's servo toward the viewer (+z), when the joint allows it.
+        // Half a turn away aligns as well; prefer the servo toward the viewer (+z) when the joint allows.
         const servo = this.servoSide;
         if (!servo) return best;
         const towardViewer = (roll: number) => {

@@ -1,9 +1,5 @@
-/*
- * SO-101 pick-and-place. The poses are solved once with a small IK solver on
- * the URDF chain, then every move eases between them like a taught servo
- * sequence, so no solver runs per frame. The grasp point and jaw opening are
- * measured from the gripper meshes.
- */
+/* SO-101 pick-and-place. Poses are solved once by IK, then eased between like a
+   taught servo sequence, so no solver runs per frame. */
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
@@ -40,8 +36,7 @@ type PickPlan = {
     approach: number;
     /* Use these joint values instead of solving `rest`, so plans on one arm share a rest pose. */
     restPose?: number[];
-    /* False to only reach the grasp without squaring up. Fine for a thin round part,
-       and it reaches much further. */
+    /* False to skip squaring up: fine for a thin round part, and it reaches much further. */
     square?: boolean;
     /* Extra wrist roll, in radians. */
     rollOffset?: number;
@@ -50,7 +45,6 @@ type PickPlan = {
 };
 
 export class So101PickDemo {
-    /* False when the grasp is out of reach. toggle() then does nothing. */
     get reachable() {
         return this.inReach;
     }
@@ -87,11 +81,8 @@ export class So101PickDemo {
     private atRest = true;
     private readonly look = new LookFollow(LOOK_SPEED);
 
-    /*
-     * A generator, so the solve can be spread over frames. `base` is the
-     * robot's parent, already placed. The payload must stay in the scene at
-     * plan.grasp until it finishes.
-     */
+    /* A generator so the solve spreads over frames. `base` is the robot's parent, already
+       placed; the payload must stay at plan.grasp until it finishes. */
     static *create(
         robot: URDFRobot,
         base: THREE.Object3D,
@@ -145,8 +136,7 @@ export class So101PickDemo {
         this.ik = new So101Ik(robot, base, this.grip, facing, servoSide, plan.lean.clone().normalize());
     }
 
-    /* Each solver run is one step. The page may move the arm in between, so each run
-       restores the pose it found. */
+    /* One step per solver run; the page may move the arm in between, so each run restores the pose it found. */
     private *solve(plan: PickPlan): Generator<void, void> {
         const { object } = this.payload;
         // Find the wrist roll that lines the jaws up with the payload, then re-solve with it.
@@ -154,7 +144,6 @@ export class So101PickDemo {
         const square = plan.square ?? true;
         let grasp = yield* this.ik.solveFor(plan.grasp, [0, 0, 0.5, 0.5], { square });
         if (grasp.error >= REACH_TOLERANCE) {
-            // Out of reach, so skip the other poses.
             this.missed = { grasp: grasp.error, approach: NaN, rest: NaN, carry: NaN };
             this.inReach = false;
             this.keys = [{ at: 0, q: grasp.q }, { at: 1, q: grasp.q }];

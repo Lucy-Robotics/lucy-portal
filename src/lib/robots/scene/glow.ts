@@ -22,8 +22,7 @@ export function logoGlow(size: number, strength: number, rgb: string) {
         + `drop-shadow(0 0 ${far.toFixed(1)}px rgb(${rgb} / ${(0.35 * strength).toFixed(2)}))`;
 }
 
-/* The screen rectangle around some bounds, with `margin` px of room for their
-   glow, clipped to the screen. Null if they're off it. */
+/* The screen rectangle around some bounds plus `margin` px for their glow, clipped to the screen; null if off it. */
 export function glowArea(all: ScreenBounds[], margin: number, width: number, height: number): Rect | null {
     let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
     for (const bounds of all) {

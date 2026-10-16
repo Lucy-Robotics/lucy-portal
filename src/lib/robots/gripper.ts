@@ -6,11 +6,8 @@ import type { URDFRobot } from "urdf-loader";
 const CONTACT_BAND = 0.017;
 const GRIP_DEPTH = 0.01;
 
-/*
- * Works in the gripper frame, where the moving jaw closes along x and -z points
- * to the fingertips. Returns the grasp point and the joint values that clear a
- * payload `gripWidth` thick or just touch it. Leaves the gripper joint moved.
- */
+/* In the gripper frame (moving jaw closes along x, -z to the fingertips). Returns the grasp point and
+   joint values that clear a `gripWidth`-thick payload or just touch it. Leaves the gripper joint moved. */
 export function measureJaws(robot: URDFRobot, gripWidth: number) {
     const body = robot.links.gripper_link;
     const jaw = robot.links.moving_jaw_so101_v1_link;
@@ -69,8 +66,7 @@ export function measureJaws(robot: URDFRobot, gripWidth: number) {
     return { grip, open, closed };
 }
 
-/* Servo direction across the roll axis (gripper frame), or null. Relies on meshes
-   named after their STL (see robotModel.ts). */
+/* Servo direction across the roll axis (gripper frame), or null. Needs meshes named after their STL (robotModel.ts). */
 export function findServoSide(robot: URDFRobot) {
     const body = robot.links.gripper_link;
     const meshes: THREE.Mesh[] = [];

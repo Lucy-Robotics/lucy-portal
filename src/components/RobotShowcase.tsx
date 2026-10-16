@@ -36,11 +36,7 @@ type RobotShowcaseProps = {
     heroRef: RefObject<HTMLElement | null>;
 };
 
-/*
- * The robots draw on a canvas fixed over the whole page (see robotPageScene.ts)
- * and settle into this box as it scrolls into view. The hidden buttons give
- * keyboard and screen-reader users the same actions as clicking the robots.
- */
+/* The robots draw on a page-wide fixed canvas (see robotPageScene.ts) and only settle into this box. */
 export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
     const layerRef = useRef<HTMLDivElement>(null);
     const backdropRef = useRef<HTMLDivElement>(null);
@@ -172,8 +168,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                 </button>
             </div>
 
-            {/* Portaled out of the sticky column's stacking context, so the grid can sit
-                behind the content and the robots above it. */}
+            {/* Portaled out of the sticky column's stacking context, so the grid goes under the content and the robots over it. */}
             {createPortal(
                 <>
                     <div ref={backdropRef} className="robot-backdrop" aria-hidden="true" />
@@ -194,6 +189,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                 document.body,
             )}
 
+            {/* Visually hidden: the same actions as clicking the robots, for keyboard and screen-reader users. */}
             {status === "ready" && (
                 <div className="robot-actions">
                     <button type="button" onClick={() => sceneRef.current?.activate("so101")}>

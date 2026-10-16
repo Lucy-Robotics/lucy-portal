@@ -15,8 +15,7 @@ import { layoutHero, type HeroPlan, type HeroTarget } from "./heroLayout.ts";
 import type { Payload } from "./parts.ts";
 import { topRect, viewWidth, type Rect } from "./screen.ts";
 
-/* Where the page's logo is: on the page, with the hero's arm (in its jaws or flying
-   to or from them), or carried into the box. What shows it only follows this. */
+/* "hero" is in the jaws or flying to or from them. What shows the logo only follows this. */
 export type LogoState = { at: "page" } | { at: "hero" | "box"; logo: HeroTarget };
 export const ON_PAGE: LogoState = { at: "page" };
 
@@ -93,8 +92,7 @@ export function createHero(s: HeroScene) {
     };
     let laidOutFor = "";
 
-    /* Plans are made only when asked, but always on phones. A generator, so it
-       can run a step at a time. Returns whether it made them. */
+    /* A generator, run a step at a time. Makes plans when asked (always on phones) and returns whether it did. */
     const layOut = function* (withPlans = true): Generator<void, boolean> {
         const started = performance.now();
         laidOutFor = layoutKey();
@@ -199,10 +197,7 @@ export function createHero(s: HeroScene) {
             return heroPick() ?? preferred?.pick ?? boxPick;
         },
 
-        /*
-         * Switching picks (hero <-> box). A held infinity is carried across, and
-         * anything half done (a logo mid-flight, say) is called off.
-         */
+        /* Switching picks (hero <-> box): a held infinity is carried across, anything half done is called off. */
         handOver(from: So101PickDemo, to: So101PickDemo) {
             const holding = from.state.holding;
             const fromEntry = planOf(from);
@@ -234,10 +229,7 @@ export function createHero(s: HeroScene) {
             if (!holding && logo.at === "box") setLogo(ON_PAGE);
         },
 
-        /*
-         * A logo taken from the page starts at the page logo's size, which can
-         * vanish in the jaws (a header logo on a phone). So it grows as it's lifted.
-         */
+        /* A taken logo starts at its page size, which can vanish in the jaws (phones), so it grows as it's lifted. */
         growHeld() {
             const plan = target ? plans.get(target) : null;
             if (!plan || plan.flight || !plan.pick.state.holding) return;

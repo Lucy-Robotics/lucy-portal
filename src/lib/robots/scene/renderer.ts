@@ -25,8 +25,7 @@ export class SceneRenderer {
     private readonly main: THREE.WebGLRenderer;
     private readonly grid: THREE.WebGLRenderer;
     private readonly glowLayer: HTMLElement;
-    // Only as big as the infinities and their glow. The CSS drop-shadow is cheap
-    // on a small canvas but not on the whole screen.
+    // Only as big as the infinities and their glow: the CSS drop-shadow is cheap on a small canvas, not the whole screen.
     private readonly glowCanvas = document.createElement("canvas");
     private readonly glowContext: CanvasRenderingContext2D;
     // Draws the robots into the depth buffer only, so they hide what's behind them.
@@ -67,9 +66,8 @@ export class SceneRenderer {
         this.grid.setSize(viewWidth(), window.innerHeight, false);
     }
 
-    /* Compiles every material ahead so none compiles mid-scroll. `alsoShown` is
-       shown for the depth pass. Skipped without parallel compiling, where it
-       would only move the stall to page load. */
+    /* Compiles every material ahead so none stalls mid-scroll; `alsoShown` joins the depth pass.
+       Skipped without parallel compiling, where it would only move the stall to page load. */
     precompile(scene: THREE.Scene, gridScene: THREE.Scene, camera: THREE.Camera, alsoShown?: THREE.Object3D) {
         if (!this.parallelCompile) return;
         this.grid.compileAsync(gridScene, camera).catch(() => {});
@@ -99,9 +97,7 @@ export class SceneRenderer {
         main.setScissorTest(false);
         main.setClearColor(0x000000, 0);
         main.clear();
-        // The draw rectangle may cover only part of the screen or overflow it.
-        // The whole screen is rendered as a window onto it, so a logo flying in
-        // from the header is still drawn.
+        // The whole screen is a window onto the draw rectangle, so a logo flying in from the header is still drawn.
         main.setViewport(0, 0, viewWidth(), height);
         camera.setViewOffset(drawRect.width, drawRect.height, -drawRect.left, -drawRect.top, viewWidth(), height);
 
@@ -126,8 +122,7 @@ export class SceneRenderer {
             });
             main.setScissorTest(true);
             main.setScissor(area.left, height - area.top - area.height, area.width, area.height);
-            // Robots into depth first, then the infinities alone, so only their
-            // unhidden parts come out wherever they're held.
+            // Robots into depth first, then the infinities alone, so only their unhidden parts glow where they're held.
             camera.layers.set(0);
             scene.overrideMaterial = this.depthOnly;
             main.render(scene, camera);

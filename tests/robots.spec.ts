@@ -1,8 +1,6 @@
 /// <reference lib="dom" />
 import { expect, test, type Page } from "@playwright/test";
 
-/* The home page robots, driven through window.__robotPage (development only). */
-
 type Pick = { progress: number; goal: number; holding: boolean };
 type State = {
     enter: number;
@@ -48,7 +46,6 @@ async function open(page: Page) {
 /* The logo the arm goes for: the hero's on wide screens, the header's on phones. */
 const target = (s: State) => (s.plans.hero ? "hero" : "header");
 
-/* A page logo is hidden exactly when the arm has it, and it has it only while holding. */
 function expectLogosConsistent(s: State) {
     const holding = s.box.holding || Object.values(s.plans).some((plan) => plan.pick.holding);
     expect(s.logoOut !== null, "a logo is out only while a pick holds it").toBe(holding);
@@ -57,8 +54,7 @@ function expectLogosConsistent(s: State) {
 }
 
 async function clickArm(page: Page) {
-    // hitTest allows some slop, so a point that just hits can be off the arm. Take
-    // the whole-pixel point (clicks land on whole pixels) deepest inside it.
+    // hitTest has slop, so take the whole-pixel point (clicks land on whole pixels) deepest inside the arm.
     const point = await page.evaluate(() => {
         const robots = (window as unknown as { __robotPage: Hook }).__robotPage;
         const r = robots.state().so101;
@@ -82,7 +78,6 @@ async function clickArm(page: Page) {
     await page.mouse.click(point!.x, point!.y);
 }
 
-/* Scrolls down until the arm has landed in the box. */
 async function scrollToBox(page: Page) {
     for (let y = 0; y < 5000; y += 40) {
         await page.evaluate((top) => window.scrollTo(0, top), y);

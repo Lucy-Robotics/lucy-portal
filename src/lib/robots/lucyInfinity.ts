@@ -1,8 +1,5 @@
-/*
- * The Lucy infinity mark, from the "InfinitySign" of the team's Logo-Export.glb,
- * simplified and compressed. Once loaded the loops run along x, it faces +z,
- * and the origin is the crossing.
- */
+/* The Lucy infinity mark ("InfinitySign" of the team's Logo-Export.glb, simplified). Once loaded
+   the loops run along x, it faces +z, and the origin is the crossing. */
 import * as THREE from "three";
 
 import { loadGltf } from "./gltf.ts";
@@ -82,8 +79,7 @@ export function createLucyInfinity(shape: InfinityShape, material: THREE.Materia
     return new THREE.Mesh(shape.geometry, material);
 }
 
-/* Mirrors the team's Blender shader (Fresnel at IOR 1.45 through a colour ramp into
-   emission), with the colours it renders to. */
+/* Mirrors the team's Blender shader (Fresnel at IOR 1.45, colour ramp, emission) and the colours it renders to. */
 const LOGO_FACE = "#00ff99";
 const LOGO_EDGE = "#00ff5a";
 
@@ -117,8 +113,7 @@ export function createLucyGlowMaterial() {
             void main() {
                 float facing = abs(dot(normalize(vNormal), normalize(vView)));
                 float fresnel = f0 + (1.0 - f0) * pow(1.0 - facing, 5.0);
-                // The ramp: stop 0 at 0, stop 1 at 0.068. A face turned to the
-                // viewer sits at f0 (about half way): the logo's mint.
+                // Ramp stops at 0 and 0.068; a face toward the viewer sits at f0 (about half way), the logo's mint.
                 float t = clamp(fresnel / 0.068, 0.0, 1.0);
                 gl_FragColor = vec4(mix(face, rim, smoothstep(0.55, 1.0, t)) * glow, glow);
                 #include <colorspace_fragment>

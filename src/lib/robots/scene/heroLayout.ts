@@ -54,8 +54,7 @@ type HeroLayout = {
     heroRect: Rect;
     // Scroll position (px) once past the hero.
     landScroll: number;
-    // Scroll position where the arm has settled in the box. Half the hero, or later
-    // on wide screens while the hero's text would still be under the box.
+    // Where the arm has settled in the box: half the hero, or later on wide screens while the hero's text is under the box.
     transitionScroll: number;
     // The box's chamfer, in px.
     chamferSize: number;
@@ -115,8 +114,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
         width: rectWidth,
         height: rectHeight,
     };
-    // The base's front edge sits lower on screen than its centre, so lift the
-    // arm until its lowest point touches the bottom edge.
+    // The base's front edge sits below its centre on screen, so lift the arm until its lowest point touches the bottom edge.
     s.resetArm();
     yield;
     heroCamera();
@@ -135,8 +133,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
     yield;
     heroCamera();
 
-    // Screen points become world points on the plane through the shoulder
-    // that faces the camera, where the gripper can stay square to them.
+    // Screen points land on the camera-facing plane through the shoulder, where the gripper can stay square to them.
     const from = s.shoulder();
     const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
     const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(
@@ -158,13 +155,11 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
     const planFor = function* (name: HeroTarget, logo: HTMLElement, rect: TopRect): Generator<void, HeroPlan | null> {
         const center = toWorld(rect.centerX, rect.centerY);
         const markScale = (rect.width * metresPerPixel(center)) / s.shape.width;
-        // Wide screens pinch the far end of the right loop, reached from above
-        // the text. Phones take it by its centre.
+        // Wide screens pinch the right loop's far end, reached from above the text; phones take it by its centre.
         const pinchAt = compact ? 0 : s.shape.rightEnd;
         const pinch = center.clone().addScaledVector(right, pinchAt * markScale);
         const towards = pinch.clone().sub(from).normalize();
-        // A logo is thin and round-edged, so the gripper needn't be square to it.
-        // It reaches much further that way.
+        // A logo is thin and round-edged, so the gripper needn't be square to it, and reaches much further.
         const common = compact
             ? { rest: REST_COMPACT.clone(), restLean: DOWN, carry, carryLean: UP, square: false }
             : { rest: REST.clone(), restLean: DOWN, carry, carryLean: UP, square: false, restPose: s.restPose, rollOffset: HERO_ROLL, gripperOffset: HERO_GRIPPER };

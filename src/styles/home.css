@@ -6,10 +6,7 @@
     padding: 0 1.5rem 3rem;
 }
 
-/* Wide screens: the hero across the page (the arm stands in it, free), then
-   the content on the left and the robots' box pinned on the right while the
-   page scrolls. DOM order is hero, stage, main so that narrow screens stack
-   the box right after the hero. */
+/* DOM order is hero, stage, main so that narrow screens stack the box right after the hero. */
 .home__layout {
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
@@ -19,7 +16,6 @@
     margin: 0 auto;
 }
 
-/* Fills the first screen below the header */
 .home__hero {
     grid-column: 1 / -1;
     grid-row: 1;
@@ -38,8 +34,7 @@
     padding: 3rem 0 4rem;
 }
 
-/* Pinned on the right from the top, at the height it settles at: it stays
-   invisible (and lets the hero be clicked) until the arm lands in it. */
+/* The height the box settles at; invisible and click-through over the hero until the arm lands. */
 .home__stage {
     grid-column: 2;
     grid-row: 1 / span 2;
@@ -338,15 +333,12 @@ a.home__highlight:hover {
     line-height: 1.6;
 }
 
-/* Narrow screens: one column in DOM order (hero, stage, content), with the
-   hero centred as a landing screen and the stage at a fixed height. */
 @media (max-width: 959px) {
     .home__layout {
         display: block;
     }
 
-    /* The header's logo is enough on phones; the arm takes that one. The
-       tagline sits at the top, leaving the screen below to the arm. */
+    /* The header's logo is enough on phones (the arm takes that one), leaving the screen to the arm. */
     .home__title {
         display: none;
     }

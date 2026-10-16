@@ -29,7 +29,6 @@ export default defineConfig(({ mode }) => {
   const allowedHosts = env.VITE_ALLOWED_HOST
       ? env.VITE_ALLOWED_HOST.split(",").map((h) => h.trim()).filter(Boolean)
       : undefined;
-  // Same host and port for `npm run dev` and `npm start`.
   const listen = { host: true, allowedHosts, port: parseInt(env.PORT || "5000") };
 
   return {
@@ -58,7 +57,7 @@ export default defineConfig(({ mode }) => {
       "import.meta.env.KEYCLOAK_URL": JSON.stringify(env.KEYCLOAK_URL ?? ""),
       "import.meta.env.KEYCLOAK_REALM": JSON.stringify(env.KEYCLOAK_REALM ?? ""),
       "import.meta.env.KEYCLOAK_CLIENT_ID": JSON.stringify(env.KEYCLOAK_CLIENT_ID ?? ""),
-      // Whether this server proxies sign-in (only the flag, never the secret).
+      // Only the flag, never the secret, reaches the bundle.
       "import.meta.env.KEYCLOAK_TOKEN_PROXY": JSON.stringify(Boolean(env.KEYCLOAK_CLIENT_SECRET)),
     },
     server: listen,

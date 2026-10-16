@@ -1,4 +1,3 @@
-/* Returns a function that removes the listener. */
 export function listen<E extends Event>(
     target: EventTarget,
     type: string,

@@ -73,12 +73,10 @@ function boxesOnScreen(boxes: { box: THREE.Box3; matrix?: THREE.Matrix4 }[], cam
     return bounds;
 }
 
-/* The object's world-space bounding box, projected. */
 export const screenBounds = (object: THREE.Object3D, camera: THREE.Camera, rect: Rect) =>
     boxesOnScreen([{ box: new THREE.Box3().setFromObject(object) }], camera, rect);
 
-/* Tighter than screenBounds, since a world axis-aligned box overshoots a lot
-   once the object turns. */
+/* Tighter than screenBounds, whose world axis-aligned box overshoots a lot once the object turns. */
 export function partsBounds(object: THREE.Object3D, camera: THREE.Camera, rect: Rect) {
     const boxes: { box: THREE.Box3; matrix: THREE.Matrix4 }[] = [];
     object.traverse((part) => {

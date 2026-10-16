@@ -1,7 +1,4 @@
-/*
- * A logo out of the arm's reach shakes loose and flies into the open gripper,
- * then the same backwards to put it back.
- */
+/* A logo out of the arm's reach shakes loose and flies into the open gripper, then the same backwards to put it back. */
 import { FLIGHT_TIME, SHAKE_TIME, WRIST_TWIST } from "../config.ts";
 import { clamp, smoothstep, UP } from "../math.ts";
 import type { HeroPlan } from "./heroLayout.ts";

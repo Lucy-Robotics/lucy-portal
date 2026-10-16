@@ -46,8 +46,7 @@ export function createPointer(s: PointerScene) {
     return {
         hitTest,
 
-        // Judged before anything moves. A hovered robot holds still instead of
-        // turning to the cursor, so the click lands where the visitor aimed.
+        // Judged before anything moves; a hovered robot holds still so the click lands where aimed.
         hovered() {
             if (hoverPending) {
                 hoverPending = false;

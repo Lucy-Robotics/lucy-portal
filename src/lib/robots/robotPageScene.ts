@@ -1,12 +1,9 @@
 /*
  * The home page's robots, on one transparent canvas fixed over the viewport.
- * The canvas ignores the pointer so the page stays usable, and clicks on the
- * robots are hit-tested instead (scene/pointer.ts).
+ * It ignores the pointer so the page stays usable; clicks are hit-tested (scene/pointer.ts).
  *
- * One world holds the SO-101 arm beside a Lucy infinity, and InMoov further
- * right. It is seen through one camera and drawn into a rectangle that goes
- * from the hero (where the arm can take the page's logo) into the box
- * (`page.frame`) as the page scrolls. setView then pans to InMoov.
+ * One world (the SO-101 and a Lucy infinity, InMoov to the right) through one camera,
+ * drawn into a rectangle that moves from the hero into the box (`page.frame`) on scroll.
  *
  * SO-101 uses the LeRobot URDF (TheRobotStudio, Apache 2.0).
  * InMoov's meshes are by Gael Langevin (CC BY-NC 4.0).
@@ -140,17 +137,15 @@ export async function createRobotPageScene(
         },
     });
 
-    // The rectangle the world is drawn into right now.
     let drawRect: Rect = { left: 0, top: 0, width: 1, height: 1 };
 
-    // The hero's plans: not made, being made in the background a step per frame, or ready.
+    // "planning" runs a step per frame in the background.
     let plans: { status: "none" } | { status: "planning"; steps: Generator<void, boolean> } | { status: "ready" } =
         { status: "none" };
     const plansReady = () => plans.status === "ready";
     let settingUp = true; // nothing draws while the first layout runs in the background
 
     let enter = 0; // 0 is the arm free in the hero, 1 is the arm in the box
-    // Still in the hero, where the arm can take the page's logo, and landed in the box.
     const inHero = () => enter < 0.02;
     const landed = () => enter >= 1;
     let rise = 0; // 0 -> 1 as the robots rise into view on load
@@ -259,8 +254,7 @@ export async function createRobotPageScene(
         } else if (rise >= 1 && plans.status === "none" && !relayoutTimer && boxPick.idle) {
             plans = { status: "planning", steps: hero.layOut() };
         }
-        // Paused while the arm is busy in the box. The layout would reset it, and
-        // a held infinity would be measured as a jaw.
+        // Paused while the box's arm is busy: the layout would reset it and measure a held infinity as a jaw.
         if (plans.status === "planning" && boxPick.idle) {
             const step = runFor(plans.steps);
             if (step.done) plansMade(step.value);
@@ -318,8 +312,7 @@ export async function createRobotPageScene(
     const onLogoClick = (target: "hero" | "header") => (event: MouseEvent) => {
         if (!inHero()) return; // a plain link once scrolled
         if (plansReady() && !hero.plans.has(target)) return; // out of the arm's reach
-        // The header's infinity is part of the home link. The arm takes it instead,
-        // and "lucy" next to it still goes home.
+        // The header's infinity is part of the home link; the arm takes it instead ("lucy" still goes home).
         event.preventDefault();
         event.stopPropagation();
         if (plansReady()) hero.toggle(target);

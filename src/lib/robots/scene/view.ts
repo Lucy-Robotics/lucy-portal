@@ -105,8 +105,7 @@ export function createView(s: ViewScene) {
             scene.updateMatrixWorld();
             placeHint(f.hint, drawRect);
             const payloads = [boxPayload, heroPayload].filter(({ shown }) => shown);
-            // Like the page logo's glow, its reach follows the mark's size on screen.
-            // Full when the arm has it or it's flying, dim at rest.
+            // Like the page logo's glow, reach follows on-screen size; full when held or flying, dim at rest.
             let glowFilter = "none";
             let area: Rect | null = null;
             if (payloads.length) {

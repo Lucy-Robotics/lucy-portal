@@ -1,5 +1,4 @@
-/* Loads a URDF with its meshes from one compressed GLB instead of every STL. GLB
-   nodes are named after their STL file. */
+/* Loads a URDF with its meshes from one compressed GLB, whose nodes are named after their STL files. */
 import * as THREE from "three";
 import URDFLoader, { type URDFRobot } from "urdf-loader";
 
@@ -11,10 +10,8 @@ type MeshEntry = {
     matrix: THREE.Matrix4;
 };
 
-/*
- * gltfpack hangs each mesh under an unnamed child carrying the quantization
- * transform, so the name comes from the parent and the transform from the full path.
- */
+/* gltfpack hangs each mesh under an unnamed quantization child, so the name comes from the
+   parent and the transform from the full path. */
 async function loadMeshes(url: string) {
     const gltf = await loadGltf(url);
 
@@ -51,8 +48,7 @@ export async function loadRobot(
         const mesh = new THREE.Mesh(entry.geometry, materialFor(urdfMaterial.name));
         mesh.name = name;
         mesh.applyMatrix4(entry.matrix);
-        // urdf-loader resets the returned object's position and rotation,
-        // so the GLB transform lives on the mesh inside a plain group.
+        // urdf-loader resets the returned object's transform, so the GLB one goes on a mesh inside a group.
         const holder = new THREE.Group();
         holder.add(mesh);
         done(holder);

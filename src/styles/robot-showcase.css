@@ -1,5 +1,4 @@
-/* Above the header, since the arm reaches the header logo on phones. Transparent
-   to the pointer so links stay clickable. */
+/* Above the header, since the arm reaches its logo on phones; click-through so links work. */
 .robot-layer {
     position: fixed;
     inset: 0;
@@ -8,7 +7,6 @@
     pointer-events: none;
 }
 
-/* The grid, behind the page content. */
 .robot-backdrop {
     position: fixed;
     inset: 0;
@@ -17,7 +15,7 @@
     pointer-events: none;
 }
 
-/* Infinity glow under the robots. The scene sets the drop-shadow per mark. */
+/* The scene sets the drop-shadow per mark. */
 .robot-glow {
     position: fixed;
     inset: 0;
@@ -113,7 +111,6 @@ html.robot-hover * {
     cursor: pointer;
 }
 
-/* A logo working itself loose before it flies to the arm. */
 .logo__mark.robot-shake {
     animation: robot-shake 0.9s ease-in-out;
 }
@@ -133,7 +130,7 @@ html.robot-hover * {
     }
 }
 
-/* The scene draws the inside. The frame fades in once the arm lands, the caption just after. */
+/* The scene draws the inside; the frame fades in once the arm lands. */
 .robot-showcase {
     display: flex;
     flex-direction: column;
@@ -157,8 +154,7 @@ html.robot-hover * {
     margin: 0;
 }
 
-/* See-through so the grid shows inside, with the border drawn as a ring instead
-   of the usual filled chamfer. */
+/* See-through so the grid shows inside: the border is a ring, not the usual filled chamfer. */
 .robot-showcase__frame[data-live] {
     background: none;
     opacity: 0;
@@ -195,8 +191,7 @@ html.robot-hover * {
     );
 }
 
-/* Until the arm lands, the invisible box column overlaps the hero and must not
-   catch the pointer. */
+/* Until the arm lands, the invisible box column overlaps the hero and must not catch the pointer. */
 @media (min-width: 960px) {
     .home__stage {
         pointer-events: none;
@@ -319,7 +314,7 @@ html.robot-hover * {
     }
 }
 
-/* Keyboard and screen-reader access to the robots, hidden until focused. */
+/* Keyboard and screen-reader access to the robots. */
 .robot-actions {
     position: fixed;
     bottom: 1rem;

@@ -2,8 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 4320;
 
-/* Browser tests for the home page robots. They drive the real page through the
-   development-only test hook (window.__robotPage), so they run on the dev server. */
+/* The tests drive the dev-only window.__robotPage hook, so they run on the dev server. */
 export default defineConfig({
     testDir: "tests",
     testMatch: "*.spec.ts",
