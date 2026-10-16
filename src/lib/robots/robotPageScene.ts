@@ -91,8 +91,6 @@ export async function createRobotPageScene(
     const world = createWorld(so101, shape, materials, accent);
     const { scene, fog, gridScene, arm, boxInfinity, boxPayload, heroPayload } = world;
 
-    let inmoov: Awaited<ReturnType<typeof loadInMoov>> | null = null;
-
     scene.updateMatrixWorld(true);
     const shoulder = () => so101.links.shoulder_link.getWorldPosition(new THREE.Vector3());
 
@@ -117,6 +115,43 @@ export async function createRobotPageScene(
 
     const renderer = await SceneRenderer.create(container, page.backdrop, page.glow);
 
+    let settingUp = true; // nothing draws while the first layout runs in the background
+    let disposed = false;
+    let raf = 0;
+    let last = 0;
+    let drawRect: Rect = { left: 0, top: 0, width: 1, height: 1 };
+    let rise = 0; // 0 -> 1 as the robots rise into view on load
+    let enter = 0; // 0 is the arm free in the hero, 1 is the arm in the box
+    let view = 0;
+    let viewGoal = 0;
+    let active: RobotName = "so101";
+    let lastDriver: So101PickDemo | null = null;
+    // Until when each robot attends to the visitor rather than the cursor.
+    let armAttention = 0;
+    let inmoovAttention = 0;
+    // "planning" runs a step per frame in the background.
+    let plans: { status: "none" } | { status: "planning"; steps: Generator<void, boolean> } | { status: "ready" } =
+        { status: "none" };
+    let pending: (() => void) | null = null; // asked for before the plans were ready
+    let inmoov: Awaited<ReturnType<typeof loadInMoov>> | null = null;
+    let inmoovRequested = false;
+    let relayoutTimer = 0;
+
+    const inHero = () => enter < 0.02;
+    const landed = () => enter >= 1;
+    const plansReady = () => plans.status === "ready";
+    const driver = () => hero.driver(inHero());
+    const inMotion = (pick: So101PickDemo) => !pick.idle && pick.state.progress !== pick.state.goal;
+
+    /* Hero -> Stage over the first half of the hero's scroll. */
+    const enterGoal = () => {
+        const { transitionScroll } = hero.layout;
+        return transitionScroll > 0 ? clamp(window.scrollY / transitionScroll, 0, 1) : 0;
+    };
+
+    /* On wide screens, once the hero is past, the scroll pans to InMoov. */
+    const scrollView = () => clamp((window.scrollY - hero.layout.landScroll) / (0.9 * window.innerHeight), 0, 1);
+
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const painter = createView({ container, page, world, camera, framing, renderer, boxPick, accent, humanoid: () => inmoov?.humanoid ?? null });
     const hero = createHero({
@@ -136,35 +171,130 @@ export async function createRobotPageScene(
             painter.resetHint();
         },
     });
-
-    let drawRect: Rect = { left: 0, top: 0, width: 1, height: 1 };
-
-    // "planning" runs a step per frame in the background.
-    let plans: { status: "none" } | { status: "planning"; steps: Generator<void, boolean> } | { status: "ready" } =
-        { status: "none" };
-    const plansReady = () => plans.status === "ready";
-    let settingUp = true; // nothing draws while the first layout runs in the background
-
-    let enter = 0; // 0 is the arm free in the hero, 1 is the arm in the box
-    const inHero = () => enter < 0.02;
-    const landed = () => enter >= 1;
-    let rise = 0; // 0 -> 1 as the robots rise into view on load
-    let view = 0;
-    let viewGoal = 0;
-    let active: RobotName = "so101";
+    const pointer = createPointer({
+        camera,
+        drawRect: () => drawRect,
+        arm,
+        heroPayload,
+        humanoid: () => inmoov?.humanoid ?? null,
+        frame: page.frame,
+        landed,
+        onChange: () => wake(),
+    });
     const armEasing = new ArmEasing(so101);
 
-    /* Hero -> Stage over the first half of the hero's scroll. */
-    const enterGoal = () => {
-        const { transitionScroll } = hero.layout;
-        return transitionScroll > 0 ? clamp(window.scrollY / transitionScroll, 0, 1) : 0;
+    const plansMade = (ready: boolean) => {
+        plans = ready ? { status: "ready" } : { status: "none" };
+        if (!ready) return;
+        timings.plans = performance.now() - started;
+        const action = pending;
+        pending = null;
+        if (action) {
+            action();
+            wake();
+        }
     };
 
-    /* On wide screens, once the hero is past, the scroll pans to InMoov. */
-    const scrollView = () => clamp((window.scrollY - hero.layout.landScroll) / (0.9 * window.innerHeight), 0, 1);
+    const tick = (time: number) => {
+        raf = 0;
+        if (disposed) return;
+        if (document.hidden) {
+            last = 0;
+            return;
+        }
+        const dt = last ? Math.min((time - last) / 1000, 0.05) : 1 / 60;
+        last = time;
 
-    let lastDriver: So101PickDemo | null = null;
-    const driver = () => hero.driver(inHero());
+        const panning = followScroll(dt);
+        const pick = switchArms();
+        aimLooks(time, pick);
+        const moving = animate(dt, pick);
+        backgroundWork();
+        draw();
+
+        if (!timings.firstFrame) {
+            timings.firstFrame = performance.now() - started;
+            prefetchOtherAssets();
+        }
+        // A click handled in this frame may have woken the loop already.
+        if (moving || panning || armEasing.easing || stillWorking(time)) {
+            if (!raf) raf = requestAnimationFrame(tick);
+        }
+        else last = 0;
+    };
+
+    const wake = () => {
+        if (!raf && !settingUp) raf = requestAnimationFrame(tick);
+    };
+
+    const followScroll = (dt: number) => {
+        rise = reduceMotion ? 1 : Math.min(1, rise + dt / RISE_TIME);
+        enter = enterGoal();
+        if (!options.compact()) viewGoal = scrollView();
+        view = reduceMotion ? viewGoal : damp(view, viewGoal, 6, dt);
+        if (Math.abs(view - viewGoal) < 1e-4) view = viewGoal;
+        const closest: RobotName = landed() && view >= 0.5 ? "inmoov" : "so101";
+        if (closest !== active) {
+            active = closest;
+            options.onActiveChange?.(active);
+        }
+        return view !== viewGoal;
+    };
+
+    const switchArms = () => {
+        const pick = driver();
+        if (lastDriver && pick !== lastDriver) {
+            hero.handOver(lastDriver, pick);
+            armEasing.start(0.6);
+        }
+        lastDriver = pick;
+        return pick;
+    };
+
+    const aimLooks = (time: number, pick: So101PickDemo) => {
+        const hovered = pointer.hovered();
+        if (inMotion(pick)) armAttention = time + ARM_ATTENTION_TIME;
+        if (reduceMotion) return;
+        // After a click the arm holds its pose (presenting the logo) instead of following the cursor.
+        if (time < armAttention) pick.setLook(null);
+        else if (hovered !== "so101") pick.setLook(pointer.lookFrom(so101.links.shoulder_link));
+        // While waving and a little after, InMoov looks the visitor in the eyes.
+        if (inmoov?.wave.waving) inmoovAttention = time + ATTENTION_TIME;
+        if (inmoov && time < inmoovAttention) inmoov.wave.setLook(inmoov.lookAt(camera));
+        else if (inmoov && hovered !== "inmoov") inmoov.wave.setLook(pointer.lookFrom(inmoov.head));
+    };
+
+    const animate = (dt: number, pick: So101PickDemo) => {
+        const picking = pick.update(dt, { instant: reduceMotion });
+        const caught = inHero() ? hero.catchStep(dt) : null;
+        hero.growHeld();
+        // The wrist twists while it strains for the logo.
+        if (caught?.wristTwist) so101.joints.wrist_roll.setJointValue(so101.joints.wrist_roll.angle + caught.wristTwist);
+        armEasing.step(dt);
+        const waving = inmoov?.wave.update(dt, { instant: reduceMotion }) ?? false;
+        return picking || (caught?.moving ?? false) || waving;
+    };
+
+    // Once the hero is up, the slower work runs one piece per frame.
+    const backgroundWork = () => {
+        if (rise >= 1 && !inmoovRequested) {
+            inmoovRequested = true;
+            renderer.precompile(scene, gridScene, camera);
+            showInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
+        } else if (rise >= 1 && plans.status === "none" && !relayoutTimer && boxPick.idle) {
+            plans = { status: "planning", steps: hero.layOut() };
+        }
+        // Paused while the box's arm is busy: the layout would reset it and measure a held infinity as a jaw.
+        if (plans.status === "planning" && boxPick.idle) {
+            const step = runFor(plans.steps);
+            if (step.done) plansMade(step.value);
+            armEasing.restore();
+        }
+    };
+
+    // Keep going while a robot attends to the visitor, so it turns back to the cursor on its own.
+    const stillWorking = (time: number) => rise < 1 || (!plansReady() && boxPick.idle) || driver() !== lastDriver
+        || time < armAttention + 50 || time < inmoovAttention + 50;
 
     const draw = () => {
         drawRect = painter.draw({
@@ -180,119 +310,6 @@ export async function createRobotPageScene(
         });
     };
 
-    const pointer = createPointer({
-        camera,
-        drawRect: () => drawRect,
-        arm,
-        heroPayload,
-        humanoid: () => inmoov?.humanoid ?? null,
-        frame: page.frame,
-        landed,
-        onChange: () => wake(),
-    });
-    // Until when each robot attends to the visitor rather than the cursor.
-    let armAttention = 0;
-    let inmoovAttention = 0;
-    const inMotion = (pick: So101PickDemo) => !pick.idle && pick.state.progress !== pick.state.goal;
-    let raf = 0;
-    let last = 0;
-
-    const tick = (time: number) => {
-        raf = 0;
-        if (disposed) return;
-        if (document.hidden) {
-            last = 0;
-            return;
-        }
-        const dt = last ? Math.min((time - last) / 1000, 0.05) : 1 / 60;
-        last = time;
-
-        rise = reduceMotion ? 1 : Math.min(1, rise + dt / RISE_TIME);
-        enter = enterGoal();
-        if (!options.compact()) viewGoal = scrollView();
-        view = reduceMotion ? viewGoal : damp(view, viewGoal, 6, dt);
-        if (Math.abs(view - viewGoal) < 1e-4) view = viewGoal;
-        const panning = view !== viewGoal;
-
-        const closest: RobotName = landed() && view >= 0.5 ? "inmoov" : "so101";
-        if (closest !== active) {
-            active = closest;
-            options.onActiveChange?.(active);
-        }
-
-        const pick = driver();
-        if (lastDriver && pick !== lastDriver) {
-            hero.handOver(lastDriver, pick);
-            armEasing.start(0.6);
-        }
-        lastDriver = pick;
-
-        const hovered = pointer.hovered();
-        if (inMotion(pick)) armAttention = time + ARM_ATTENTION_TIME;
-        if (!reduceMotion) {
-            // After a click the arm holds its pose (presenting the logo) instead of following the cursor.
-            if (time < armAttention) pick.setLook(null);
-            else if (hovered !== "so101") pick.setLook(pointer.lookFrom(so101.links.shoulder_link));
-            // While waving and a little after, InMoov looks the visitor in the eyes.
-            if (inmoov?.wave.waving) inmoovAttention = time + ATTENTION_TIME;
-            if (inmoov && time < inmoovAttention) inmoov.wave.setLook(inmoov.lookAt(camera));
-            else if (inmoov && hovered !== "inmoov") inmoov.wave.setLook(pointer.lookFrom(inmoov.head));
-        }
-        const picking = pick.update(dt, { instant: reduceMotion });
-        const caught = inHero() ? hero.catchStep(dt) : null;
-        hero.growHeld();
-        // The wrist twists while it strains for the logo.
-        if (caught?.wristTwist) so101.joints.wrist_roll.setJointValue(so101.joints.wrist_roll.angle + caught.wristTwist);
-        armEasing.step(dt);
-        const waving = inmoov?.wave.update(dt, { instant: reduceMotion }) ?? false;
-
-        // Once the hero is up, the slower work runs one piece per frame.
-        if (rise >= 1 && !inmoovRequested) {
-            inmoovRequested = true;
-            renderer.precompile(scene, gridScene, camera);
-            showInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
-        } else if (rise >= 1 && plans.status === "none" && !relayoutTimer && boxPick.idle) {
-            plans = { status: "planning", steps: hero.layOut() };
-        }
-        // Paused while the box's arm is busy: the layout would reset it and measure a held infinity as a jaw.
-        if (plans.status === "planning" && boxPick.idle) {
-            const step = runFor(plans.steps);
-            if (step.done) plansMade(step.value);
-            armEasing.restore();
-        }
-
-        draw();
-
-        if (!timings.firstFrame) {
-            timings.firstFrame = performance.now() - started;
-            prefetchOtherAssets();
-        }
-        // Keep going while a robot attends to the visitor, so it turns back to the cursor on its own.
-        const working = rise < 1 || (!plansReady() && boxPick.idle) || driver() !== lastDriver
-            || time < armAttention + 50 || time < inmoovAttention + 50;
-        // A click handled in this frame may have woken the loop already.
-        if (picking || caught?.moving || waving || panning || armEasing.easing || working) {
-            if (!raf) raf = requestAnimationFrame(tick);
-        }
-        else last = 0;
-    };
-
-    const wake = () => {
-        if (!raf && !settingUp) raf = requestAnimationFrame(tick);
-    };
-
-    let pending: (() => void) | null = null; // asked for before the plans were ready
-    function plansMade(ready: boolean) {
-        plans = ready ? { status: "ready" } : { status: "none" };
-        if (!ready) return;
-        timings.plans = performance.now() - started;
-        const action = pending;
-        pending = null;
-        if (action) {
-            action();
-            wake();
-        }
-    }
     const activate = (robot: RobotName) => {
         // After a click the visitor, not the cursor, has the robot's attention.
         if (robot === "inmoov") inmoovAttention = performance.now() + ATTENTION_TIME;
@@ -307,6 +324,14 @@ export async function createRobotPageScene(
             hero.takeOrGiveBack();
         }
         wake();
+    };
+
+    const onClick = (event: MouseEvent) => {
+        const target = event.target as Element | null;
+        if (event.defaultPrevented || target?.closest(INTERACTIVE)) return;
+        if (window.getSelection()?.toString()) return;
+        const robot = pointer.hitTest(event.clientX, event.clientY);
+        if (robot) activate(robot);
     };
 
     const onLogoClick = (target: "hero" | "header") => (event: MouseEvent) => {
@@ -336,17 +361,7 @@ export async function createRobotPageScene(
         activate("so101");
     };
 
-    const onClick = (event: MouseEvent) => {
-        const target = event.target as Element | null;
-        if (event.defaultPrevented || target?.closest(INTERACTIVE)) return;
-        if (window.getSelection()?.toString()) return;
-        const robot = pointer.hitTest(event.clientX, event.clientY);
-        if (robot) activate(robot);
-    };
-
     // Fonts and resizes move the logos. Wait while the arm moves, or it would drop what it carries.
-    let disposed = false;
-    let relayoutTimer = 0;
     const relayout = () => {
         if (disposed) return;
         window.clearTimeout(relayoutTimer);
@@ -379,6 +394,22 @@ export async function createRobotPageScene(
         }, 150);
     };
 
+    const showInMoov = async () => {
+        const loaded = await loadInMoov(materials, accent);
+        if (disposed) return;
+        inmoov = loaded;
+        const { humanoid } = loaded;
+        humanoid.visible = landed();
+        scene.add(humanoid);
+        // Headroom for the raised hand when it waves, with the arm still in the shot.
+        framing.shots.inmoov = new THREE.Box3().setFromObject(humanoid)
+            .expandByVector(new THREE.Vector3(0, 0.15, 0))
+            .union(armShot);
+        renderer.precompile(scene, gridScene, camera, humanoid);
+        timings.inmoov = performance.now() - started;
+        wake();
+    };
+
     // Before anything listens to the page.
     const planned = await inBackground(hero.layOut(false));
     // With parallel compiling, the first frame needn't stall on it either.
@@ -408,23 +439,6 @@ export async function createRobotPageScene(
     const resizeObserver = new ResizeObserver(relayout);
     resizeObserver.observe(page.frame);
     void document.fonts?.ready.then(relayout);
-
-    let inmoovRequested = false;
-    const showInMoov = async () => {
-        const loaded = await loadInMoov(materials, accent);
-        if (disposed) return;
-        inmoov = loaded;
-        const { humanoid } = loaded;
-        humanoid.visible = landed();
-        scene.add(humanoid);
-        // Headroom for the raised hand when it waves, with the arm still in the shot.
-        framing.shots.inmoov = new THREE.Box3().setFromObject(humanoid)
-            .expandByVector(new THREE.Vector3(0, 0.15, 0))
-            .union(armShot);
-        renderer.precompile(scene, gridScene, camera, humanoid);
-        timings.inmoov = performance.now() - started;
-        wake();
-    };
 
     draw();
     wake();
