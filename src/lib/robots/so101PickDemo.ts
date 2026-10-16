@@ -12,9 +12,9 @@ import {
 } from "./config.ts";
 import { LookFollow } from "./lookFollow.ts";
 import { measureJaws, findServoSide } from "./gripper.ts";
-import { clamp, damp, easeInOutCubic, smoothstep, solveLinear } from "./math.ts";
+import { clamp, damp, easeInOutCubic, smoothstep } from "./math.ts";
+import { So101Ik, type Pose } from "./so101Ik.ts";
 
-const CHAIN = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex"] as const;
 /* Above this many metres of residual, a pose counts as out of reach. */
 const REACH_TOLERANCE = 0.006;
 
@@ -49,8 +49,6 @@ type PickPlan = {
     gripperOffset?: { open: number; closed: number };
 };
 
-type Pose = number[];
-
 export class So101PickDemo {
     /* False when the grasp is out of reach. toggle() then does nothing. */
     get reachable() {
@@ -66,13 +64,7 @@ export class So101PickDemo {
 
     private readonly payload: Payload;
     private readonly robot: URDFRobot;
-    private readonly base: THREE.Object3D;
-    private readonly tcp: THREE.Object3D;
-    private lean: THREE.Vector3;
-    private readonly facing: THREE.Vector3;
-    // Side of the gripper its servo is on, across the roll axis (gripper frame).
-    private readonly servoSide: THREE.Vector3 | null;
-    private readonly panOrigin: THREE.Vector3;
+    private readonly ik: So101Ik;
     private keys: { at: number; q: Pose }[] = [];
     private readonly onHoldChange?: (holding: boolean) => void;
     private readonly home: {
@@ -83,12 +75,10 @@ export class So101PickDemo {
     };
 
     private readonly grip = new THREE.Object3D();
-    private readonly chain: THREE.Object3D[] = [];
     // Payload pose in the grip frame once taken, reused by takeOver().
     private heldOffset = new THREE.Matrix4();
     private gripOpen = 0;
     private gripClosed = 0;
-    private roll = 0;
 
     private progress = 0;
     private goal = 0;
@@ -128,13 +118,10 @@ export class So101PickDemo {
         onHoldChange?: (holding: boolean) => void,
     ) {
         this.robot = robot;
-        this.base = base;
         this.payload = payload;
         this.onHoldChange = onHoldChange;
-        this.lean = plan.lean.clone().normalize();
-        this.tcp = robot.links.gripper_frame_link;
         const { object } = payload;
-        this.facing = new THREE.Vector3(0, 0, 1).applyQuaternion(object.getWorldQuaternion(new THREE.Quaternion()));
+        const facing = new THREE.Vector3(0, 0, 1).applyQuaternion(object.getWorldQuaternion(new THREE.Quaternion()));
         this.home = {
             parent: object.parent!,
             position: object.position.clone(),
@@ -143,7 +130,7 @@ export class So101PickDemo {
         };
 
         base.updateMatrixWorld(true);
-        this.servoSide = findServoSide(robot);
+        const servoSide = findServoSide(robot);
         const jaws = measureJaws(robot, payload.gripWidth);
         this.gripOpen = jaws.open;
         this.gripClosed = jaws.closed;
@@ -155,12 +142,7 @@ export class So101PickDemo {
             this.gripOpen += opening * plan.gripperOffset.open;
             this.gripClosed -= opening * plan.gripperOffset.closed;
         }
-        for (const end of [this.grip, this.tcp]) {
-            const path: THREE.Object3D[] = [];
-            for (let object: THREE.Object3D | null = end; object && object !== base; object = object.parent) path.push(object);
-            for (const object of path.reverse()) if (!this.chain.includes(object)) this.chain.push(object);
-        }
-        this.panOrigin = robot.links.shoulder_link.getWorldPosition(new THREE.Vector3());
+        this.ik = new So101Ik(robot, base, this.grip, facing, servoSide, plan.lean.clone().normalize());
     }
 
     /* Each solver run is one step. The page may move the arm in between, so each run
@@ -170,7 +152,7 @@ export class So101PickDemo {
         // Find the wrist roll that lines the jaws up with the payload, then re-solve with it.
         this.set("gripper", this.gripOpen);
         const square = plan.square ?? true;
-        let grasp = yield* this.solveFor(plan.grasp, [0, 0, 0.5, 0.5], { square });
+        let grasp = yield* this.ik.solveFor(plan.grasp, [0, 0, 0.5, 0.5], { square });
         if (grasp.error >= REACH_TOLERANCE) {
             // Out of reach, so skip the other poses.
             this.missed = { grasp: grasp.error, approach: NaN, rest: NaN, carry: NaN };
@@ -178,25 +160,25 @@ export class So101PickDemo {
             this.keys = [{ at: 0, q: grasp.q }, { at: 1, q: grasp.q }];
             return;
         }
-        this.roll = this.alignRoll(grasp.q) + (plan.rollOffset ?? 0);
-        grasp = yield* this.solveFor(plan.grasp, grasp.q, { square });
+        this.ik.roll = this.ik.alignRoll(grasp.q) + (plan.rollOffset ?? 0);
+        grasp = yield* this.ik.solveFor(plan.grasp, grasp.q, { square });
         // Approach and retreat straight along the gripper's axis at the grasp.
-        this.apply(grasp.q);
-        const axis = this.toolAxis();
-        const approach = yield* this.solveFor(plan.grasp.clone().addScaledVector(axis, -plan.approach), grasp.q, { square });
-        this.lean = plan.carryLean.clone().normalize();
-        const carry = yield* this.solveFor(plan.carry, approach.q, { square });
+        this.ik.apply(grasp.q);
+        const axis = this.ik.toolAxis();
+        const approach = yield* this.ik.solveFor(plan.grasp.clone().addScaledVector(axis, -plan.approach), grasp.q, { square });
+        this.ik.lean = plan.carryLean.clone().normalize();
+        const carry = yield* this.ik.solveFor(plan.carry, approach.q, { square });
         // At rest it holds nothing, so it may turn out of square.
-        this.lean = plan.restLean.clone().normalize();
+        this.ik.lean = plan.restLean.clone().normalize();
         const rest = plan.restPose
             ? { q: plan.restPose.slice(), error: 0 }
-            : yield* this.solveFor(plan.rest, approach.q, { square: false });
+            : yield* this.ik.solveFor(plan.rest, approach.q, { square: false });
         this.missed = { grasp: grasp.error, approach: approach.error, rest: rest.error, carry: carry.error };
         // Rest needn't be exact, it's only where the arm waits.
         this.inReach = [grasp, approach, carry].every((solution) => solution.error < REACH_TOLERANCE);
 
         // The payload's pose in the grip, measured at the grasp with jaws closed.
-        this.apply(grasp.q);
+        this.ik.apply(grasp.q);
         this.set("gripper", this.gripClosed);
         this.robot.updateMatrixWorld(true);
         object.updateMatrixWorld(true);
@@ -329,10 +311,6 @@ export class So101PickDemo {
         this.robot.joints[joint].setJointValue(value);
     }
 
-    private angle(joint: string) {
-        return this.robot.joints[joint].angle;
-    }
-
     private pose(t: number, dt: number) {
         let q = this.keys[this.keys.length - 1].q;
         for (let i = 1; i < this.keys.length; i++) {
@@ -356,128 +334,8 @@ export class So101PickDemo {
         this.set("shoulder_lift", q[1]);
         this.set("elbow_flex", q[2]);
         this.set("wrist_flex", q[3] + offset("wrist") - this.look.current.y * LOOK.wrist * f);
-        this.set("wrist_roll", this.roll + offset("roll") - this.look.current.x * LOOK.roll * f);
+        this.set("wrist_roll", this.ik.roll + offset("roll") - this.look.current.x * LOOK.roll * f);
         const g = easeInOutCubic(clamp((t - CLOSE_START) / (ATTACH_AT - CLOSE_START), 0, 1));
         this.set("gripper", this.gripOpen + (this.gripClosed - this.gripOpen) * g);
-    }
-
-    /* Toward the fingertips, as of the last updateChain. */
-    private toolAxis() {
-        return new THREE.Vector3().setFromMatrixColumn(this.tcp.matrixWorld, 2).normalize();
-    }
-
-    /* Rolling turns the gripper about its own axis, so the chain can stay put while we search. */
-    private alignRoll(grasp: Pose) {
-        this.apply(grasp);
-        const { lower, upper } = this.robot.joints.wrist_roll.limit;
-        const alignment = (roll: number) => {
-            this.set("wrist_roll", roll);
-            this.updateChain();
-            const across = new THREE.Vector3().setFromMatrixColumn(this.robot.links.gripper_link.matrixWorld, 0);
-            return Math.abs(across.normalize().dot(this.facing)); // the jaws are symmetric
-        };
-        let best = 0;
-        let bestScore = -1;
-        for (let roll = lower; roll <= upper; roll += 0.02) {
-            const score = alignment(roll);
-            if (score > bestScore + 1e-6) {
-                best = roll;
-                bestScore = score;
-            }
-        }
-        // Half a turn away aligns as well. Of the two, keep the one with the
-        // gripper's servo toward the viewer (+z), when the joint allows it.
-        const servo = this.servoSide;
-        if (!servo) return best;
-        const towardViewer = (roll: number) => {
-            this.set("wrist_roll", roll);
-            this.updateChain();
-            return servo.clone().transformDirection(this.robot.links.gripper_link.matrixWorld).z;
-        };
-        return [best, best + Math.PI, best - Math.PI]
-            .filter((roll) => roll >= lower && roll <= upper)
-            .reduce((a, b) => (towardViewer(b) > towardViewer(a) ? b : a));
-    }
-
-    /* Returns the values actually reached after joint limits. */
-    private apply(q: Pose) {
-        CHAIN.forEach((name, i) => this.set(name, q[i]));
-        this.set("wrist_roll", this.roll);
-        this.updateChain();
-        return CHAIN.map((name) => this.angle(name));
-    }
-
-    /* Only the root-to-gripper path, which is all the solver reads. The rest catches up before drawing. */
-    private updateChain() {
-        for (const object of this.chain) {
-            object.updateMatrix();
-            object.matrixWorld.multiplyMatrices(object.parent!.matrixWorld, object.matrix);
-        }
-    }
-
-    /* Damped least squares on position and squareness, with a soft pull toward the lean. */
-    private ik(goal: THREE.Vector3, start: Pose, iterations: number, keepSquare: boolean, lean = 0.04) {
-        const saved = CHAIN.map((name) => this.angle(name));
-        const residual = () => {
-            const p = new THREE.Vector3().setFromMatrixPosition(this.grip.matrixWorld);
-            const a = this.toolAxis();
-            // 0.08 m of position error is worth one unit of tilt.
-            const square = keepSquare ? -a.dot(this.facing) * 0.08 : 0;
-            return [
-                goal.x - p.x, goal.y - p.y, goal.z - p.z, square,
-                (this.lean.x - a.x) * lean, (this.lean.y - a.y) * lean, (this.lean.z - a.z) * lean,
-            ];
-        };
-
-        let q = this.apply(start);
-        let e = residual();
-        for (let it = 0; it < iterations; it++) {
-            const h = 1e-3;
-            const J = q.map((_, i) => {
-                const probe = q.slice();
-                probe[i] += h;
-                this.apply(probe);
-                return residual().map((x, k) => (e[k] - x) / h);
-            });
-            const lambda = 0.01;
-            const A = J.map((ja) => J.map((jb) => ja.reduce((s, x, k) => s + x * jb[k], 0)));
-            A.forEach((row, i) => (row[i] += lambda * lambda));
-            const b = J.map((column) => column.reduce((s, x, k) => s + x * e[k], 0));
-            const dq = solveLinear(A, b);
-            const biggest = Math.max(...dq.map(Math.abs));
-            const k = biggest > 0.4 ? 0.4 / biggest : 1;
-            q = this.apply(q.map((v, i) => v + dq[i] * k));
-            e = residual();
-        }
-        // Reach is judged on position and squareness, the lean is only a preference.
-        const error = Math.hypot(e[0], e[1], e[2], e[3]);
-        this.apply(saved);
-        return { q, error };
-    }
-
-    /* Refine from `start`. If that stalls, search a coarse grid of starts (forward-leaning preferred). */
-    private *solveFor(goal: THREE.Vector3, start: Pose, { square = true } = {}): Generator<void, { q: Pose; error: number }> {
-        const preference = (q: Pose) => 0.004 * (Math.abs(q[1] - 0.4) + Math.abs(q[2] + 0.2));
-        let best = this.ik(goal, start, 20, square);
-        yield;
-        if (best.error > 0.004) {
-            const toGoal = this.base.worldToLocal(goal.clone()).sub(this.base.worldToLocal(this.panOrigin.clone()));
-            const pan = Math.atan2(-toGoal.z, toGoal.x);
-            for (const lift of [-0.8, -0.2, 0.4, 1.0]) {
-                for (const elbow of [-1.2, -0.4, 0.4, 1.2]) {
-                    for (const wrist of [-1.4, -0.6, 0.6, 1.4]) {
-                        const candidate = this.ik(goal, [pan, lift, elbow, wrist], 20, square);
-                        yield;
-                        if (candidate.error + preference(candidate.q) < best.error + preference(best.q) - 1e-4) {
-                            best = candidate;
-                        }
-                    }
-                }
-            }
-        }
-        // Polish without the lean so position wins.
-        const polished = this.ik(goal, best.q, 20, square, 0);
-        yield;
-        return polished.error < best.error ? polished : best;
     }
 }
