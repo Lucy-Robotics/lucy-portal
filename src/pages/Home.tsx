@@ -15,6 +15,7 @@ import type { IconType } from "react-icons";
 
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
 import Logo from "../components/Logo.tsx";
+import RobotShowcase from "../components/RobotShowcase.tsx";
 import "../styles/home.css";
 
 const FEATURES: { icon: IconType; title: string; description: string }[] = [
@@ -96,7 +97,8 @@ function ExternalIcon() {
 }
 
 const Home = () => {
-    const quickstartRef = useRef<HTMLElement>(null);
+    const heroRef = useRef<HTMLDivElement>(null);
+    const introRef = useRef<HTMLElement>(null);
     const [isAtTop, setIsAtTop] = useState(true);
 
     useEffect(() => {
@@ -108,13 +110,13 @@ const Home = () => {
 
     const scrollToContent = () => {
         const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        quickstartRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+        introRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
     };
 
     return (
         <div className="home">
-            <div className="home__content">
-                <div className="home__hero">
+            <div className="home__layout">
+                <div ref={heroRef} className="home__hero">
                     <h1 className="home__title">
                         <Logo />
                     </h1>
@@ -124,100 +126,111 @@ const Home = () => {
                         <span className="home__tagline-accent">//</span> Any robot.
                     </p>
 
-                    <p className="home__description">
-                        Lucy is an open-source framework powered by ROS 2. It
-                        controls and simulates robotic platforms and integrates with
-                        many tools, such as Gazebo simulation, RViz and a web control
-                        panel. Lucy is multiplatform and runs from a Python + Pixi
-                        environment.
-                    </p>
-
-                    <div className="home__actions">
-                        <a
-                            href="/download"
-                            className="header__button header__button--main home__button"
-                        >
-                            Download
-                        </a>
-
-                        <a
-                            href={EXTERNAL_LINKS.LIVE_DEMO}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="header__button header__button--primary home__button"
-                        >
-                            Live Demo
-                            <ExternalIcon />
-                        </a>
-                    </div>
-
-                    <a
-                        href={EXTERNAL_LINKS.DISCORD}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="home__discord"
-                    >
-                        <FaDiscord aria-hidden="true" />
-                        Join our Discord
-                    </a>
-
                     <button
                         type="button"
                         className={`home__scroll-hint ${isAtTop ? "" : "home__scroll-hint--hidden"}`}
                         onClick={scrollToContent}
-                        aria-label="Scroll to quickstart"
+                        aria-label="Scroll to content"
                     >
                         <FaChevronDown aria-hidden="true" />
                     </button>
                 </div>
 
-                <section
-                    ref={quickstartRef}
-                    className="home__quickstart"
-                    aria-label="Lucy quickstart"
-                >
-                    <div className="home__terminal">
-                        <div className="home__terminal-header">
-                            Lucy quickstart
-                        </div>
-                        <pre className="home__terminal-body">
-                            <code>
-                                <span className="home__terminal-line">
-                                    <span className="home__terminal-prompt">
-                                        ${" "}
-                                    </span>
-                                    git clone
-                                    https://github.com/Lucy-Robotics/lucy_ws.git
-                                </span>
-                                <span className="home__terminal-line">
-                                    <span className="home__terminal-prompt">
-                                        ${" "}
-                                    </span>
-                                    cd lucy_ws
-                                </span>
-                                <span className="home__terminal-line">
-                                    <span className="home__terminal-prompt">
-                                        ${" "}
-                                    </span>
-                                    python3 Lucy.py
-                                </span>
-                            </code>
-                        </pre>
-                    </div>
+                <aside className="home__stage">
+                    <RobotShowcase heroRef={heroRef} />
+                </aside>
 
-                    <p className="home__quickstart-note">
-                        Then enable{" "}
-                        <span className="home__highlight">
-                            Core + Control Panel
-                        </span>{" "}
-                        and open{" "}
+                <div className="home__main">
+                    <section
+                        ref={introRef}
+                        className="home__intro"
+                        aria-label="About Lucy"
+                    >
+                        <p className="home__description">
+                            Lucy is an open-source framework powered by ROS 2. It
+                            controls and simulates robots and integrates with
+                            many tools, such as Gazebo simulation, RViz and a web control
+                            panel. Lucy is multiplatform and runs from a Python + Pixi
+                            environment.
+                        </p>
+
+                        <div className="home__actions">
+                            <a
+                                href="/download"
+                                className="header__button header__button--main home__button"
+                            >
+                                Download
+                            </a>
+
+                            <a
+                                href={EXTERNAL_LINKS.LIVE_DEMO}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="header__button header__button--primary home__button"
+                            >
+                                Live Demo
+                                <ExternalIcon />
+                            </a>
+                        </div>
+
                         <a
-                            href="http://localhost:4004"
-                            className="home__highlight"
+                            href={EXTERNAL_LINKS.DISCORD}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="home__discord"
                         >
-                            http://localhost:4004
+                            <FaDiscord aria-hidden="true" />
+                            Join our Discord
                         </a>
-                        .
+                    </section>
+
+                    <section
+                        className="home__quickstart"
+                        aria-label="Lucy quickstart"
+                    >
+                        <div className="home__terminal">
+                            <div className="home__terminal-header">
+                                Lucy quickstart
+                            </div>
+                            <pre className="home__terminal-body">
+                                <code>
+                                    <span className="home__terminal-line">
+                                        <span className="home__terminal-prompt">
+                                            ${" "}
+                                        </span>
+                                        git clone
+                                        https://github.com/Lucy-Robotics/lucy_ws.git
+                                    </span>
+                                    <span className="home__terminal-line">
+                                        <span className="home__terminal-prompt">
+                                            ${" "}
+                                        </span>
+                                        cd lucy_ws
+                                    </span>
+                                    <span className="home__terminal-line">
+                                        <span className="home__terminal-prompt">
+                                            ${" "}
+                                        </span>
+                                        python3 Lucy.py
+                                    </span>
+                                </code>
+                            </pre>
+                        </div>
+
+                        <p className="home__quickstart-note">
+                            Then enable{" "}
+                            <span className="home__highlight">
+                                Core + Control Panel
+                            </span>{" "}
+                            and open{" "}
+                            <a
+                                href="http://localhost:4004"
+                                className="home__highlight"
+                            >
+                                http://localhost:4004
+                            </a>
+                            .
+                        </p>
                         <p className="home__quickstart-note">
                             Only{" "}
                             <a href="https://git-scm.com/downloads" target="_blank" rel="noopener noreferrer" className="home__highlight">
@@ -233,36 +246,36 @@ const Home = () => {
                             </a>{" "}
                             are required.
                         </p>
-                    </p>
 
-                    <hr className="home__separator" />
-                </section>
+                        <hr className="home__separator" />
+                    </section>
 
-                <section
-                    className="home__features"
-                    aria-label="Everything you need already in Lucy"
-                >
-                    <h2 className="home__features-title">
-                        Everything you need already in Lucy
-                    </h2>
+                    <section
+                        className="home__features"
+                        aria-label="Everything you need already in Lucy"
+                    >
+                        <h2 className="home__features-title">
+                            Everything you need already in Lucy
+                        </h2>
 
-                    <div className="home__features-grid">
-                        {FEATURES.map(({ icon: Icon, title, description }) => (
-                            <article
-                                key={title}
-                                className="chamfer home__feature-card"
-                            >
-                                <h3 className="home__feature-card-title">
-                                    <Icon aria-hidden="true" />
-                                    {title}
-                                </h3>
-                                <p className="home__feature-card-text">
-                                    {description}
-                                </p>
-                            </article>
-                        ))}
-                    </div>
-                </section>
+                        <div className="home__features-grid">
+                            {FEATURES.map(({ icon: Icon, title, description }) => (
+                                <article
+                                    key={title}
+                                    className="home__feature-card chamfer"
+                                >
+                                    <h3 className="home__feature-card-title">
+                                        <Icon aria-hidden="true" />
+                                        {title}
+                                    </h3>
+                                    <p className="home__feature-card-text">
+                                        {description}
+                                    </p>
+                                </article>
+                            ))}
+                        </div>
+                    </section>
+                </div>
             </div>
         </div>
     );

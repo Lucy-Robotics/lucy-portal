@@ -12,8 +12,9 @@ export const authUrls = {
 } as const;
 
 // Confidential Keycloak clients require the client secret at the token endpoint.
-// The browser must never see the secret, so token exchange goes through a server proxy.
-const tokenEndpoint = import.meta.env.DEV
+// The browser must never see the secret, so token exchange goes through a server proxy,
+// the Vite server's when it has the secret, else the backend's.
+const tokenEndpoint = import.meta.env.DEV || import.meta.env.KEYCLOAK_TOKEN_PROXY
     ? `${window.location.origin}/api/auth/token`
     : `${env.backendUrl}/auth/token`;
 

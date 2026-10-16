@@ -1,0 +1,339 @@
+/* Above the header, since the arm reaches its logo on phones; click-through so links work. */
+.robot-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+
+    pointer-events: none;
+}
+
+.robot-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+
+    pointer-events: none;
+}
+
+/* The scene sets the drop-shadow per mark. */
+.robot-glow {
+    position: fixed;
+    inset: 0;
+    z-index: 19;
+
+    pointer-events: none;
+}
+
+.robot-layer canvas,
+.robot-backdrop canvas,
+.robot-glow canvas {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+}
+
+/* Placed by the scene, then offset by --hint-x and --hint-y (positive is right and down). */
+.robot-click-hint {
+    --hint-x: 50px;
+    --hint-y: -55px;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 21;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+
+    padding: 0.25rem 0.5rem 0.5rem;
+
+    background: none;
+    color: var(--color-text-pri);
+
+    font-family: var(--font-primary);
+    font-size: 0.8rem;
+    font-weight: var(--font-weight-bold);
+    white-space: nowrap;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.robot-click-hint[data-shown] {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.robot-click-hint:hover:not(:disabled) {
+    background: none;
+    color: var(--color-highlight);
+}
+
+@media (max-width: 959px) {
+    .robot-click-hint {
+        --hint-x: -20px;
+        --hint-y: -20px;
+    }
+}
+
+html:has(.header--menu-open) .robot-layer,
+html:has(.header--menu-open) .robot-glow,
+html:has(.header--menu-open) .robot-click-hint {
+    visibility: hidden;
+}
+
+/* The hero logo glows while the hero text invites the arm to take it. */
+.robot-takeable {
+    cursor: pointer;
+}
+
+.logo__mark.robot-invite {
+    filter:
+        drop-shadow(0 0 3px color-mix(in srgb, var(--color-highlight) 60%, transparent))
+        drop-shadow(0 0 9px color-mix(in srgb, var(--color-highlight) 35%, transparent));
+}
+
+.logo__mark {
+    transition: filter 0.25s ease;
+}
+
+/* Set by the scene's hit test, so it must win over every child's cursor. */
+html.robot-hover,
+html.robot-hover * {
+    cursor: pointer !important;
+}
+
+.logo__mark.robot-target {
+    cursor: pointer;
+}
+
+.logo__mark.robot-shake {
+    animation: robot-shake 0.9s ease-in-out;
+}
+
+@keyframes robot-shake {
+    0%, 100% { transform: none; }
+    15% { transform: translate(-1px, 0) rotate(-6deg); }
+    30% { transform: translate(1px, -1px) rotate(5deg); }
+    45% { transform: translate(-1px, 1px) rotate(-4deg); }
+    60% { transform: translate(1px, 0) rotate(3deg); }
+    80% { transform: translate(0, -1px) rotate(-2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .logo__mark.robot-shake {
+        animation: none;
+    }
+}
+
+/* The scene draws the inside; the frame fades in once the arm lands. */
+.robot-showcase {
+    display: flex;
+    flex-direction: column;
+}
+
+.robot-showcase__row {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.75rem, 3vw, 1.5rem);
+}
+
+.robot-showcase__frame {
+    --chamfer: 1.5rem;
+
+    flex: 1;
+    align-self: stretch;
+
+    margin: 0;
+}
+
+/* See-through so the grid shows inside: the border is a ring, not the usual filled chamfer. */
+.robot-showcase__frame[data-live] {
+    background: none;
+    opacity: 0;
+
+    transition: opacity 0.5s ease;
+}
+
+.robot-showcase__frame[data-live][data-landed] {
+    opacity: 1;
+}
+
+.robot-showcase__frame[data-live]::before {
+    --ring: var(--border-width);
+
+    inset: 0;
+
+    background: var(--color-border);
+    clip-path: polygon(
+        evenodd,
+        0 0,
+        calc(100% - var(--chamfer)) 0,
+        100% var(--chamfer),
+        100% 100%,
+        var(--chamfer) 100%,
+        0 calc(100% - var(--chamfer)),
+        0 0,
+        var(--ring) var(--ring),
+        var(--ring) calc(100% - var(--chamfer-inner) - var(--ring)),
+        calc(var(--chamfer-inner) + var(--ring)) calc(100% - var(--ring)),
+        calc(100% - var(--ring)) calc(100% - var(--ring)),
+        calc(100% - var(--ring)) calc(var(--chamfer-inner) + var(--ring)),
+        calc(100% - var(--chamfer-inner) - var(--ring)) var(--ring),
+        var(--ring) var(--ring)
+    );
+}
+
+/* Until the arm lands, the invisible box column overlaps the hero and must not catch the pointer. */
+@media (min-width: 960px) {
+    .home__stage {
+        pointer-events: none;
+    }
+
+    .robot-showcase__frame[data-landed] {
+        pointer-events: auto;
+    }
+}
+
+.robot-showcase__status {
+    position: absolute;
+    inset: 0;
+
+    display: grid;
+    place-items: center;
+
+    margin: 0;
+
+    color: var(--color-text-sec);
+
+    font-size: 0.85rem;
+}
+
+.robot-showcase__caption {
+    position: absolute;
+    top: 1rem;
+    left: 1.25rem;
+
+    color: var(--color-text-sec);
+
+    font-size: 0.75rem;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+
+    pointer-events: none;
+    transition: opacity 0.6s ease 0.3s;
+}
+
+.robot-showcase__frame[data-live]:not([data-landed]) .robot-showcase__caption {
+    opacity: 0;
+    transition: none;
+}
+
+.robot-showcase__caption-sep {
+    color: var(--color-highlight);
+}
+
+.robot-showcase__hint {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 1rem;
+
+    margin: 0;
+
+    color: var(--color-text-sec);
+
+    font-size: 0.75rem;
+
+    pointer-events: none;
+}
+
+/* Arrows only on phones. Wide screens switch robot with the scroll. */
+.robot-showcase__arrow {
+    display: none;
+    flex: none;
+    place-items: center;
+
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+
+    background: transparent;
+    border: var(--border-width) solid var(--color-border);
+    color: var(--color-text-pri);
+
+    font-size: 1.1rem;
+
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.robot-showcase__arrow:hover:not(:disabled) {
+    background: transparent;
+    border-color: var(--color-highlight);
+    color: var(--color-highlight);
+}
+
+.robot-showcase__arrow:focus-visible {
+    outline: 2px solid var(--color-highlight);
+    outline-offset: 2px;
+}
+
+.robot-showcase__arrow:disabled {
+    background: transparent;
+}
+
+@media (max-width: 959px) {
+    .robot-showcase__arrow {
+        display: grid;
+    }
+
+    .robot-showcase__frame {
+        flex: 0 1 26rem;
+        align-self: auto;
+
+        aspect-ratio: 4 / 5;
+    }
+}
+
+@media (max-width: 560px) {
+    .robot-showcase__row {
+        flex-wrap: wrap;
+        row-gap: 1rem;
+    }
+
+    .robot-showcase__frame {
+        flex-basis: 100%;
+        order: -1;
+    }
+}
+
+/* Keyboard and screen-reader access to the robots. */
+.robot-actions {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 30;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.robot-actions button:not(:focus-visible) {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+
+    clip-path: inset(50%);
+    white-space: nowrap;
+}

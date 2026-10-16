@@ -42,13 +42,13 @@ Configuration is read from a `.env` file at the project root (or from the proces
 
 | Variable                 | Required | Used by               | Description                                                                                                  |
 |--------------------------|----------|-----------------------|--------------------------------------------------------------------------------------------------------------|
-| `PORT`                   | No       | Dev server            | Port the Vite development server listens on. Defaults to `5000`.                                             |
+| `PORT`                   | No       | Dev / preview server  | Port the Vite server (`npm run dev`, `npm start`) listens on. Defaults to `5000`.                            |
 | `VITE_ALLOWED_HOST`      | No       | Dev / preview server  | Comma-separated list of additional host names accepted by the Vite server (for example, behind a tunnel).   |
 | `BACKEND_URL`            | No       | Client bundle         | Base URL of the backend API. Without it, the blog and roadmap are disabled.                                  |
 | `KEYCLOAK_URL`           | No       | Client bundle         | Base URL of the Keycloak server, for example `https://auth.example.com`.                                     |
 | `KEYCLOAK_REALM`         | No       | Client bundle         | Keycloak realm name.                                                                                         |
 | `KEYCLOAK_CLIENT_ID`     | No       | Client bundle         | Client ID of the portal in Keycloak.                                                                         |
-| `KEYCLOAK_CLIENT_SECRET` | No       | Dev server only       | Client secret, used by the development token proxy. Never injected into the client bundle.                   |
+| `KEYCLOAK_CLIENT_SECRET` | No       | Dev / preview server  | Client secret, used by the token proxy of `npm run dev` and `npm start`. Never injected into the client bundle. |
 
 Important notes:
 
@@ -62,7 +62,8 @@ Important notes:
 |-------------------|----------------------------------------------------------------------|
 | `npm run dev`     | Starts the Vite development server with hot module replacement.      |
 | `npm run build`   | Type-checks the project (`tsc -b`) and builds it into `dist/`.       |
-| `npm run preview` | Serves the content of `dist/` locally, to check a production build.  |
+| `npm run start`   | Serves the content of `dist/` locally, to check a production build.  |
+| `npm start`       | Serves `dist/` (`vite preview`) in production, with the token proxy. |
 | `npm run lint`    | Lints the source code with Oxlint.                                   |
 
 ## Authentication
@@ -72,7 +73,8 @@ The portal signs maintainers in with OpenID Connect against Keycloak, using the 
 | Environment | Token endpoint used by the browser | Provided by                                                        |
 |-------------|------------------------------------|--------------------------------------------------------------------|
 | Development | `<portal origin>/api/auth/token`   | `vite-plugin-keycloak-token-proxy.ts` (reads `KEYCLOAK_CLIENT_SECRET`) |
-| Production  | `<BACKEND_URL>/auth/token`         | The backend (see `backend/auth-token.example.ts`)                  |
+| Production (`npm start`, build with the secret) | `<portal origin>/api/auth/token` | The same proxy, run by `vite preview` |
+| Production (otherwise) | `<BACKEND_URL>/auth/token`         | The backend (see `backend/auth-token.example.ts`)                  |
 
 ### Keycloak client settings
 
@@ -100,7 +102,9 @@ npm ci
 npm run build
 ```
 
-The output is written to `dist/`. Do not set `KEYCLOAK_CLIENT_SECRET` in the frontend build environment, because the production build does not need it.
+The output is written to `dist/`. Set `KEYCLOAK_CLIENT_SECRET` only if `npm start` serves the build and proxies sign-in (the bundle then only knows a proxy exists, never the secret). Otherwise leave it unset: the backend proxies sign-in.
+
+The simplest way to serve it is `npm start` (`vite preview`) on `PORT`. Behind a domain name, list it in `VITE_ALLOWED_HOST`. Hashed files under `/assets` are cached for good. To use another web server instead, see below.
 
 ### 2. Serve with a single-page application fallback
 
@@ -127,7 +131,7 @@ server {
 }
 ```
 
-Terminate TLS in front of this server, for example with Certbot or a reverse proxy. Other hosts need an equivalent rewrite rule, for example `_redirects` on Netlify or `rewrites` in `vercel.json`. Use `npm run preview` only to check a build locally, not as a production server.
+Terminate TLS in front of this server, for example with Certbot or a reverse proxy. Other hosts need an equivalent rewrite rule, for example `_redirects` on Netlify or `rewrites` in `vercel.json`.
 
 ### 3. Configure the backend
 

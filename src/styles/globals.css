@@ -703,6 +703,7 @@ select:focus {
    hover/focus states recolour --chamfer-border instead. */
 .chamfer {
     --chamfer: 1rem;
+    --chamfer-inner: calc(var(--chamfer) - 0.586 * var(--border-width));
     --chamfer-border: var(--color-border);
     --chamfer-fill: var(--color-bg-comp);
 
@@ -724,8 +725,6 @@ select:focus {
 }
 
 .chamfer::before {
-    --inner-chamfer: calc(var(--chamfer) - 0.586 * var(--border-width));
-
     content: "";
     position: absolute;
     inset: var(--border-width);
@@ -734,11 +733,11 @@ select:focus {
     background: var(--chamfer-fill);
     clip-path: polygon(
         0 0,
-        calc(100% - var(--inner-chamfer)) 0,
-        100% var(--inner-chamfer),
+        calc(100% - var(--chamfer-inner)) 0,
+        100% var(--chamfer-inner),
         100% 100%,
-        var(--inner-chamfer) 100%,
-        0 calc(100% - var(--inner-chamfer))
+        var(--chamfer-inner) 100%,
+        0 calc(100% - var(--chamfer-inner))
     );
 }
 

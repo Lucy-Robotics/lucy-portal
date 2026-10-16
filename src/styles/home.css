@@ -1,35 +1,60 @@
 .home {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    --header-height: 65px;
 
-    padding: 4.5rem 1.5rem 3rem;
+    flex: 1;
+
+    padding: 0 1.5rem 3rem;
 }
 
-.home__content {
+/* DOM order is hero, stage, main so that narrow screens stack the box right after the hero. */
+.home__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    column-gap: clamp(2rem, 4vw, 4rem);
+
+    max-width: 1360px;
+    margin: 0 auto;
+}
+
+.home__hero {
+    grid-column: 1 / -1;
+    grid-row: 1;
+
     display: flex;
     flex-direction: column;
     align-items: center;
-
-    width: 100%;
-    max-width: 64rem;
+    justify-content: center;
 
     text-align: center;
-}
-
-/* Fills the first screen (viewport minus header and .home top padding) */
-.home__hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
 
     position: relative;
+    container-type: inline-size;
 
-    width: 100%;
-    min-height: calc(100svh - 65px - 4.5rem);
-    padding-bottom: 4rem;
+    min-height: calc(100svh - var(--header-height));
+    padding: 3rem 0 4rem;
+}
+
+/* The height the box settles at; invisible and click-through over the hero until the arm lands. */
+.home__stage {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+
+    position: sticky;
+    top: var(--header-height);
+
+    display: flex;
+    height: calc(100svh - var(--header-height));
+    padding: 1.5rem 0;
+}
+
+.home__stage > .robot-showcase {
+    flex: 1;
+}
+
+.home__main {
+    grid-column: 1;
+    grid-row: 2;
 }
 
 .home__scroll-hint {
@@ -88,7 +113,7 @@
     color: var(--color-text-pri);
 
     font-family: var(--font-brand);
-    font-size: clamp(1rem, 5.5vw, 3.125rem);
+    font-size: clamp(1rem, 6.2cqi, 3.125rem);
     font-weight: var(--font-weight-bold);
 }
 
@@ -112,8 +137,14 @@
     color: var(--color-text-pri);
 }
 
+.home__intro {
+    scroll-margin-top: 6rem;
+
+    padding-top: 3rem;
+}
+
 .home__description {
-    margin: 3rem 0 0;
+    margin: 0;
 
     color: var(--color-text-sec);
 
@@ -125,7 +156,6 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
     gap: 1rem;
 
     margin-top: 2.5rem;
@@ -164,14 +194,8 @@
 }
 
 .home__quickstart {
-    scroll-margin-top: 6rem;
-
-    width: 100%;
     max-width: 36rem;
-
     margin-top: 4.5rem;
-
-    text-align: left;
 }
 
 .home__terminal {
@@ -224,7 +248,6 @@
 
     font-size: var(--font-size-caption);
     line-height: 1.6;
-    text-align: center;
 }
 
 .home__quickstart-disclaimer {
@@ -234,7 +257,6 @@
 
     font-size: 0.7rem;
     font-style: italic;
-    text-align: center;
 }
 
 .home__highlight {
@@ -256,8 +278,6 @@ a.home__highlight:hover {
 }
 
 .home__features {
-    width: 100%;
-
     margin-top: 2.5rem;
 }
 
@@ -273,12 +293,10 @@ a.home__highlight:hover {
 
 .home__features-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.25rem;
 
     margin-top: 2rem;
-
-    text-align: left;
 }
 
 .home__feature-card {
@@ -315,24 +333,56 @@ a.home__highlight:hover {
     line-height: 1.6;
 }
 
-@media (max-width: 900px) {
-    .home__features-grid {
-        grid-template-columns: repeat(2, 1fr);
+@media (max-width: 959px) {
+    .home__layout {
+        display: block;
+    }
+
+    /* The header's logo is enough on phones (the arm takes that one), leaving the screen to the arm. */
+    .home__title {
+        display: none;
+    }
+
+    /* The robot below the tagline already invites a scroll. */
+    .home__scroll-hint {
+        display: none;
+    }
+
+    .home__hero {
+        justify-content: flex-start;
+
+        padding-top: 2.5rem;
+    }
+
+    .home__actions {
+        justify-content: center;
+    }
+
+    .home__stage {
+        position: static;
+
+        height: auto;
+        padding: 0 0 3rem;
+    }
+
+    .home__intro {
+        text-align: center;
+    }
+
+    .home__quickstart {
+        margin: 4.5rem auto 0;
     }
 }
 
 @media (max-width: 560px) {
+    .home {
+        --header-height: 57px;
+
+        padding: 0 1rem 2rem;
+    }
+
     .home__features-grid {
         grid-template-columns: 1fr;
-    }
-
-    .home {
-        padding: 3rem 1rem 2rem;
-        align-items: flex-start;
-    }
-
-    .home__hero {
-        min-height: calc(100svh - 57px - 3rem);
     }
 
     .home__headline {
