@@ -19,11 +19,11 @@ import type { URDFRobot } from "urdf-loader";
 import { inBackground, runFor } from "../background.ts";
 import { listen } from "../listen.ts";
 import {
-    ARM_ATTENTION_TIME, ARM_YAW, ATTENTION_TIME, BOX_INFINITY_X, BOX_SLIDE, CLOSE_FROM, FOV, HEAD_TURN,
+    ARM_ATTENTION_TIME, ATTENTION_TIME, BOX_SLIDE, CLOSE_FROM, FOV, HEAD_TURN,
     HIT_SLOP, REST, RESTING_GLOW, RISE_TIME,
 } from "./config.ts";
 import { InMoovWave } from "./inmoovWave.ts";
-import { createLucyGlowMaterial, loadLucyInfinity } from "./lucyInfinity.ts";
+import { loadLucyInfinity } from "./lucyInfinity.ts";
 import { clamp, damp, DOWN, smoothstep } from "./math.ts";
 import { prefetchOtherAssets, ROBOT_ASSETS } from "./robotAssets.ts";
 import { loadRobot } from "./robotModel.ts";
@@ -32,11 +32,12 @@ import { SceneRenderer } from "./scene/renderer.ts";
 import { Framing } from "./scene/framing.ts";
 import { glowArea, glowReach, logoGlow, rgbOf } from "./scene/glow.ts";
 import { layoutHero as layOutHero, type HeroPlan, type HeroTarget } from "./scene/heroLayout.ts";
-import { createMaterials, createPayload, INFINITY_LAYER, standInMoov } from "./scene/parts.ts";
+import { createMaterials, INFINITY_LAYER, standInMoov } from "./scene/parts.ts";
 import {
     chamferedClip, contains, cssColor, HIDDEN, lerpRect, partsBounds, rayFrom, screenBounds, toRect, toScreen, topRect,
     viewWidth, type Rect,
 } from "./scene/screen.ts";
+import { createWorld, disposeWorld } from "./scene/world.ts";
 import { So101PickDemo } from "./so101PickDemo.ts";
 
 export type RobotName = "so101" | "inmoov";
@@ -84,8 +85,6 @@ export async function createRobotPageScene(
     options: Options,
 ): Promise<RobotPageScene> {
     const accent = cssColor("--color-highlight", "#00ff41");
-    const background = cssColor("--color-bg-comp", "#141414");
-    const gridColor = cssColor("--color-border", "#3f3f3f");
     const materials = createMaterials();
 
     // The hero only needs the arm and the logo. InMoov loads later.
@@ -98,42 +97,8 @@ export async function createRobotPageScene(
         loadLucyInfinity(),
     ]);
     timings.assets = performance.now() - started;
-    // The infinity stands on its loops, so its crossing is half its height up.
-    const boxInfinity = new THREE.Vector3(BOX_INFINITY_X, shape.height / 2, 0);
-
-    const scene = new THREE.Scene();
-    const fog = new THREE.Fog(background, 1, 2);
-    scene.fog = fog;
-    scene.add(new THREE.HemisphereLight(0xffffff, background, 1.4));
-    const key = new THREE.DirectionalLight(0xffffff, 2.2);
-    key.position.set(-0.6, 1, 0.8);
-    const rim = new THREE.DirectionalLight(0xffffff, 0.8);
-    rim.position.set(0.8, 0.4, -1);
-    scene.add(key, rim);
-
-    // The grid has its own scene, so it can be drawn behind the page during the transition.
-    const gridScene = new THREE.Scene();
-    gridScene.fog = fog;
-    const grid = new THREE.GridHelper(16, 160, gridColor, gridColor);
-    const gridMaterial = grid.material as THREE.Material;
-    gridMaterial.transparent = true;
-    gridScene.add(grid);
-
-    const arm = new THREE.Group();
-    arm.rotation.y = ARM_YAW;
-    arm.add(so101);
-    scene.add(arm);
-
-    // The box's infinity has its own material, so it fades in on its own.
-    const boxPayload = createPayload(shape, createLucyGlowMaterial(), accent);
-    boxPayload.group.position.copy(boxInfinity);
-    const heroPayload = createPayload(shape, materials.logo, accent);
-    heroPayload.shown = false;
-    scene.add(boxPayload.group, heroPayload.group);
-    // Lights on every layer, so the glow pass reuses the main pass's shaders.
-    scene.traverse((object) => {
-        if (object instanceof THREE.Light) object.layers.enableAll();
-    });
+    const { scene, fog, gridScene, grid, gridMaterial, arm, boxInfinity, boxPayload, heroPayload } =
+        createWorld(so101, shape, materials, accent);
 
     let inmoov: URDFRobot | null = null;
     let humanoid: THREE.Group | null = null;
@@ -779,6 +744,7 @@ export async function createRobotPageScene(
     // With parallel compiling, the first frame needn't stall on it either.
     await renderer.compileFirst(scene, camera);
     settingUp = false;
+    enter = enterGoal();
     if (plansReady) plansDone(); // phones plan with the layout
 
     const unlisten = [
@@ -823,7 +789,6 @@ export async function createRobotPageScene(
         wake();
     };
 
-    enter = enterGoal();
     draw();
     wake();
 
@@ -886,22 +851,7 @@ export async function createRobotPageScene(
             page.hint?.removeAttribute("data-shown");
             disposeHeroPlans();
             boxPick.dispose();
-            scene.traverse((object) => {
-                if (object instanceof THREE.Mesh || object instanceof THREE.LineSegments) {
-                    object.geometry.dispose();
-                    const list = Array.isArray(object.material) ? object.material : [object.material];
-                    list.forEach((material) => {
-                        (material as THREE.MeshBasicMaterial).map?.dispose();
-                        material.dispose();
-                    });
-                }
-            });
-            gridScene.traverse((object) => {
-                if (object instanceof THREE.LineSegments) {
-                    object.geometry.dispose();
-                    (object.material as THREE.Material).dispose();
-                }
-            });
+            disposeWorld(scene, gridScene);
             renderer.dispose();
         },
     };
