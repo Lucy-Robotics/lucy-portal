@@ -42,6 +42,11 @@ import { So101PickDemo } from "./so101PickDemo.ts";
 
 export type RobotName = "so101" | "inmoov";
 
+/* Where the page's logo is: on the page, with the hero's arm (in its jaws or flying
+   to or from them), or carried into the box. What shows it only follows this. */
+type LogoState = { at: "page" } | { at: "hero" | "box"; logo: HeroTarget };
+const ON_PAGE: LogoState = { at: "page" };
+
 type Page = {
     /* heroLogo is not shown on phones. */
     hero: HTMLElement;
@@ -119,10 +124,7 @@ export async function createRobotPageScene(
         approach: 0.06,
     }, (holding) => {
         // Set down in the Stage, so the page gets its logo back.
-        if (!holding && logoOut) {
-            markVisible(logoOut, true);
-            logoOut = null;
-        }
+        if (!holding && logo.at === "box") setLogo(ON_PAGE);
     }));
     const restPose = boxPick.restPose;
 
@@ -142,12 +144,16 @@ export async function createRobotPageScene(
 
     const heroPlans = new Map<HeroTarget, HeroPlan>();
     let heroTarget: HeroTarget | null = null; // the plan in use
-    // The page logo whose infinity the robot has (hidden on the page).
-    let logoOut: HTMLElement | null = null;
-
-    // Opacity, not visibility, so the mark still takes the click that asks for it back.
-    const markVisible = (logo: HTMLElement, visible: boolean) => {
-        logo.style.opacity = visible ? "" : "0";
+    let logo: LogoState = ON_PAGE;
+    // The page logo a robot has, hidden on the page.
+    const logoOut = () => (logo.at === "page" ? null : logo.logo);
+    const setLogo = (next: LogoState) => {
+        logo = next;
+        // Opacity, not visibility, so the mark still takes the click that asks for it back.
+        for (const [name, element] of [["hero", page.heroLogo], ["header", page.headerLogo]] as const) {
+            if (element) element.style.opacity = logoOut() === name ? "0" : "";
+        }
+        heroPayload.shown = logo.at === "hero";
     };
 
     /* `pinch` is where along its loops the infinity is held. */
@@ -161,13 +167,11 @@ export async function createRobotPageScene(
     const disposeHeroPlans = () => {
         for (const plan of heroPlans.values()) {
             plan.pick.dispose();
-            markVisible(plan.logo, true);
             plan.logo.classList.remove("robot-target", "robot-shake");
         }
         heroPlans.clear();
         heroTarget = null;
-        logoOut = null;
-        heroPayload.shown = false;
+        setLogo(ON_PAGE);
     };
 
     // Scroll positions (px) where the hero is past and where the arm has settled in the box.
@@ -205,11 +209,7 @@ export async function createRobotPageScene(
             },
             heroPayload,
             placeHeroPayload,
-            onHeroHold: (logo, holding) => {
-                heroPayload.shown = holding;
-                markVisible(logo, !holding);
-                logoOut = holding ? logo : null;
-            },
+            onHeroHold: (name, holding) => setLogo(holding ? { at: "hero", logo: name } : ON_PAGE),
         }, withPlans);
         ({ heroRect, landScroll, transitionScroll, chamferSize } = layout);
         for (const [name, plan] of layout.plans ?? []) {
@@ -217,7 +217,6 @@ export async function createRobotPageScene(
             plan.logo.classList.add("robot-target");
         }
         plansReady = layout.plans !== null;
-        heroPayload.shown = false;
         layoutMs = performance.now() - started;
     };
     const layoutNow = (withPlans: boolean) => {
@@ -274,18 +273,15 @@ export async function createRobotPageScene(
      */
     const handOver = (from: So101PickDemo, to: So101PickDemo) => {
         const holding = from.state.holding;
-        const fromPlan = planOf(from)?.[1];
-        if (fromPlan) {
-            fromPlan.logo.classList.remove("robot-shake");
-            if (!holding && fromPlan.phase !== "idle") {
-                markVisible(fromPlan.logo, true);
-                if (logoOut === fromPlan.logo) logoOut = null;
-            }
-            fromPlan.phase = "idle";
+        const fromEntry = planOf(from);
+        if (fromEntry) {
+            const [name, plan] = fromEntry;
+            plan.logo.classList.remove("robot-shake");
+            if (!holding && plan.phase !== "idle" && logoOut() === name) setLogo(ON_PAGE);
+            plan.phase = "idle";
         }
         to.lookLike(from);
         from.release();
-        heroPayload.shown = false;
         if (holding) {
             const entry = planOf(to);
             if (entry) {
@@ -293,13 +289,11 @@ export async function createRobotPageScene(
                 heroTarget = name;
                 placeHeroPayload(plan.home.position, plan.home.scale, plan.home.pinch);
                 to.takeOver();
-                heroPayload.shown = true;
-                markVisible(plan.logo, false);
-                if (logoOut && logoOut !== plan.logo) markVisible(logoOut, true);
-                logoOut = plan.logo;
+                setLogo({ at: "hero", logo: name });
                 if (plan.flight) plan.phase = "held";
             } else {
                 to.takeOver();
+                if (logo.at === "hero") setLogo({ at: "box", logo: logo.logo });
             }
         }
         smoothing = 0.6;
@@ -334,15 +328,13 @@ export async function createRobotPageScene(
 
     let wristTwist = 0; // added to the wrist roll while it strains for the logo
     const catchStep = (dt: number) => {
-        const plan = heroTarget ? heroPlans.get(heroTarget) : null;
-        if (!plan?.flight) return false;
+        const name = heroTarget;
+        const plan = name ? heroPlans.get(name) : null;
+        if (!name || !plan?.flight) return false;
         const step = stepCatch(plan, dt, {
             heroPayload,
             instant: reduceMotion,
-            setLogoOut: (logo, out) => {
-                markVisible(logo, !out);
-                logoOut = out ? logo : null;
-            },
+            setLogoOut: (out) => setLogo(out ? { at: "hero", logo: name } : ON_PAGE),
         });
         wristTwist = step.wristTwist;
         return step.moving;
@@ -374,7 +366,7 @@ export async function createRobotPageScene(
     const placeHint = () => {
         const hint = page.hint;
         if (!hint) return;
-        const visible = rise >= 1 && enter < 0.02 && logoOut === null && driver().idle;
+        const visible = rise >= 1 && enter < 0.02 && logo.at === "page" && driver().idle;
         // Wait for the arm to settle, as it eases from the pose on screen after a layout.
         if (visible && !hintPlaced && smoothing === 0 && driver() === lastDriver) {
             hintPlaced = true;
@@ -720,7 +712,7 @@ export async function createRobotPageScene(
             }
             // The layout resets the arm, so give back what it held and the logo it carried.
             const held = boxPick.state.holding;
-            const carried = held ? logoOut : null;
+            const carried = logo.at === "box" ? logo : null;
             // Before the hero is up, stay light. The plans come after the rise.
             planning?.return(); // what it had half built goes
             planning = null;
@@ -728,10 +720,7 @@ export async function createRobotPageScene(
             if (plansReady) plansDone();
             if (held) {
                 boxPick.takeOver();
-                if (carried) {
-                    markVisible(carried, false);
-                    logoOut = carried;
-                }
+                if (carried) setLogo(carried);
             }
             showShown();
             draw();
@@ -806,7 +795,7 @@ export async function createRobotPageScene(
                 const plan = heroPlans.get("header");
                 return plan?.flight ? +plan.home.position.distanceTo(shoulder()).toFixed(3) : null;
             })(),
-            logoOut: logoOut ? (logoOut.closest(".header") ? "header" : "hero") : null,
+            logoOut: logoOut(),
             plans: Object.fromEntries([...heroPlans].map(([name, plan]) => [name, {
                 reachable: plan.pick.reachable,
                 flies: plan.flight !== null,

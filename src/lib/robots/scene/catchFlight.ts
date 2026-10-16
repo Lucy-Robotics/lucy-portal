@@ -11,8 +11,8 @@ type CatchScene = {
     heroPayload: Payload;
     /* No animation: every phase is over at once. */
     instant: boolean;
-    /* Hides the page's logo while the arm has it, or shows it again. */
-    setLogoOut: (logo: HTMLElement, out: boolean) => void;
+    /* The logo leaves the page for the arm, or is back. */
+    setLogoOut: (out: boolean) => void;
 };
 
 /* `dt` is in seconds. Also returns the wrist twist while it strains for the logo. */
@@ -44,8 +44,7 @@ export function stepCatch(plan: HeroPlan, dt: number, s: CatchScene) {
             }
             if (s.instant || plan.timer >= SHAKE_TIME) {
                 logo.classList.remove("robot-shake");
-                s.setLogoOut(logo, true);
-                payload.shown = true;
+                s.setLogoOut(true);
                 plan.phase = "fly";
                 plan.timer = 0;
                 place(0);
@@ -67,15 +66,13 @@ export function stepCatch(plan: HeroPlan, dt: number, s: CatchScene) {
             if (progress <= 0.5 + 1e-3) {
                 plan.phase = "flyback";
                 plan.timer = 0;
-                payload.shown = true;
             }
             break;
         case "flyback": {
             const e = s.instant ? 1 : smoothstep(plan.timer, 0, FLIGHT_TIME);
             place(1 - e);
             if (e >= 1) {
-                payload.shown = false;
-                s.setLogoOut(logo, false);
+                s.setLogoOut(false);
                 logo.classList.add("robot-shake"); // settling back in
                 plan.phase = "return";
                 plan.timer = 0;

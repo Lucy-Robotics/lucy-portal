@@ -47,7 +47,7 @@ type HeroLayoutScene = {
     resetArm: () => void;
     heroPayload: Payload;
     placeHeroPayload: (position: THREE.Vector3, scale: number, pinch: number) => void;
-    onHeroHold: (logo: HTMLElement, holding: boolean) => void;
+    onHeroHold: (name: HeroTarget, holding: boolean) => void;
 };
 
 type HeroLayout = {
@@ -155,7 +155,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
     const carry = new THREE.Vector3(carryAt.x, carryAt.y, from.z);
 
     /* Out of reach, the arm stretches toward the logo and the logo flies into its gripper. */
-    const planFor = function* (logo: HTMLElement, rect: TopRect): Generator<void, HeroPlan | null> {
+    const planFor = function* (name: HeroTarget, logo: HTMLElement, rect: TopRect): Generator<void, HeroPlan | null> {
         const center = toWorld(rect.centerX, rect.centerY);
         const markScale = (rect.width * metresPerPixel(center)) / s.shape.width;
         // Wide screens pinch the far end of the right loop, reached from above
@@ -174,7 +174,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
             object: s.heroPayload.group,
             gripWidth: s.shape.depth * markScale,
         }, { ...common, grasp: pinch.clone(), lean: compact ? towards : towards.clone().add(DOWN).normalize(), approach: 0.05 },
-        (holding) => s.onHeroHold(logo, holding));
+        (holding) => s.onHeroHold(name, holding));
         heroCamera();
         if (reach.reachable) {
             return { logo, pick: reach, home: { position: pinch, scale: markScale, pinch: pinchAt }, flight: null, phase: "idle", timer: 0 };
@@ -238,7 +238,7 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
     try {
         for (const [name, logo, rect] of [["hero", page.heroLogo, heroLogo], ["header", page.headerLogo, headerLogo]] as const) {
             if (!logo || !rect?.width) continue;
-            const plan = yield* planFor(logo, rect);
+            const plan = yield* planFor(name, logo, rect);
             if (plan) plans.set(name, plan);
         }
         layout.plans = new Map(plans);
