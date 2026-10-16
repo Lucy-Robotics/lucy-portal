@@ -39,15 +39,15 @@ function dequantize(source: THREE.BufferGeometry) {
     return geometry;
 }
 
-export async function loadLucyInfinity(url: string = ROBOT_ASSETS.infinity): Promise<InfinityShape> {
-    const gltf = await loadGltf(url);
+export async function loadLucyInfinity(): Promise<InfinityShape> {
+    const gltf = await loadGltf(ROBOT_ASSETS.infinity);
     let geometry: THREE.BufferGeometry | null = null;
     gltf.scene.traverse((object) => {
         if (!geometry && object instanceof THREE.Mesh) {
             geometry = dequantize(object.geometry).applyMatrix4(object.matrixWorld);
         }
     });
-    if (!geometry) throw new Error(`No mesh in ${url}`);
+    if (!geometry) throw new Error(`No mesh in ${ROBOT_ASSETS.infinity}`);
     const shape: THREE.BufferGeometry = geometry;
 
     // Exported lying down, so stand it up facing +z, centred and at its real size.
@@ -88,13 +88,11 @@ const LOGO_FACE = "#00ff99";
 const LOGO_EDGE = "#00ff5a";
 
 export function createLucyGlowMaterial() {
-    const face = new THREE.Color(LOGO_FACE);
-    const rim = new THREE.Color(LOGO_EDGE);
     const ior = 1.45;
     return new THREE.ShaderMaterial({
         uniforms: {
-            face: { value: face },
-            rim: { value: rim },
+            face: { value: new THREE.Color(LOGO_FACE) },
+            rim: { value: new THREE.Color(LOGO_EDGE) },
             f0: { value: ((1 - ior) / (1 + ior)) ** 2 },
             // 0..1, fades the mark from dark and transparent to fully lit.
             glow: { value: 1 },

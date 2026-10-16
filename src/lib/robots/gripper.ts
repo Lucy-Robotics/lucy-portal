@@ -73,13 +73,11 @@ export function measureJaws(robot: URDFRobot, gripWidth: number) {
    named after their STL (see robotModel.ts). */
 export function findServoSide(robot: URDFRobot) {
     const body = robot.links.gripper_link;
-    const servo = body.children.flatMap((child) => {
-        const meshes: THREE.Mesh[] = [];
-        child.traverse((object) => {
-            if (object instanceof THREE.Mesh && object.name.startsWith("sts3215")) meshes.push(object);
-        });
-        return meshes;
-    })[0];
+    const meshes: THREE.Mesh[] = [];
+    body.traverse((object) => {
+        if (object instanceof THREE.Mesh && object.name.startsWith("sts3215")) meshes.push(object);
+    });
+    const servo = meshes[0];
     if (!servo) return null;
     servo.geometry.computeBoundingBox();
     const center = servo.geometry.boundingBox!.getCenter(new THREE.Vector3()).applyMatrix4(servo.matrixWorld);

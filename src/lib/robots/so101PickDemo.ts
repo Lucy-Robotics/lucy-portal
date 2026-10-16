@@ -18,7 +18,7 @@ const CHAIN = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex"] as c
 /* Above this many metres of residual, a pose counts as out of reach. */
 const REACH_TOLERANCE = 0.006;
 
-export type Payload = {
+type Payload = {
     /* Origin at the grasp point. Local z is the axis the jaws close along. */
     object: THREE.Object3D;
     /* Thickness between the jaws at the grasp point, in metres. */
@@ -26,7 +26,7 @@ export type Payload = {
 };
 
 /* Positions are in world coordinates. */
-export type PickPlan = {
+type PickPlan = {
     grasp: THREE.Vector3;
     /* Direction the gripper would rather point at the grasp. */
     lean: THREE.Vector3;
@@ -50,7 +50,6 @@ export type PickPlan = {
 };
 
 type Pose = number[];
-
 
 export class So101PickDemo {
     /* False when the grasp is out of reach. toggle() then does nothing. */
@@ -370,13 +369,12 @@ export class So101PickDemo {
     /* Rolling turns the gripper about its own axis, so the chain can stay put while we search. */
     private alignRoll(grasp: Pose) {
         this.apply(grasp);
-        const target = this.facing;
         const { lower, upper } = this.robot.joints.wrist_roll.limit;
         const alignment = (roll: number) => {
             this.set("wrist_roll", roll);
             this.updateChain();
             const across = new THREE.Vector3().setFromMatrixColumn(this.robot.links.gripper_link.matrixWorld, 0);
-            return Math.abs(across.normalize().dot(target)); // the jaws are symmetric
+            return Math.abs(across.normalize().dot(this.facing)); // the jaws are symmetric
         };
         let best = 0;
         let bestScore = -1;
@@ -396,13 +394,10 @@ export class So101PickDemo {
             this.updateChain();
             return servo.clone().transformDirection(this.robot.links.gripper_link.matrixWorld).z;
         };
-        const chosen = [best, best + Math.PI, best - Math.PI]
+        return [best, best + Math.PI, best - Math.PI]
             .filter((roll) => roll >= lower && roll <= upper)
             .reduce((a, b) => (towardViewer(b) > towardViewer(a) ? b : a));
-        return chosen;
     }
-
-
 
     /* Returns the values actually reached after joint limits. */
     private apply(q: Pose) {
@@ -442,8 +437,7 @@ export class So101PickDemo {
                 const probe = q.slice();
                 probe[i] += h;
                 this.apply(probe);
-                const e1 = residual();
-                return e1.map((x, k) => (e[k] - x) / h);
+                return residual().map((x, k) => (e[k] - x) / h);
             });
             const lambda = 0.01;
             const A = J.map((ja) => J.map((jb) => ja.reduce((s, x, k) => s + x * jb[k], 0)));
