@@ -62,7 +62,7 @@ Important notes:
 |-------------------|----------------------------------------------------------------------|
 | `npm run dev`     | Starts the Vite development server with hot module replacement.      |
 | `npm run build`   | Type-checks the project (`tsc -b`) and builds it into `dist/`.       |
-| `npm run preview` | Serves the content of `dist/` locally, to check a production build.  |
+| `npm run start`   | Serves the content of `dist/` locally, to check a production build.  |
 | `npm start`       | Serves `dist/` (`vite preview`) in production, with the token proxy. |
 | `npm run lint`    | Lints the source code with Oxlint.                                   |
 
