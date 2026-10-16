@@ -1,7 +1,7 @@
 /*
  * The home page's robots, on one transparent canvas fixed over the viewport.
  * The canvas ignores the pointer so the page stays usable, and clicks on the
- * robots are hit-tested here instead.
+ * robots are hit-tested instead (scene/pointer.ts).
  *
  * One world holds the SO-101 arm beside a Lucy infinity, and InMoov further
  * right. It is seen through one camera and drawn into a rectangle that goes
@@ -18,34 +18,23 @@ import type { URDFRobot } from "urdf-loader";
 
 import { inBackground, runFor } from "../background.ts";
 import { listen } from "../listen.ts";
-import {
-    ARM_ATTENTION_TIME, ATTENTION_TIME, BOX_SLIDE, CLOSE_FROM, FOV, HEAD_TURN,
-    HIT_SLOP, REST, RESTING_GLOW, RISE_TIME,
-} from "./config.ts";
+import { ARM_ATTENTION_TIME, ATTENTION_TIME, FOV, HEAD_TURN, REST, RISE_TIME } from "./config.ts";
 import { InMoovWave } from "./inmoovWave.ts";
 import { loadLucyInfinity } from "./lucyInfinity.ts";
-import { clamp, damp, DOWN, smoothstep } from "./math.ts";
+import { clamp, damp, DOWN } from "./math.ts";
 import { prefetchOtherAssets, ROBOT_ASSETS } from "./robotAssets.ts";
 import { loadRobot } from "./robotModel.ts";
-import { stepCatch } from "./scene/catchFlight.ts";
-import { SceneRenderer } from "./scene/renderer.ts";
 import { Framing } from "./scene/framing.ts";
-import { glowArea, glowReach, logoGlow, rgbOf } from "./scene/glow.ts";
-import { layoutHero as layOutHero, type HeroPlan, type HeroTarget } from "./scene/heroLayout.ts";
+import { createHero } from "./scene/hero.ts";
 import { createMaterials, INFINITY_LAYER, standInMoov } from "./scene/parts.ts";
-import {
-    chamferedClip, contains, cssColor, HIDDEN, lerpRect, partsBounds, rayFrom, screenBounds, toRect, toScreen, topRect,
-    viewWidth, type Rect,
-} from "./scene/screen.ts";
+import { createPointer } from "./scene/pointer.ts";
+import { SceneRenderer } from "./scene/renderer.ts";
+import { cssColor, screenBounds, type Rect } from "./scene/screen.ts";
+import { createView } from "./scene/view.ts";
 import { createWorld, disposeWorld } from "./scene/world.ts";
 import { So101PickDemo } from "./so101PickDemo.ts";
 
 export type RobotName = "so101" | "inmoov";
-
-/* Where the page's logo is: on the page, with the hero's arm (in its jaws or flying
-   to or from them), or carried into the box. What shows it only follows this. */
-type LogoState = { at: "page" } | { at: "hero" | "box"; logo: HeroTarget };
-const ON_PAGE: LogoState = { at: "page" };
 
 type Page = {
     /* heroLogo is not shown on phones. */
@@ -102,8 +91,8 @@ export async function createRobotPageScene(
         loadLucyInfinity(),
     ]);
     timings.assets = performance.now() - started;
-    const { scene, fog, gridScene, grid, gridMaterial, arm, boxInfinity, boxPayload, heroPayload } =
-        createWorld(so101, shape, materials, accent);
+    const world = createWorld(so101, shape, materials, accent);
+    const { scene, fog, gridScene, arm, boxInfinity, boxPayload, heroPayload } = world;
 
     let inmoov: URDFRobot | null = null;
     let humanoid: THREE.Group | null = null;
@@ -122,11 +111,7 @@ export async function createRobotPageScene(
         carry: boxInfinity.clone().add(new THREE.Vector3(0, 0.09, 0)),
         carryLean: DOWN,
         approach: 0.06,
-    }, (holding) => {
-        // Set down in the Stage, so the page gets its logo back.
-        if (!holding && logo.at === "box") setLogo(ON_PAGE);
-    }));
-    const restPose = boxPick.restPose;
+    }, (holding) => hero.onBoxHold(holding)));
 
     // Shots are fitted to the robots' bounds at rest.
     scene.updateMatrixWorld(true);
@@ -138,106 +123,33 @@ export async function createRobotPageScene(
 
     const renderer = await SceneRenderer.create(container, page.backdrop, page.glow);
 
-    // The rectangle the world is drawn into right now, and the hero's.
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const painter = createView({ container, page, world, camera, framing, renderer, boxPick, accent, humanoid: () => humanoid });
+    const hero = createHero({
+        page,
+        compact: options.compact,
+        reduceMotion,
+        so101,
+        arm,
+        shape,
+        camera,
+        framing,
+        heroPayload,
+        boxPick,
+        shoulder,
+        beforeLayout: () => {
+            renderer.fit();
+            painter.resetHint();
+        },
+    });
+
+    // The rectangle the world is drawn into right now.
     let drawRect: Rect = { left: 0, top: 0, width: 1, height: 1 };
-    let heroRect: Rect = { left: 0, top: 0, width: 1, height: 1 };
 
-    const heroPlans = new Map<HeroTarget, HeroPlan>();
-    let heroTarget: HeroTarget | null = null; // the plan in use
-    let logo: LogoState = ON_PAGE;
-    // The page logo a robot has, hidden on the page.
-    const logoOut = () => (logo.at === "page" ? null : logo.logo);
-    const setLogo = (next: LogoState) => {
-        logo = next;
-        // Opacity, not visibility, so the mark still takes the click that asks for it back.
-        for (const [name, element] of [["hero", page.heroLogo], ["header", page.headerLogo]] as const) {
-            if (element) element.style.opacity = logoOut() === name ? "0" : "";
-        }
-        heroPayload.shown = logo.at === "hero";
-    };
-
-    /* `pinch` is where along its loops the infinity is held. */
-    const placeHeroPayload = (position: THREE.Vector3, scale: number, pinch: number) => {
-        heroPayload.setPinch(pinch);
-        heroPayload.group.quaternion.copy(camera.quaternion);
-        heroPayload.group.scale.setScalar(scale);
-        heroPayload.group.position.copy(position);
-    };
-
-    const disposeHeroPlans = () => {
-        for (const plan of heroPlans.values()) {
-            plan.pick.dispose();
-            plan.logo.classList.remove("robot-target", "robot-shake");
-        }
-        heroPlans.clear();
-        heroTarget = null;
-        setLogo(ON_PAGE);
-    };
-
-    // Scroll positions (px) where the hero is past and where the arm has settled in the box.
-    let landScroll = 0;
-    let transitionScroll = 0;
-
-    // The box's chamfer in px, read on layout rather than every frame.
-    let chamferSize = 24;
-
-    let layoutMs = 0; // TEST-HOOK: ms to lay out the hero, across frames when in the background
-    /* Plans are made only when asked, but always on phones. A generator, so it
-       can run a step at a time. Returns whether it made them. */
-    const layoutHero = function* (withPlans = true): Generator<void, boolean> {
-        const started = performance.now();
-        laidOutFor = layoutKey();
-        disposeHeroPlans();
-        renderer.fit();
-        hintPlaced = false;
-        yield;
-        const layout = yield* layOutHero({
-            page,
-            compact: options.compact(),
-            so101,
-            arm,
-            shape,
-            camera,
-            framing,
-            shoulder,
-            restPose,
-            resetArm: () => {
-                boxPick.reset();
-                arm.updateMatrixWorld(true);
-            },
-            heroPayload,
-            placeHeroPayload,
-            onHeroHold: (name, holding) => setLogo(holding ? { at: "hero", logo: name } : ON_PAGE),
-        }, withPlans);
-        ({ heroRect, landScroll, transitionScroll, chamferSize } = layout);
-        for (const [name, plan] of layout.plans ?? []) {
-            heroPlans.set(name, plan);
-            plan.logo.classList.add("robot-target");
-        }
-        layoutMs = performance.now() - started;
-        return layout.plans !== null;
-    };
-    const layoutNow = (withPlans: boolean) => {
-        const steps = layoutHero(withPlans);
-        let step = steps.next();
-        while (!step.done) step = steps.next();
-        return step.value;
-    };
     // The hero's plans: not made, being made in the background a step per frame, or ready.
     let plans: { status: "none" } | { status: "planning"; steps: Generator<void, boolean> } | { status: "ready" } =
         { status: "none" };
     const plansReady = () => plans.status === "ready";
-    /* What the layout depends on. If none of it changed, there's nothing to redo. */
-    const layoutKey = () => {
-        const frame = page.frame.getBoundingClientRect();
-        const logos = [page.heroLogo, page.headerLogo].flatMap((logo) => {
-            const at = logo ? topRect(logo) : null;
-            return at ? [at.centerX, at.centerY, at.width] : [];
-        });
-        return [viewWidth(), window.innerHeight, frame.width, frame.height, ...logos]
-            .map(Math.round).join() + (options.compact() ? "c" : "");
-    };
-    let laidOutFor = "";
     let settingUp = true; // nothing draws while the first layout runs in the background
 
     let enter = 0; // 0 is the arm free in the hero, 1 is the arm in the box
@@ -252,76 +164,17 @@ export async function createRobotPageScene(
     const shown = new Map<string, number>(); // joint values on screen while smoothing
     const ARM_JOINTS = ["shoulder_pan", "shoulder_lift", "elbow_flex", "wrist_flex", "wrist_roll", "gripper"];
 
-    const frameRect = (): Rect => toRect(page.frame.getBoundingClientRect());
-
     /* Hero -> Stage over the first half of the hero's scroll. */
-    const enterGoal = () => (transitionScroll > 0 ? clamp(window.scrollY / transitionScroll, 0, 1) : 0);
+    const enterGoal = () => {
+        const { transitionScroll } = hero.layout;
+        return transitionScroll > 0 ? clamp(window.scrollY / transitionScroll, 0, 1) : 0;
+    };
 
     /* On wide screens, once the hero is past, the scroll pans to InMoov. */
-    const scrollView = () => clamp((window.scrollY - landScroll) / (0.9 * window.innerHeight), 0, 1);
+    const scrollView = () => clamp((window.scrollY - hero.layout.landScroll) / (0.9 * window.innerHeight), 0, 1);
 
-    const heroPick = () => (heroTarget ? heroPlans.get(heroTarget)?.pick ?? null : null);
     let lastDriver: So101PickDemo | null = null;
-
-    /* In the hero, the pick in use or else the default logo's. The box's otherwise. */
-    const driver = () => {
-        if (!inHero()) return boxPick;
-        const preferred = heroPlans.get(options.compact() ? "header" : "hero") ?? heroPlans.get("header");
-        return heroPick() ?? preferred?.pick ?? boxPick;
-    };
-
-    const planOf = (pick: So101PickDemo) =>
-        [...heroPlans.entries()].find(([, plan]) => plan.pick === pick) ?? null;
-
-    /*
-     * Switching picks (hero <-> box). A held infinity is carried across, and
-     * anything half done (a logo mid-flight, say) is called off.
-     */
-    const handOver = (from: So101PickDemo, to: So101PickDemo) => {
-        const holding = from.state.holding;
-        const fromEntry = planOf(from);
-        if (fromEntry) {
-            const [name, plan] = fromEntry;
-            plan.logo.classList.remove("robot-shake");
-            if (!holding && plan.phase !== "idle" && logoOut() === name) setLogo(ON_PAGE);
-            plan.phase = "idle";
-        }
-        to.lookLike(from);
-        from.release();
-        if (holding) {
-            const entry = planOf(to);
-            if (entry) {
-                const [name, plan] = entry;
-                heroTarget = name;
-                placeHeroPayload(plan.home.position, plan.home.scale, plan.home.pinch);
-                to.takeOver();
-                setLogo({ at: "hero", logo: name });
-                if (plan.flight) plan.phase = "held";
-            } else {
-                to.takeOver();
-                if (logo.at === "hero") setLogo({ at: "box", logo: logo.logo });
-            }
-        }
-        smoothing = 0.6;
-    };
-
-    /*
-     * A logo taken from the page starts at the page logo's size, which can
-     * vanish in the jaws (a header logo on a phone). So it grows as it's lifted.
-     */
-    const growHeld = () => {
-        const plan = heroTarget ? heroPlans.get(heroTarget) : null;
-        if (!plan || plan.flight || !plan.pick.state.holding) return;
-        const grown = smoothstep(plan.pick.state.progress, 0.7, 1);
-        const payload = heroPayload.group;
-        payload.scale.setScalar(plan.home.scale + (1 - plan.home.scale) * grown);
-        // Held at its centre on phones, it stays upright and facing the viewer.
-        if (plan.home.pinch === 0 && payload.parent) {
-            payload.parent.updateMatrixWorld(true);
-            const parent = payload.parent.getWorldQuaternion(new THREE.Quaternion());
-            payload.quaternion.copy(parent.invert().multiply(camera.quaternion));
-        }
-    };
+    const driver = () => hero.driver(inHero());
 
     const lookAtViewer = () => {
         if (!head) return null;
@@ -330,20 +183,6 @@ export async function createRobotPageScene(
         const yaw = Math.atan2(to.x, to.z);
         const pitch = Math.atan2(to.y, Math.hypot(to.x, to.z));
         return { x: clamp(yaw / HEAD_TURN.yaw, -1, 1), y: clamp(pitch / HEAD_TURN.pitch, -1, 1) };
-    };
-
-    let wristTwist = 0; // added to the wrist roll while it strains for the logo
-    const catchStep = (dt: number) => {
-        const name = heroTarget;
-        const plan = name ? heroPlans.get(name) : null;
-        if (!name || !plan?.flight) return false;
-        const step = stepCatch(plan, dt, {
-            heroPayload,
-            instant: reduceMotion,
-            setLogoOut: (out) => setLogo(out ? { at: "hero", logo: name } : ON_PAGE),
-        });
-        wristTwist = step.wristTwist;
-        return step.moving;
     };
 
     /* Planning moves the arm, so it's put back to the pose on screen. */
@@ -366,135 +205,38 @@ export async function createRobotPageScene(
         smoothing = Math.max(0, smoothing - dt);
     };
 
-    const glowRgb = rgbOf(accent);
-
-    /* "Click me!" above the arm while it waits in the hero. It stays put once placed. */
-    const placeHint = () => {
-        const hint = page.hint;
-        if (!hint) return;
-        const visible = rise >= 1 && inHero() && logo.at === "page" && driver().idle;
-        // Wait for the arm to settle, as it eases from the pose on screen after a layout.
-        if (visible && !hintPlaced && smoothing === 0 && driver() === lastDriver) {
-            hintPlaced = true;
-            const { top, left, right } = partsBounds(arm, camera, drawRect);
-            // Nudged by --hint-x / --hint-y (robot-showcase.css).
-            hint.style.transform = `translate(${((left + right) / 2).toFixed(1)}px, ${top.toFixed(1)}px) `
-                + "translate(-50%, -100%) translate(var(--hint-x), var(--hint-y))";
-        }
-        hint.toggleAttribute("data-shown", visible && hintPlaced);
-    };
-    let hintPlaced = false;
-
-    /*
-     * As `enter` goes 0 -> 1 the grid spreads over the page, the arm shrinks
-     * into the box (landed at 0.8), and the visible area closes in on the box
-     * from 0.55, so it stays wider than the box while the arm flies in.
-     */
     const draw = () => {
-        const height = window.innerHeight;
-        // Read the layout before writing to the page (no forced reflow).
-        const box = frameRect();
-        const headerBottom = page.header?.getBoundingClientRect().bottom ?? 0;
-        const settle = smoothstep(enter, 0, 0.8);
-        drawRect = lerpRect(heroRect, box, settle);
-        // Rises into view on load from a screen lower.
-        drawRect.top += (1 - rise) ** 3 * height;
-        const level = options.compact() ? 1 - settle : 0;
-        framing.place(landed() ? view : 0, drawRect.width / drawRect.height, level);
-
-        const grid01 = smoothstep(enter, 0.05, 0.4);
-        gridMaterial.opacity = 0.6 * grid01;
-        grid.visible = grid01 > 0;
-
-        // Slides in and lights up as the arm settles, unless the arm brought one (lit already).
-        const held = boxPick.state.holding;
-        const arrive = held ? 1 : smoothstep(enter, 0.35, 0.95);
-        boxPayload.shown = arrive > 0;
-        boxPayload.setGlow(held ? 1 : smoothstep(enter, 0.55, 1));
-        if (!held && boxPick.idle) boxPayload.group.position.x = boxInfinity.x - (1 - arrive) * BOX_SLIDE;
-        if (humanoid) humanoid.visible = landed();
-        page.frame.toggleAttribute("data-landed", landed());
-
-        const screen: Rect = { left: -1, top: -1, width: viewWidth() + 2, height: height + 2 };
-        const close = smoothstep(enter, CLOSE_FROM, 1);
-        const clip = enter <= 0 ? "none" : chamferedClip(lerpRect(screen, box, close), close, chamferSize, headerBottom);
-        container.style.clipPath = clip;
-        page.backdrop.style.clipPath = clip;
-        page.glow.style.clipPath = clip;
-        if (clip === HIDDEN) {
-            page.hint?.removeAttribute("data-shown");
-            return; // scrolled out of sight (phones), nothing to draw
-        }
-
-        // Measured before the camera gets its view offset for drawing.
-        scene.updateMatrixWorld();
-        placeHint();
-        const payloads = [boxPayload, heroPayload].filter(({ shown }) => shown);
-        // Like the page logo's glow, its reach follows the mark's size on screen.
-        // Full when the arm has it or it's flying, dim at rest.
-        let glowFilter = "none";
-        let area: Rect | null = null;
-        if (payloads.length) {
-            const lead = payloads.includes(heroPayload) ? heroPayload : boxPayload;
-            const bounds = screenBounds(lead.infinity, camera, drawRect);
-            const size = Math.max(8, bounds.right - bounds.left);
-            const strength = lead === heroPayload || boxPick.state.holding ? 1 : RESTING_GLOW;
-            glowFilter = logoGlow(size, strength, glowRgb);
-            // Room for the wider shadow to fade out entirely.
-            const margin = Math.ceil(3 * glowReach(size).far) + 4;
-            area = glowArea(payloads.map(({ infinity }) => screenBounds(infinity, camera, drawRect)), margin, viewWidth(), height);
-        }
-
-        renderer.render({
-            scene,
-            gridScene,
-            gridVisible: grid.visible,
-            camera,
-            drawRect,
-            glowArea: area,
-            glowFilter,
+        const { heroRect, chamferSize } = hero.layout;
+        drawRect = painter.draw({
+            enter,
+            rise,
+            view,
+            heroRect,
+            chamferSize,
+            compact: options.compact(),
+            hint: {
+                shown: rise >= 1 && inHero() && hero.logo.at === "page" && driver().idle,
+                settled: smoothing === 0 && driver() === lastDriver,
+            },
         });
     };
 
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let pointer: { x: number; y: number } | null = null;
-    let hoverPending = false;
-    let hovered: RobotName | null = null;
+    const pointer = createPointer({
+        camera,
+        drawRect: () => drawRect,
+        arm,
+        heroPayload,
+        humanoid: () => humanoid,
+        frame: page.frame,
+        landed,
+        onChange: () => wake(),
+    });
     // Until when each robot attends to the visitor rather than the cursor.
     let armAttention = 0;
     let inmoovAttention = 0;
     const inMotion = (pick: So101PickDemo) => !pick.idle && pick.state.progress !== pick.state.goal;
     let raf = 0;
     let last = 0;
-
-    const lookFrom = (object: THREE.Object3D) => {
-        if (!pointer) return null;
-        const from = toScreen(object.getWorldPosition(new THREE.Vector3()), camera, drawRect);
-        return {
-            x: Math.tanh(((pointer.x - from.x) / (viewWidth() / 2)) * 1.6),
-            y: Math.tanh((-(pointer.y - from.y) / (window.innerHeight / 2)) * 1.6),
-        };
-    };
-
-    const hitAt = (x: number, y: number): RobotName | null => {
-        const raycaster = rayFrom(x, y, camera, drawRect);
-        const armParts = [arm, ...(heroPayload.shown ? [heroPayload.group] : [])];
-        if (raycaster.intersectObjects(armParts, true).length) return "so101";
-        if (humanoid?.visible && raycaster.intersectObject(humanoid, true).length) return "inmoov";
-        return null;
-    };
-    const hitTest = (x: number, y: number): RobotName | null => {
-        // In the box, only what's inside the box counts.
-        if (landed() && !contains(frameRect(), x, y)) return null;
-        const exact = hitAt(x, y);
-        if (exact) return exact;
-        for (let i = 0; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
-            const robot = hitAt(x + Math.cos(angle) * HIT_SLOP, y + Math.sin(angle) * HIT_SLOP);
-            if (robot) return robot;
-        }
-        return null;
-    };
 
     const tick = (time: number) => {
         raf = 0;
@@ -520,31 +262,28 @@ export async function createRobotPageScene(
         }
 
         const pick = driver();
-        if (lastDriver && pick !== lastDriver) handOver(lastDriver, pick);
+        if (lastDriver && pick !== lastDriver) {
+            hero.handOver(lastDriver, pick);
+            smoothing = 0.6;
+        }
         lastDriver = pick;
 
-        // Judged before anything moves. A hovered robot holds still instead of
-        // turning to the cursor, so the click lands where the visitor aimed.
-        if (hoverPending) {
-            hoverPending = false;
-            hovered = pointer ? hitTest(pointer.x, pointer.y) : null;
-            document.documentElement.classList.toggle("robot-hover", hovered !== null);
-        }
+        const hovered = pointer.hovered();
         if (inMotion(pick)) armAttention = time + ARM_ATTENTION_TIME;
         if (!reduceMotion) {
             // After a click the arm holds its pose (presenting the logo) instead of following the cursor.
             if (time < armAttention) pick.setLook(null);
-            else if (hovered !== "so101") pick.setLook(lookFrom(so101.links.shoulder_link));
+            else if (hovered !== "so101") pick.setLook(pointer.lookFrom(so101.links.shoulder_link));
             // While waving and a little after, InMoov looks the visitor in the eyes.
             if (wave?.waving) inmoovAttention = time + ATTENTION_TIME;
             if (time < inmoovAttention) wave?.setLook(lookAtViewer());
-            else if (hovered !== "inmoov" && wave && head) wave.setLook(lookFrom(head));
+            else if (hovered !== "inmoov" && wave && head) wave.setLook(pointer.lookFrom(head));
         }
         const picking = pick.update(dt, { instant: reduceMotion });
-        wristTwist = 0;
-        const catching = inHero() && catchStep(dt);
-        growHeld();
-        if (wristTwist) so101.joints.wrist_roll.setJointValue(so101.joints.wrist_roll.angle + wristTwist);
+        const caught = inHero() ? hero.catchStep(dt) : null;
+        hero.growHeld();
+        // The wrist twists while it strains for the logo.
+        if (caught?.wristTwist) so101.joints.wrist_roll.setJointValue(so101.joints.wrist_roll.angle + caught.wristTwist);
         smoothJoints(dt);
         const waving = wave?.update(dt, { instant: reduceMotion }) ?? false;
 
@@ -554,7 +293,7 @@ export async function createRobotPageScene(
             renderer.precompile(scene, gridScene, camera);
             loadInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
         } else if (rise >= 1 && plans.status === "none" && !relayoutTimer && boxPick.idle) {
-            plans = { status: "planning", steps: layoutHero() };
+            plans = { status: "planning", steps: hero.layOut() };
         }
         // Paused while the arm is busy in the box. The layout would reset it, and
         // a held infinity would be measured as a jaw.
@@ -574,7 +313,7 @@ export async function createRobotPageScene(
         const working = rise < 1 || (!plansReady() && boxPick.idle) || driver() !== lastDriver
             || time < armAttention + 50 || time < inmoovAttention + 50;
         // A click handled in this frame may have woken the loop already.
-        if (picking || catching || waving || panning || smoothing > 0 || working) {
+        if (picking || caught?.moving || waving || panning || smoothing > 0 || working) {
             if (!raf) raf = requestAnimationFrame(tick);
         }
         else last = 0;
@@ -584,38 +323,6 @@ export async function createRobotPageScene(
         if (!raf && !settingUp) raf = requestAnimationFrame(tick);
     };
 
-    /* A caught logo only turns around once it's settled (held, or back in place). */
-    const togglePlan = (plan: HeroPlan) => {
-        if (!plan.flight) {
-            if (plan.pick.idle) placeHeroPayload(plan.home.position, plan.home.scale, plan.home.pinch);
-            plan.pick.toggle();
-        } else if (plan.phase === "idle") {
-            placeHeroPayload(plan.home.position, plan.home.scale, plan.home.pinch);
-            plan.phase = "reach";
-            plan.timer = 0;
-            plan.pick.setGoal(0.5);
-        } else if (plan.phase === "held") {
-            plan.phase = "letgo";
-            plan.timer = 0;
-            plan.pick.setGoal(0.5);
-        }
-    };
-
-    const toggleHero = (target: "hero" | "header") => {
-        const plan = heroPlans.get(target);
-        if (!plan) return false;
-        const current = heroTarget ? heroPlans.get(heroTarget) : null;
-        // Busy with the other logo, so give that one back first.
-        if (current && heroTarget !== target && !current.pick.idle) {
-            togglePlan(current);
-        } else {
-            heroTarget = target;
-            togglePlan(plan);
-        }
-        wake();
-        return true;
-    };
-
     let pending: (() => void) | null = null; // asked for before the plans were ready
     function plansMade(ready: boolean) {
         plans = ready ? { status: "ready" } : { status: "none" };
@@ -623,7 +330,10 @@ export async function createRobotPageScene(
         timings.plans = performance.now() - started;
         const action = pending;
         pending = null;
-        action?.();
+        if (action) {
+            action();
+            wake();
+        }
     }
     const activate = (robot: RobotName) => {
         // After a click the visitor, not the cursor, has the robot's attention.
@@ -636,24 +346,21 @@ export async function createRobotPageScene(
         } else if (landed()) {
             boxPick.toggle();
         } else if (inHero()) {
-            // The arm goes for the logo it can see (the header's on phones), or gives back the one it has.
-            const busy = heroTarget ? heroPlans.get(heroTarget) : null;
-            if (busy && !busy.pick.idle) togglePlan(busy);
-            else if (!toggleHero(options.compact() ? "header" : "hero")) toggleHero("header");
+            hero.takeOrGiveBack();
         }
         wake();
     };
 
     const onLogoClick = (target: "hero" | "header") => (event: MouseEvent) => {
         if (!inHero()) return; // a plain link once scrolled
-        if (plansReady() && !heroPlans.has(target)) return; // out of the arm's reach
+        if (plansReady() && !hero.plans.has(target)) return; // out of the arm's reach
         // The header's infinity is part of the home link. The arm takes it instead,
         // and "lucy" next to it still goes home.
         event.preventDefault();
         event.stopPropagation();
-        if (plansReady()) toggleHero(target);
+        if (plansReady()) hero.toggle(target);
         else pending = () => {
-            if (inHero()) toggleHero(target); // still in the hero by then
+            if (inHero()) hero.toggle(target); // still in the hero by then
         };
         wake();
     };
@@ -672,26 +379,11 @@ export async function createRobotPageScene(
         activate("so101");
     };
 
-    const onPointerMove = (event: PointerEvent) => {
-        if (event.pointerType !== "mouse") return;
-        pointer = { x: event.clientX, y: event.clientY };
-        hoverPending = true;
-        wake();
-    };
-
-    // relatedTarget is null when the pointer leaves the window.
-    const onPointerOut = (event: PointerEvent) => {
-        if (event.relatedTarget) return;
-        pointer = null;
-        hoverPending = true;
-        wake();
-    };
-
     const onClick = (event: MouseEvent) => {
         const target = event.target as Element | null;
         if (event.defaultPrevented || target?.closest(INTERACTIVE)) return;
         if (window.getSelection()?.toString()) return;
-        const robot = hitTest(event.clientX, event.clientY);
+        const robot = pointer.hitTest(event.clientX, event.clientY);
         if (robot) activate(robot);
     };
 
@@ -707,8 +399,8 @@ export async function createRobotPageScene(
                 relayout();
                 return;
             }
-            if (layoutKey() === laidOutFor) return; // fonts or observers, nothing moved
-            if (inMotion(boxPick) || [...heroPlans.values()].some((plan) => !plan.pick.idle)) {
+            if (hero.upToDate()) return; // fonts or observers, nothing moved
+            if (inMotion(boxPick) || hero.busy()) {
                 renderer.fit();
                 draw();
                 relayout();
@@ -716,13 +408,13 @@ export async function createRobotPageScene(
             }
             // The layout resets the arm, so give back what it held and the logo it carried.
             const held = boxPick.state.holding;
-            const carried = logo.at === "box" ? logo : null;
+            const carried = hero.logo.at === "box" ? hero.logo : null;
             // Before the hero is up, stay light. The plans come after the rise.
             if (plans.status === "planning") plans.steps.return(false); // what it had half built goes
-            plansMade(layoutNow(plansReady()));
+            plansMade(hero.layOutNow(plansReady()));
             if (held) {
                 boxPick.takeOver();
-                if (carried) setLogo(carried);
+                if (carried) hero.setLogo(carried);
             }
             showShown();
             draw();
@@ -731,7 +423,7 @@ export async function createRobotPageScene(
     };
 
     // Before anything listens to the page.
-    const planned = await inBackground(layoutHero(false));
+    const planned = await inBackground(hero.layOut(false));
     // With parallel compiling, the first frame needn't stall on it either.
     await renderer.compileFirst(scene, camera);
     settingUp = false;
@@ -751,8 +443,8 @@ export async function createRobotPageScene(
             listen(element, "click", onTextClick),
         ]),
         ...(reduceMotion ? [] : [
-            listen(window, "pointermove", onPointerMove, { passive: true }),
-            listen(document, "pointerout", onPointerOut),
+            listen(window, "pointermove", pointer.onMove, { passive: true }),
+            listen(document, "pointerout", pointer.onOut),
         ]),
     ];
     for (const element of heroText) element.classList.add("robot-takeable");
@@ -786,19 +478,19 @@ export async function createRobotPageScene(
     // TEST-HOOK: RobotShowcase only exposes it in development.
     const screenRect = (object: THREE.Object3D) => screenBounds(object, camera, drawRect);
     const testHook = {
-        hitTest,
+        hitTest: pointer.hitTest,
         state: () => ({
             enter,
             view,
             active,
-            heroTarget,
-            layoutMs: Math.round(layoutMs),
+            heroTarget: hero.target,
+            layoutMs: Math.round(hero.layoutMs),
             catchReach: (() => {
-                const plan = heroPlans.get("header");
+                const plan = hero.plans.get("header");
                 return plan?.flight ? +plan.home.position.distanceTo(shoulder()).toFixed(3) : null;
             })(),
-            logoOut: logoOut(),
-            plans: Object.fromEntries([...heroPlans].map(([name, plan]) => [name, {
+            logoOut: hero.logoOut(),
+            plans: Object.fromEntries([...hero.plans].map(([name, plan]) => [name, {
                 reachable: plan.pick.reachable,
                 flies: plan.flight !== null,
                 phase: plan.phase,
@@ -813,7 +505,7 @@ export async function createRobotPageScene(
             so101: screenRect(arm),
             inmoov: humanoid?.visible ? screenRect(humanoid) : null,
             timings: Object.fromEntries(Object.entries(timings).map(([k, v]) => [k, Math.round(v)])),
-            heroRect,
+            heroRect: hero.layout.heroRect,
             drawRect,
             heroLogoVisible: page.heroLogo ? page.heroLogo.style.opacity !== "0" : null,
             headerLogoVisible: page.headerLogo ? page.headerLogo.style.opacity !== "0" : null,
@@ -840,7 +532,7 @@ export async function createRobotPageScene(
             document.documentElement.classList.remove("robot-hover");
             page.frame.removeAttribute("data-landed");
             page.hint?.removeAttribute("data-shown");
-            disposeHeroPlans();
+            hero.clear();
             boxPick.dispose();
             disposeWorld(scene, gridScene);
             renderer.dispose();
