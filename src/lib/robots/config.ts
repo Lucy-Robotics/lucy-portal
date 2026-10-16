@@ -41,7 +41,7 @@ export const LOGO_HEIGHT = 0.27;
 export const ARM_INSET = 0.09;
 export const ARM_MAX_WIDTH_SHARE = 0.4;
 /* Wide screen hero pick: extra wrist roll, and jaws opened wider or closed tighter than measured (negative for less). */
-export const HERO_ROLL = 0.3;
+export const HERO_ROLL = 0.2;
 export const HERO_GRIPPER = { open: 0, closed: 0 };
 /* Phones: header logo distances from the shoulder to try, longest first since a longer reach draws the arm smaller. */
 export const HEADER_REACHES = [0.435, 0.42, 0.4, 0.38, 0.37, 0.35, 0.33, 0.31];
