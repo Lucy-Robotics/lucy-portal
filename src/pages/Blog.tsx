@@ -131,9 +131,9 @@ const Blog: React.FC = () => {
         <p>Are you sure you want to delete this post?</p>
       </ConfirmModal>
 
-      <header className="blog-page-header">
-        <h1 className="blog-page-title">Blog</h1>
-        <p className="blog-page-subtitle">
+      <header className="page-header">
+        <h1 className="page-title"><span className="page-title__accent" aria-hidden="true">&gt;</span> Blog</h1>
+        <p className="page-subtitle blog-page-subtitle">
           Latest news and updates from the team.
         </p>
       </header>

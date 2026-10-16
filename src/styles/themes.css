@@ -5,6 +5,7 @@
 
     --color-bg-page: #141414;
     --color-bg-comp: #141414;
+    --color-bg-raised: #1a1a1a;
 
     --color-highlight: #00ff41;
     --color-primary: #00ff41;
@@ -12,6 +13,7 @@
 
     --color-border: #3f3f3f;
     --color-alert: #ff0000;
+    --color-warning: #e6c84c;
 
     --color-text-pri: #ffffff;
     --color-text-sec: #b7b7b7;

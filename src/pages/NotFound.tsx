@@ -10,7 +10,9 @@ const NotFound = () => {
                     404
                 </p>
 
-                <h1 className="not-found__title">Page not found</h1>
+                <h1 className="page-title not-found__title">
+                    <span className="page-title__accent" aria-hidden="true">&gt;</span> Page not found
+                </h1>
 
                 <p className="not-found__subtext">
                     The page you are looking for does not exist or may have

@@ -49,7 +49,7 @@ const BlogPostDetail: React.FC = () => {
       <Link to="/blog" className="back-link">
         ← Back to blog
       </Link>
-      <article className="blog-post-detail">
+      <article className="chamfer blog-post-detail">
         <header className="card-header">
           <h1 className="title">{post.title}</h1>
           <div className="post-meta">

@@ -1,52 +1,65 @@
 .confirm-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  
-  .confirm-modal-content {
-    background-color: var(--color-bg);
-    padding: 2rem;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-  }
-  
-  .confirm-modal-content h2 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-  }
-  
-  .modal-buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    margin-top: 1.5rem;
-  }
-  
-  .modal-buttons button {
-    padding: 0.5rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  
-  .cancel-button {
-    background-color: var(--color-border);
-    color: var(--color-text);
-  }
-  
-  .confirm-button-danger {
-    background-color: #ef4444; /* red-500 */
-    color: white;
-  }
-  
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.confirm-modal-content {
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirm-modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--color-text-pri);
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.confirm-modal-content p {
+  font-size: var(--font-size-caption);
+  line-height: 1.6;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.modal-buttons button {
+  padding: 0.5rem 1.5rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.cancel-button {
+  border: var(--border-width) solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text-pri);
+}
+
+.cancel-button:hover:not(:disabled) {
+  background-color: transparent;
+  color: var(--color-highlight);
+}
+
+.confirm-button-danger {
+  background-color: var(--color-alert);
+  color: var(--color-text-pri);
+}
+
+.confirm-button-danger:hover:not(:disabled) {
+  background-color: var(--color-alert);
+  filter: brightness(0.85);
+}

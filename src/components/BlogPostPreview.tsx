@@ -24,7 +24,7 @@ const BlogPostPreview: React.FC<BlogPostPreviewProps> = ({
   onDelete,
 }) => {
   return (
-    <article className="blog-post-item">
+    <article className="chamfer blog-post-item">
       <div className="card-header">
         <Link to={`/blog/${post.id}`} className="title-link">
           <h2 className="title">{post.title}</h2>

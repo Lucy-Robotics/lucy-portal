@@ -250,7 +250,7 @@ const Home = () => {
                         {FEATURES.map(({ icon: Icon, title, description }) => (
                             <article
                                 key={title}
-                                className="home__feature-card"
+                                className="chamfer home__feature-card"
                             >
                                 <h3 className="home__feature-card-title">
                                     <Icon aria-hidden="true" />

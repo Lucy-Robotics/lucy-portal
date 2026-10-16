@@ -23,19 +23,16 @@
 
     color: var(--color-highlight);
 
+    font-family: var(--font-brand);
     font-size: clamp(4rem, 12vw, 6rem);
     font-weight: var(--font-weight-bold);
-    letter-spacing: 0.08em;
     line-height: 1;
 }
 
 .not-found__title {
-    margin: 1.25rem 0 0;
-
-    color: var(--color-text-pri);
+    margin-top: 1.25rem;
 
     font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: var(--font-weight-bold);
     line-height: 1.35;
 }
 

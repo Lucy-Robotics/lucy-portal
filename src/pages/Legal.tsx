@@ -4,9 +4,9 @@ import "../styles/legal.css";
 const Legal = () => {
   return (
     <div className="legal-page">
-      <header className="legal-page__header">
-        <h1 className="legal-page__title">Mentions légales</h1>
-        <p className="legal-page__subtitle">
+      <header className="page-header">
+        <h1 className="page-title"><span className="page-title__accent" aria-hidden="true">&gt;</span> Mentions légales</h1>
+        <p className="page-subtitle legal-page__subtitle">
           Informations légales relatives au site Lucy Portal, conformément au
           droit français (notamment la loi n° 2004-575 du 21 juin 2004 pour la
           confiance dans l’économie numérique — LCEN).
@@ -15,7 +15,7 @@ const Legal = () => {
 
       <section className="legal-section" aria-labelledby="legal-editor">
         <h2 id="legal-editor">1. Éditeur du site</h2>
-        <div className="legal-card">
+        <div className="chamfer legal-card">
           <dl className="legal-dl">
             <div>
               <dt>Nom / raison sociale</dt>
@@ -33,7 +33,7 @@ const Legal = () => {
 
       <section className="legal-section" aria-labelledby="legal-rgpd">
         <h2 id="legal-rgpd">2. Données personnelles (RGPD)</h2>
-        <div className="legal-card">
+        <div className="chamfer legal-card">
           <p>
             Conformément au Règlement (UE) 2016/679 (RGPD) et à la loi
             « Informatique et Libertés », le présent site{" "}
@@ -75,7 +75,7 @@ const Legal = () => {
 
       <section className="legal-section" aria-labelledby="legal-a11y">
         <h2 id="legal-a11y">3. Accessibilité</h2>
-        <div className="legal-card">
+        <div className="chamfer legal-card">
           <p>
             Un rapport décrivant l’accessibilité de chaque page du site est
             disponible à l’adresse suivante :{" "}
@@ -91,7 +91,7 @@ const Legal = () => {
 
       <section className="legal-section" aria-labelledby="legal-ip">
         <h2 id="legal-ip">4. Propriété intellectuelle</h2>
-        <div className="legal-card">
+        <div className="chamfer legal-card">
           <p>
             Les contenus originaux du site (textes, éléments graphiques propres
             au projet Lucy / Lucy Robotics), sauf mention contraire,
@@ -114,7 +114,7 @@ const Legal = () => {
 
       <section className="legal-section" aria-labelledby="legal-liability">
         <h2 id="legal-liability">5. Limitation de responsabilité</h2>
-        <div className="legal-card">
+        <div className="chamfer legal-card">
           <p>
             L’éditeur s’efforce d’assurer l’exactitude des informations
             publiées et la disponibilité du site, sans pouvoir garantir
@@ -132,7 +132,7 @@ const Legal = () => {
 
       <section className="legal-section" aria-labelledby="legal-law">
         <h2 id="legal-law">6. Droit applicable</h2>
-        <div className="legal-card">
+        <div className="chamfer legal-card">
           <p>
             Les présentes mentions sont régies par le{" "}
             <strong>droit français</strong>. En cas de litige, et à défaut

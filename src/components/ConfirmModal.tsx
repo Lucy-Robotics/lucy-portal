@@ -27,7 +27,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
   return (
     <div className="confirm-modal" {...overlayProps}>
-      <div className="confirm-modal-content" {...dialogProps}>
+      <div className="chamfer confirm-modal-content" {...dialogProps}>
         <h2 id={titleId}>{title}</h2>
         {children}
         <div className="modal-buttons">

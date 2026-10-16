@@ -18,17 +18,6 @@
     text-align: center;
 }
 
-.download__title {
-    margin: 0;
-
-    color: var(--color-highlight);
-
-    font-size: clamp(2.5rem, 8vw, 4rem);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.08em;
-    line-height: 1;
-}
-
 .download__subtext {
     margin: 1.25rem 0 0;
 
@@ -78,18 +67,12 @@
 
     padding: 1.5rem 1.25rem;
 
-    background: var(--color-bg-comp);
-    border: var(--border-width) solid var(--color-border);
-
     text-decoration: none;
-
-    transition:
-        border-color 0.15s ease,
-        color 0.15s ease;
 }
 
-.download__requirement-card:hover {
-    border-color: var(--color-highlight);
+.download__requirement-card:hover,
+.download__requirement-card:focus-visible {
+    --chamfer-border: var(--color-highlight);
 }
 
 .download__requirement-card svg {
@@ -106,7 +89,8 @@
     font-weight: var(--font-weight-bold);
 }
 
-.download__requirement-card:hover .download__requirement-name {
+.download__requirement-card:hover .download__requirement-name,
+.download__requirement-card:focus-visible .download__requirement-name {
     color: var(--color-highlight);
 }
 
@@ -129,9 +113,6 @@
 .download__install-card {
     display: flex;
     flex-direction: column;
-
-    background: var(--color-bg-comp);
-    border: var(--border-width) solid var(--color-border);
 }
 
 .download__install-card-title {
@@ -193,7 +174,7 @@
 
     color: var(--color-text-pri);
 
-    font-family: "Consolas", "Courier New", monospace;
+    font-family: var(--font-primary);
     font-size: 0.85rem;
     line-height: 1.7;
     text-align: left;
@@ -239,9 +220,6 @@ a.download__highlight:hover {
     width: 100%;
     margin-top: 2rem;
     padding: 1.5rem;
-
-    background: var(--color-bg-comp);
-    border: var(--border-width) solid var(--color-border);
 }
 
 .download__curl-title {
@@ -292,7 +270,7 @@ a.download__highlight:hover {
         text-align: left;
     }
 
-    .download__title {
+    .download__content > .page-title {
         text-align: center;
     }
 

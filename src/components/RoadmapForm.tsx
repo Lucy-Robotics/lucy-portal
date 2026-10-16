@@ -60,8 +60,8 @@ const RoadmapForm: React.FC<RoadmapFormProps> = ({ item, onSave, onClose }) => {
 
   return (
     <div className="roadmap-modal-overlay" {...overlayProps}>
-      <div className="roadmap-modal-content" {...dialogProps}>
-        <form className="roadmap-form" onSubmit={handleSubmit}>
+      <div className="chamfer roadmap-modal-content" {...dialogProps}>
+        <form className="roadmap-form roadmap-modal-body" onSubmit={handleSubmit}>
           <h2 id={titleId}>{title}</h2>
           <label>
             Title
