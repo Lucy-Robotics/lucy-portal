@@ -1,10 +1,6 @@
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
 
-// Click tracking for the self-hosted Umami instance (see index.html for the
-// tracker script). Page views, including client-side route changes, are
-// tracked by the script itself; this only adds named events for the links we
-// care about. One delegated listener covers every copy of a link (header,
-// mobile menu, footer, page body), so new links only need an entry below.
+// Click tracking for Umami
 
 type Umami = { track: (event: string, data?: Record<string, string>) => void };
 
