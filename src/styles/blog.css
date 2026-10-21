@@ -107,6 +107,32 @@
   margin-bottom: 1rem;
 }
 
+.post-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.post-body pre,
+.mermaid-diagram {
+  overflow-x: auto;
+}
+
+.post-body a {
+  color: var(--color-highlight);
+}
+
+.post-body table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+
+.post-body th,
+.post-body td {
+  padding: 0.35rem 0.75rem;
+  border: var(--border-width) solid var(--color-border);
+}
+
 .post-tags {
   display: flex;
   gap: 0.5rem;

@@ -75,12 +75,12 @@ const pages: PageReport[] = [
       "Search field has an aria-label",
       "Post titles are links to the full article",
       "List shows a short text snippet instead of dumping full HTML",
-      "Rich-text toolbar uses role=\"toolbar\", button aria-labels, and aria-pressed states",
+      "Markdown editor with a live preview region",
       "Create/edit and delete dialogs trap focus, support Escape, and restore focus",
-      "Editor notes that body HTML is admin-authored content",
+      "Editor lists the supported Markdown features",
     ],
     gaps: [
-      "Heading structure inside post bodies still depends on what admins write in TipTap",
+      "Heading structure inside post bodies still depends on what admins write in Markdown",
     ],
   },
   {
@@ -96,7 +96,7 @@ const pages: PageReport[] = [
       "Loading and not-found states communicate failure in text",
     ],
     gaps: [
-      "Rendered HTML body depends on heading structure authored in the editor",
+      "Rendered body depends on heading structure authored in the editor. Mermaid diagrams have no text alternative",
       "No reading-time or landmark aside for long posts yet",
     ],
   },

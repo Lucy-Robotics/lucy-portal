@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import type { BlogPost } from '../types/blog';
 import { getBlogPost } from '../lib/api';
 import { isBackendConfigured } from '../config/env';
+import Markdown from '../components/Markdown';
 import '../styles/blog.css';
 
 const BlogPostDetail: React.FC = () => {
@@ -57,10 +58,9 @@ const BlogPostDetail: React.FC = () => {
             <span className="date">{new Date(post.date).toLocaleDateString()}</span>
           </div>
         </header>
-        <div
-          className="post-body"
-          dangerouslySetInnerHTML={{ __html: post.body }}
-        />
+        <div className="post-body">
+          <Markdown>{post.body}</Markdown>
+        </div>
         <div className="post-tags">
           {post.tags.map((tag) => (
             <span key={tag} className="tag">
