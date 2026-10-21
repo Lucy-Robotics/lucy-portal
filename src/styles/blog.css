@@ -103,9 +103,26 @@
 }
 
 .post-body {
+  color: var(--color-text-sec);
+  font-size: var(--font-size-base);
   line-height: 1.6;
   margin-bottom: 1rem;
 }
+
+.post-body p {
+  font-size: inherit;
+}
+
+.post-body h1,
+.post-body h2,
+.post-body h3 {
+  margin: 1.5em 0 0.5em;
+  color: var(--color-text-pri);
+}
+
+.post-body h1 { font-size: 1.5rem; }
+.post-body h2 { font-size: 1.25rem; }
+.post-body h3 { font-size: 1.1rem; }
 
 .post-body img {
   --chamfer: 1rem;
