@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { HIT_SLOP } from "../config.ts";
 import type { RobotName } from "../robotPageScene.ts";
 import type { Payload } from "./parts.ts";
-import { contains, rayFrom, toRect, toScreen, viewWidth, type Rect } from "./screen.ts";
+import { contains, rayFrom, toRect, toScreen, viewHeight, viewWidth, type Rect } from "./screen.ts";
 
 type PointerScene = {
     camera: THREE.Camera;
@@ -61,7 +61,7 @@ export function createPointer(s: PointerScene) {
             const from = toScreen(object.getWorldPosition(new THREE.Vector3()), s.camera, s.drawRect());
             return {
                 x: Math.tanh(((pointer.x - from.x) / (viewWidth() / 2)) * 1.6),
-                y: Math.tanh((-(pointer.y - from.y) / (window.innerHeight / 2)) * 1.6),
+                y: Math.tanh((-(pointer.y - from.y) / (viewHeight() / 2)) * 1.6),
             };
         },
 

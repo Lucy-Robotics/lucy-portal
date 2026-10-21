@@ -12,7 +12,7 @@ import type { So101PickDemo } from "../so101PickDemo.ts";
 import type { Framing } from "./framing.ts";
 import { glowArea, glowReach, logoGlow, rgbOf } from "./glow.ts";
 import type { SceneRenderer } from "./renderer.ts";
-import { chamferedClip, HIDDEN, lerpRect, partsBounds, screenBounds, toRect, viewWidth, type Rect } from "./screen.ts";
+import { chamferedClip, HIDDEN, lerpRect, partsBounds, screenBounds, toRect, viewHeight, viewWidth, type Rect } from "./screen.ts";
 import type { createWorld } from "./world.ts";
 
 type ViewScene = {
@@ -65,7 +65,7 @@ export function createView(s: ViewScene) {
         draw(f: ViewFrame): Rect {
             const { enter } = f;
             const landed = enter >= 1;
-            const height = window.innerHeight;
+            const height = viewHeight();
             // Read the layout before writing to the page (no forced reflow).
             const box = toRect(page.frame.getBoundingClientRect());
             const headerBottom = page.header?.getBoundingClientRect().bottom ?? 0;
@@ -93,13 +93,16 @@ export function createView(s: ViewScene) {
             const screen: Rect = { left: -1, top: -1, width: viewWidth() + 2, height: height + 2 };
             const close = smoothstep(enter, CLOSE_FROM, 1);
             const clip = enter <= 0 ? "none" : chamferedClip(lerpRect(screen, box, close), close, f.chamferSize, headerBottom);
-            s.container.style.clipPath = clip;
-            page.backdrop.style.clipPath = clip;
-            page.glow.style.clipPath = clip;
+            const layers = [s.container, page.backdrop, page.glow];
+            for (const layer of layers) layer.style.clipPath = clip;
             if (clip === HIDDEN) {
                 page.hint?.removeAttribute("data-shown");
                 return drawRect; // scrolled out of sight (phones), nothing to draw
             }
+            // Phones: pinned to the page, so they scroll with the box.
+            // shortcut: drawing at the very end of the page would lengthen it.
+            const top = f.compact ? `${window.scrollY}px` : "";
+            for (const layer of layers) layer.style.top = top;
 
             // Measured before the camera gets its view offset for drawing.
             scene.updateMatrixWorld();

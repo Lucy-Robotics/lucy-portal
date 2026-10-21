@@ -26,7 +26,7 @@ import { loadInMoov } from "./scene/inmoov.ts";
 import { createMaterials, INFINITY_LAYER } from "./scene/parts.ts";
 import { createPointer } from "./scene/pointer.ts";
 import { SceneRenderer } from "./scene/renderer.ts";
-import { cssColor, screenBounds, type Rect } from "./scene/screen.ts";
+import { cssColor, screenBounds, viewHeight, type Rect } from "./scene/screen.ts";
 import { createView } from "./scene/view.ts";
 import { createWorld, disposeWorld } from "./scene/world.ts";
 import { So101PickDemo } from "./so101PickDemo.ts";
@@ -150,7 +150,7 @@ export async function createRobotPageScene(
     };
 
     /* On wide screens, once the hero is past, the scroll pans to InMoov. */
-    const scrollView = () => clamp((window.scrollY - hero.layout.landScroll) / (0.9 * window.innerHeight), 0, 1);
+    const scrollView = () => clamp((window.scrollY - hero.layout.landScroll) / (0.9 * viewHeight()), 0, 1);
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const painter = createView({ container, page, world, camera, framing, renderer, boxPick, accent, humanoid: () => inmoov?.humanoid ?? null });
