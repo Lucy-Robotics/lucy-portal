@@ -23,13 +23,18 @@ const cacheHashedAssets = (): Plugin => ({
   },
 });
 
-export default defineConfig(({ mode }) => {
+/* In dev the browser calls this path and Vite forwards it to BACKEND_URL, so CORS never applies locally. */
+const DEV_BACKEND_PATH = "/__backend";
+
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
   const allowedHosts = env.VITE_ALLOWED_HOST
       ? env.VITE_ALLOWED_HOST.split(",").map((h) => h.trim()).filter(Boolean)
       : undefined;
   const listen = { host: true, allowedHosts, port: parseInt(env.PORT || "5000") };
+
+  const isBackendProxied = command === "serve" && Boolean(env.BACKEND_URL);
 
   return {
     plugins: [
@@ -53,14 +58,23 @@ export default defineConfig(({ mode }) => {
       ],
     },
     define: {
-      "import.meta.env.BACKEND_URL": JSON.stringify(env.BACKEND_URL ?? ""),
+      "import.meta.env.BACKEND_URL": JSON.stringify(isBackendProxied ? DEV_BACKEND_PATH : env.BACKEND_URL ?? ""),
       "import.meta.env.KEYCLOAK_URL": JSON.stringify(env.KEYCLOAK_URL ?? ""),
       "import.meta.env.KEYCLOAK_REALM": JSON.stringify(env.KEYCLOAK_REALM ?? ""),
       "import.meta.env.KEYCLOAK_CLIENT_ID": JSON.stringify(env.KEYCLOAK_CLIENT_ID ?? ""),
       // Only the flag, never the secret, reaches the bundle.
       "import.meta.env.KEYCLOAK_TOKEN_PROXY": JSON.stringify(Boolean(env.KEYCLOAK_CLIENT_SECRET)),
     },
-    server: listen,
+    server: {
+      ...listen,
+      proxy: isBackendProxied ? {
+        [DEV_BACKEND_PATH]: {
+          target: env.BACKEND_URL,
+          changeOrigin: true,
+          rewrite: (url) => url.slice(DEV_BACKEND_PATH.length),
+        },
+      } : undefined,
+    },
     preview: listen,
   }
 });
