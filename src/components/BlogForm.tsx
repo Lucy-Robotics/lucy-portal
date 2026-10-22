@@ -124,7 +124,8 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, titleId, onSave, onClose }) =
           </div>
           <p className="editor-trust-note">
             Supports GitHub-flavored Markdown, images by URL
-            (<code>![alt](https://…)</code>) and <code>```mermaid</code> diagrams.
+            (<code>![alt](https://…)</code>, add <code>#no-chamfer</code> to the URL for square corners)
+            and <code>```mermaid</code> diagrams.
           </p>
         </div>
         <label>

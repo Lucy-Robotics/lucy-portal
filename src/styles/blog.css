@@ -108,8 +108,22 @@
 }
 
 .post-body img {
+  --chamfer: 1rem;
   max-width: 100%;
   height: auto;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--chamfer)) 0,
+    100% var(--chamfer),
+    100% 100%,
+    var(--chamfer) 100%,
+    0 calc(100% - var(--chamfer))
+  );
+}
+
+/* Opt out per image from Markdown: ![alt](url#no-chamfer) */
+.post-body img[src$="#no-chamfer"] {
+  clip-path: none;
 }
 
 .post-body pre,
