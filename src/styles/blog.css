@@ -121,6 +121,13 @@
   color: var(--color-highlight);
 }
 
+.post-body blockquote {
+  margin: 0 0 1rem;
+  padding: 0 1em;
+  color: var(--color-text-sec);
+  border-left: 0.25em solid var(--color-border);
+}
+
 .post-body table {
   border-collapse: collapse;
   display: block;
