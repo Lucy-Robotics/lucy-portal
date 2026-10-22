@@ -33,6 +33,7 @@ export function useAccessibleDialog({ isOpen, onClose }: UseAccessibleDialogOpti
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  const pressStartedOnOverlay = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -88,11 +89,17 @@ export function useAccessibleDialog({ isOpen, onClose }: UseAccessibleDialogOpti
     [onClose]
   );
 
+  // Press + release
+  const onOverlayMouseDown = useCallback((event: ReactMouseEvent) => {
+    pressStartedOnOverlay.current = event.target === event.currentTarget;
+  }, []);
+
   const onOverlayClick = useCallback(
     (event: ReactMouseEvent) => {
-      if (event.target === event.currentTarget) {
+      if (pressStartedOnOverlay.current && event.target === event.currentTarget) {
         onClose();
       }
+      pressStartedOnOverlay.current = false;
     },
     [onClose]
   );
@@ -101,6 +108,7 @@ export function useAccessibleDialog({ isOpen, onClose }: UseAccessibleDialogOpti
     titleId,
     dialogRef: dialogRef as RefObject<HTMLDivElement>,
     overlayProps: {
+      onMouseDown: onOverlayMouseDown,
       onClick: onOverlayClick,
       onKeyDown,
     },

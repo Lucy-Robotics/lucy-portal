@@ -80,7 +80,10 @@ const Blog: React.FC = () => {
   };
 
   const handleSave = async (post: BlogPostInput) => {
-    if (!accessToken) return;
+    if (!accessToken) {
+      setError('Your session expired, sign in again (draft saved).');
+      return false;
+    }
 
     try {
       if (selectedPost) {
@@ -91,9 +94,11 @@ const Blog: React.FC = () => {
       await fetchPosts();
       setIsFormOpen(false);
       setSelectedPost(null);
+      return true;
     } catch (err) {
       setError(selectedPost ? 'Failed to update post.' : 'Failed to create post.');
       console.error(err);
+      return false;
     }
   };
 

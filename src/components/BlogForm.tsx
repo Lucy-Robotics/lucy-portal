@@ -8,8 +8,35 @@ import '../styles/blog-form.css';
 interface BlogFormProps {
   post: BlogPost | null;
   titleId?: string;
-  onSave: (post: BlogPostInput) => void;
+  onSave: (post: BlogPostInput) => Promise<boolean>;
   onClose: () => void;
+}
+
+const draftKey = (post: BlogPost | null) => `blog-draft:${post?.id ?? 'new'}`;
+
+const fromPost = (post: BlogPost | null): BlogPostInput => ({
+  title: post?.title || '',
+  body: post?.body || '',
+  tags: post?.tags || [],
+});
+
+// Storage can be unavailable. Drafts are best-effort.
+function loadDraft(post: BlogPost | null): BlogPostInput | null {
+  try {
+    const raw = localStorage.getItem(draftKey(post));
+    return raw ? (JSON.parse(raw) as BlogPostInput) : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeDraft(post: BlogPost | null, data: BlogPostInput | null) {
+  try {
+    if (data) localStorage.setItem(draftKey(post), JSON.stringify(data));
+    else localStorage.removeItem(draftKey(post));
+  } catch {
+    // ignore
+  }
 }
 
 type ToolbarButton = {
@@ -122,11 +149,10 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, titleId, onSave, onClose }) =
   const headingId = titleId ?? generatedTitleId;
   const bodyLabelId = useId();
 
-  const [formData, setFormData] = useState<BlogPostInput>({
-    title: post?.title || '',
-    body: post?.body || '',
-    tags: post?.tags || [],
-  });
+  const [initialDraft] = useState(() => loadDraft(post));
+  const [formData, setFormData] = useState<BlogPostInput>(initialDraft ?? fromPost(post));
+  const [restoredDraft, setRestoredDraft] = useState(initialDraft !== null);
+  const [saving, setSaving] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -137,7 +163,7 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, titleId, onSave, onClose }) =
         },
       }),
     ],
-    content: post?.body || '',
+    content: formData.body,
     onUpdate: ({ editor: updatedEditor }) => {
       setFormData((prev) => ({ ...prev, body: updatedEditor.getHTML() }));
     },
@@ -150,19 +176,17 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, titleId, onSave, onClose }) =
   });
 
   useEffect(() => {
-    setFormData({
-      title: post?.title || '',
-      body: post?.body || '',
-      tags: post?.tags || [],
-    });
+    const unchanged = JSON.stringify(formData) === JSON.stringify(fromPost(post));
+    storeDraft(post, unchanged ? null : formData);
+  }, [formData, post]);
 
-    if (!editor) return;
-
-    const nextBody = post?.body || '';
-    if (editor.getHTML() !== nextBody) {
-      editor.commands.setContent(nextBody, { emitUpdate: false });
-    }
-  }, [post?.id, editor]);
+  const discardDraft = () => {
+    const original = fromPost(post);
+    storeDraft(post, null);
+    setFormData(original);
+    setRestoredDraft(false);
+    editor?.commands.setContent(original.body, { emitUpdate: false });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -177,15 +201,26 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, titleId, onSave, onClose }) =
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    setSaving(true);
+    const saved = await onSave(formData);
+    setSaving(false);
+    if (saved) storeDraft(post, null);
   };
 
   return (
     <div className="blog-form-container">
       <form onSubmit={handleSubmit}>
         <h2 id={headingId}>{post ? 'Edit' : 'Create'} Blog Post</h2>
+        {restoredDraft && (
+          <p className="editor-trust-note" role="status">
+            Restored your unsaved draft.{' '}
+            <button type="button" className="secondary" onClick={discardDraft}>
+              Discard draft
+            </button>
+          </p>
+        )}
         <label>
           Title:
           <input
@@ -219,7 +254,9 @@ const BlogForm: React.FC<BlogFormProps> = ({ post, titleId, onSave, onClose }) =
           />
         </label>
         <div className="form-buttons">
-          <button type="submit">Save</button>
+          <button type="submit" disabled={saving}>
+            {saving ? 'Saving...' : 'Save'}
+          </button>
           <button type="button" className="secondary" onClick={onClose}>
             Cancel
           </button>

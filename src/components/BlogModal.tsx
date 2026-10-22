@@ -7,7 +7,7 @@ import '../styles/blog-modal.css';
 interface BlogModalProps {
   isOpen: boolean;
   post: BlogPost | null;
-  onSave: (post: BlogPostInput) => void;
+  onSave: (post: BlogPostInput) => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -26,6 +26,7 @@ const BlogModal: React.FC<BlogModalProps> = ({ isOpen, post, onSave, onClose }) 
       <div className="chamfer blog-modal-content" {...dialogProps}>
         <div className="blog-modal-body">
           <BlogForm
+            key={post?.id ?? 'new'}
             post={post}
             titleId={titleId}
             onSave={onSave}
