@@ -27,7 +27,7 @@
     z-index: 2000;
     padding: 0.65rem 1rem;
     background: var(--color-highlight);
-    color: #000;
+    color: var(--color-on-highlight);
     font-weight: var(--font-weight-bold);
     text-decoration: none;
 }
@@ -155,7 +155,7 @@
 
     border: var(--border-width) solid var(--color-highlight);
 
-    color: var(--color-highlight) !important;
+    color: var(--color-highlight);
 
     text-decoration: none;
 
@@ -163,45 +163,48 @@
     font-weight: var(--font-weight-bold);
 
     cursor: pointer;
-    background: transparent;
+    background-color: transparent;
     font-family: inherit;
 
     transition:
-        background 0.15s ease,
+        background-color 0.15s ease,
         color 0.15s ease;
 }
 
 
 .header__button--main {
-    background: var(--color-highlight);
+    background-color: var(--color-highlight);
 
-    color: #000000 !important;
+    color: var(--color-on-highlight);
 }
 
-.header__button--main:hover {
-    background: #000000 !important;
+.header__button--main:hover,
+.header__button--main:focus-visible {
+    background-color: #000000;
 
-    color: var(--color-highlight) !important;
+    color: var(--color-highlight);
 }
 
-.header__button--primary:hover {
-    background: var(--color-highlight);
+.header__button--primary:hover,
+.header__button--primary:focus-visible {
+    background-color: var(--color-highlight);
 
-    color: #000000 !important;
+    color: var(--color-on-highlight);
 }
 
 
 .header__button--secondary {
     border-color: var(--color-border);
 
-    color: var(--color-text-pri) !important;
+    color: var(--color-text-pri);
 }
 
 
-.header__button--secondary:hover {
-    background: var(--color-bg-comp) !important;
+.header__button--secondary:hover,
+.header__button--secondary:focus-visible {
+    background-color: var(--color-bg-comp);
 
-    color: var(--color-highlight) !important;
+    color: var(--color-highlight);
 }
 
 .header__user {
@@ -325,7 +328,6 @@
         align-items: center;
         min-height: 2.75rem;
         padding: 0.55rem 0.75rem;
-        color: var(--color-text-pri);
         text-decoration: none;
         font-size: 1rem;
         font-weight: var(--font-weight-bold);
@@ -335,6 +337,15 @@
     .header__mobile-nav a:hover,
     .header__mobile-nav a:focus-visible {
         border-color: var(--color-border);
+    }
+
+    /* Buttons keep their own colours. */
+    .header__mobile-nav a:not(.header__button) {
+        color: var(--color-text-pri);
+    }
+
+    .header__mobile-nav a:not(.header__button):hover,
+    .header__mobile-nav a:not(.header__button):focus-visible {
         color: var(--color-highlight);
     }
 
@@ -618,7 +629,7 @@ button {
     padding: 0.75rem 1.25rem;
 
     background: var(--btn-active);
-    color: #000000;
+    color: var(--color-on-highlight);
 
     font-family: inherit;
     font-size: inherit;
@@ -697,21 +708,21 @@ select:focus {
    Chamfer
    ============================== */
 
-/* Chamfered top-right and bottom-left corners. The element background paints
-   the border colour; ::before fills the inside, its chamfer shortened so the
-   diagonal edges keep the same border width. clip-path also clips outlines, so
-   hover/focus states recolour --chamfer-border instead. */
+/* Chamfered top-right and bottom-left corners. The element keeps a real
+   background and border, so contrast checkers can resolve the colours behind
+   its text; clip-path cuts the corners and ::before/::after draw the diagonal
+   border edges as rotated zero-height lines (border only, no background, which
+   checkers would otherwise treat as an unknown backdrop). clip-path also clips
+   outlines, so hover/focus states recolour --chamfer-border instead. */
 .chamfer {
     --chamfer: 1rem;
-    --chamfer-inner: calc(var(--chamfer) - 0.586 * var(--border-width));
     --chamfer-border: var(--color-border);
     --chamfer-fill: var(--color-bg-comp);
 
     position: relative;
-    isolation: isolate;
 
-    border: none;
-    background: var(--chamfer-border);
+    border: var(--border-width) solid var(--chamfer-border);
+    background-color: var(--chamfer-fill);
     clip-path: polygon(
         0 0,
         calc(100% - var(--chamfer)) 0,
@@ -721,24 +732,43 @@ select:focus {
         0 calc(100% - var(--chamfer))
     );
 
-    transition: background 0.15s ease;
+    transition: border-color 0.15s ease;
 }
 
-.chamfer::before {
+/* Each line starts on the cut and rotates about its start so its border lies
+   just inside the diagonal. Offsets are from the padding box, hence the
+   border-width terms. */
+.chamfer::before,
+.chamfer::after {
     content: "";
     position: absolute;
-    inset: var(--border-width);
-    z-index: -1;
+    z-index: 1;
 
-    background: var(--chamfer-fill);
-    clip-path: polygon(
-        0 0,
-        calc(100% - var(--chamfer-inner)) 0,
-        100% var(--chamfer-inner),
-        100% 100%,
-        var(--chamfer-inner) 100%,
-        0 calc(100% - var(--chamfer-inner))
-    );
+    width: calc(var(--chamfer) * 1.4143);
+    height: 0;
+
+    border-top: var(--border-width) solid var(--chamfer-border);
+    transform-origin: 0 0;
+
+    pointer-events: none;
+
+    transition: border-color 0.15s ease;
+}
+
+/* From (100% - chamfer, 0) down-right to (100%, chamfer). */
+.chamfer::before {
+    top: calc(-1 * var(--border-width));
+    left: calc(100% + var(--border-width) - var(--chamfer));
+
+    transform: rotate(45deg);
+}
+
+/* From (chamfer, 100%) up-left to (0, 100% - chamfer). */
+.chamfer::after {
+    top: calc(100% + var(--border-width));
+    left: calc(var(--chamfer) - var(--border-width));
+
+    transform: rotate(225deg);
 }
 
 .chamfer:focus-visible {

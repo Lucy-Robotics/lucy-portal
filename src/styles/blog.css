@@ -180,7 +180,7 @@
 
 .tag {
   background-color: var(--color-highlight);
-  color: #000;
+  color: var(--color-on-highlight);
   padding: 0.25rem 0.5rem;
   font-size: 0.8rem;
   font-weight: var(--font-weight-medium);
