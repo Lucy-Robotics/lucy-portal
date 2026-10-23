@@ -1,4 +1,6 @@
 :root {
+    color-scheme: dark;
+
     /* ==============================
        Colors
        ============================== */
@@ -10,6 +12,7 @@
     --color-highlight: #00ff41;
     --color-primary: #00ff41;
     --color-highlight-hover: #00cc34;
+    --color-on-highlight: #000000;
 
     --color-border: #3f3f3f;
     --color-alert: #ff0000;
