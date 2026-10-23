@@ -107,6 +107,53 @@
   margin-bottom: 1rem;
 }
 
+.post-body img {
+  --chamfer: 1rem;
+  max-width: 100%;
+  height: auto;
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--chamfer)) 0,
+    100% var(--chamfer),
+    100% 100%,
+    var(--chamfer) 100%,
+    0 calc(100% - var(--chamfer))
+  );
+}
+
+/* Opt out per image from Markdown: ![alt](url#no-chamfer) */
+.post-body img[src$="#no-chamfer"] {
+  clip-path: none;
+}
+
+.post-body pre,
+.mermaid-diagram {
+  overflow-x: auto;
+}
+
+.post-body a {
+  color: var(--color-highlight);
+}
+
+.post-body blockquote {
+  margin: 0 0 1rem;
+  padding: 0 1em;
+  color: var(--color-text-sec);
+  border-left: 0.25em solid var(--color-border);
+}
+
+.post-body table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+
+.post-body th,
+.post-body td {
+  padding: 0.35rem 0.75rem;
+  border: var(--border-width) solid var(--color-border);
+}
+
 .post-tags {
   display: flex;
   gap: 0.5rem;

@@ -38,70 +38,46 @@
   outline: none;
 }
 
-.editor-container {
+.markdown-editor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "write-label preview-label"
+    "write preview";
+  gap: 0.5rem 1rem;
+}
+
+.markdown-write-label { grid-area: write-label; }
+.markdown-preview-label { grid-area: preview-label; }
+
+.markdown-editor textarea,
+.markdown-preview {
+  min-height: 360px;
+  max-height: 60vh;
+  padding: 0.75rem 1rem;
   border: var(--border-width) solid var(--color-border);
-  margin-top: 0.5rem;
   background-color: var(--color-bg-raised);
   color: var(--color-text-pri);
-  overflow: hidden;
 }
 
-.editor-container:focus-within {
+.markdown-editor textarea {
+  grid-area: write;
+  resize: vertical;
+  font-family: var(--font-primary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.markdown-editor textarea:focus {
   border-color: var(--color-highlight);
-}
-
-.tiptap-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.5rem;
-  border-bottom: var(--border-width) solid var(--color-border);
-  background-color: var(--color-bg-comp);
-}
-
-.tiptap-toolbar button {
-  padding: 0.35rem 0.65rem;
-  border: var(--border-width) solid var(--color-border);
-  background-color: transparent;
-  color: var(--color-text-pri);
-  cursor: pointer;
-  font-size: 0.85rem;
-  line-height: 1;
-}
-
-.tiptap-toolbar button:hover:not(:disabled) {
-  border-color: var(--color-highlight);
-  background-color: transparent;
-  color: var(--color-highlight);
-}
-
-.tiptap-toolbar button.is-active {
-  background-color: var(--color-highlight);
-  border-color: var(--color-highlight);
-  color: #000;
-}
-
-.toolbar-divider {
-  width: 1px;
-  height: 1.25rem;
-  background-color: var(--color-border);
-  margin: 0 0.15rem;
-}
-
-.tiptap-editor {
-  padding: 0.75rem 1rem;
-  min-height: 300px;
+  box-shadow: var(--focus-glow);
   outline: none;
-  line-height: 1.6;
 }
 
-.tiptap-editor p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: var(--color-text-muted);
-  pointer-events: none;
-  height: 0;
+.markdown-preview {
+  grid-area: preview;
+  overflow-y: auto;
+  margin-bottom: 0;
 }
 
 .form-buttons {
@@ -119,20 +95,18 @@
 }
 
 @media (max-width: 640px) {
-  .tiptap-toolbar {
-    gap: 0.3rem;
-  }
-
-  .tiptap-toolbar button {
-    flex: 1 1 auto;
-    min-height: 2.25rem;
-  }
-
   .form-buttons {
     flex-wrap: wrap;
   }
 
   .form-buttons button {
     flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .markdown-editor {
+    grid-template-columns: 1fr;
+    grid-template-areas: "write-label" "write" "preview-label" "preview";
   }
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import type { BlogPost } from '../types/blog';
+import { stripMarkdown } from '../lib/markdownText';
 import '../styles/blog.css';
 
 interface BlogPostPreviewProps {
@@ -10,10 +11,9 @@ interface BlogPostPreviewProps {
   onDelete?: (id: string) => void;
 }
 
-const createSnippet = (html: string, length = 100) => {
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  const text = (div.textContent || div.innerText || '').trim();
+const createSnippet = (body: string, length = 100) => {
+  const markdownFree = stripMarkdown(body);
+  const text = (new DOMParser().parseFromString(markdownFree, 'text/html').body.textContent ?? '').trim();
   return text.length > length ? `${text.substring(0, length)}...` : text;
 };
 
