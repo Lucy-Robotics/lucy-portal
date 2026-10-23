@@ -20,10 +20,18 @@ export type ScanResult = {
     passedRules: number;
 };
 
+type Attempt = {
+    status: TestResult["status"];
+    error?: string;
+    scans: ScanResult[];
+};
+
+type RowState = "passed" | "flaky" | "failed" | "skipped";
+
 type Row = {
     project: string;
     title: string;
-    status: TestResult["status"];
+    state: RowState;
     error?: string;
     scans: ScanResult[];
 };
@@ -31,24 +39,23 @@ type Row = {
 const OUTPUT_DIR = "a11y-report";
 
 export default class A11yReporter implements Reporter {
-    private rows = new Map<string, Row>();
+    private tests = new Map<string, { test: TestCase; attempts: Attempt[] }>();
 
+    // Every attempt is kept: an issue found before a passing retry must still be reported.
     onTestEnd(test: TestCase, result: TestResult) {
-        this.rows.set(test.id, {
-            project: test.parent.project()?.name ?? "",
-            title: test.title,
+        const entry = this.tests.get(test.id) ?? { test, attempts: [] };
+        entry.attempts.push({
             status: result.status,
-            error: result.status === "failed" || result.status === "timedOut"
-                ? stripAnsi(result.error?.message ?? "").split("\n")[0]
-                : undefined,
+            error: result.error ? stripAnsi(result.error.message ?? "").split("\n")[0] : undefined,
             scans: result.attachments
                 .filter((attachment) => attachment.name === AXE_ATTACHMENT && attachment.body)
                 .map((attachment) => JSON.parse(attachment.body!.toString()) as ScanResult),
         });
+        this.tests.set(test.id, entry);
     }
 
     onEnd(result: FullResult) {
-        const rows = [...this.rows.values()].sort(
+        const rows = [...this.tests.values()].map(({ test, attempts }) => toRow(test, attempts)).sort(
             (a, b) => a.project.localeCompare(b.project) || a.title.localeCompare(b.title),
         );
         const generatedAt = new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
@@ -70,31 +77,47 @@ export default class A11yReporter implements Reporter {
     }
 }
 
+function toRow(test: TestCase, attempts: Attempt[]): Row {
+    const outcome = test.outcome();
+    const state: RowState =
+        outcome === "expected" ? "passed" : outcome === "unexpected" ? "failed" : outcome;
+    const retried = attempts.length > 1;
+
+    return {
+        project: test.parent.project()?.name ?? "",
+        title: test.title,
+        state,
+        error: attempts.find((attempt) => attempt.error)?.error,
+        scans: attempts.flatMap((attempt, index) =>
+            attempt.scans.map((scan) =>
+                retried ? { ...scan, label: `${scan.label} (attempt ${index + 1}: ${attempt.status})` } : scan,
+            ),
+        ),
+    };
+}
+
 const countNodes = (issues: ScanIssue[]) => issues.reduce((sum, issue) => sum + issue.nodes.length, 0);
 
 function totals(rows: Row[]) {
     const scans = rows.flatMap((row) => row.scans);
+    const count = (state: RowState) => rows.filter((row) => row.state === state).length;
     return {
-        tests: rows.filter((row) => row.status !== "skipped").length,
-        failedTests: rows.filter((row) => row.status === "failed" || row.status === "timedOut").length,
+        tests: rows.length - count("skipped"),
+        passed: count("passed"),
+        flaky: count("flaky"),
+        failed: count("failed"),
         failures: scans.reduce((sum, scan) => sum + countNodes(scan.failures), 0),
         toReview: scans.reduce((sum, scan) => sum + countNodes(scan.toReview), 0),
     };
 }
 
-function rowState(row: Row) {
-    if (row.status === "skipped") return "skipped";
-    if (row.status === "passed") return "passed";
-    return "failed";
-}
-
 function renderMarkdown(rows: Row[], status: FullResult["status"], generatedAt: string) {
     const total = totals(rows);
-    const icon = { passed: "✅", failed: "❌", skipped: "⏭️" };
+    const icon: Record<RowState, string> = { passed: "✅", flaky: "⚠️", failed: "❌", skipped: "⏭️" };
     const lines = [
-        `## Accessibility report ${status === "passed" ? "✅" : "❌"}`,
+        `## Accessibility report ${status !== "passed" ? "❌" : total.flaky ? "⚠️" : "✅"}`,
         "",
-        `WCAG 2.2 AA (axe-core) · ${total.tests} checks · ${total.failedTests} failing · ` +
+        `WCAG 2.2 AA (axe-core) · ${total.tests} checks · ${total.failed} failing · ${total.flaky} flaky · ` +
             `${total.failures} issues · ${total.toReview} to review by hand · ${generatedAt}`,
         "",
         "| | Viewport | Check | Issues | To review | Rules passed |",
@@ -103,16 +126,16 @@ function renderMarkdown(rows: Row[], status: FullResult["status"], generatedAt: 
             const failures = row.scans.reduce((sum, scan) => sum + countNodes(scan.failures), 0);
             const review = row.scans.reduce((sum, scan) => sum + countNodes(scan.toReview), 0);
             const passed = Math.max(0, ...row.scans.map((scan) => scan.passedRules));
-            return `| ${icon[rowState(row)]} | ${row.project} | ${escapeMd(row.title)} | ${failures} | ${review} | ${passed} |`;
+            return `| ${icon[row.state]} | ${row.project} | ${escapeMd(row.title)} | ${failures} | ${review} | ${passed} |`;
         }),
         "",
     ];
 
-    const failing = rows.filter((row) => rowState(row) === "failed");
+    const failing = rows.filter((row) => row.state === "failed" || row.state === "flaky");
     if (failing.length > 0) {
         lines.push("### Issues", "");
         for (const row of failing) {
-            lines.push(`**${row.project} · ${escapeMd(row.title)}**`, "");
+            lines.push(`**${row.project} · ${escapeMd(row.title)}${row.state === "flaky" ? " (flaky)" : ""}**`, "");
             if (row.error && row.scans.every((scan) => scan.failures.length === 0)) {
                 lines.push(`- Test error: ${escapeMd(row.error)}`);
             }
@@ -171,7 +194,7 @@ function renderHtml(rows: Row[], status: FullResult["status"], generatedAt: stri
             .join("");
 
     const rowHtml = (row: Row) => {
-        const state = rowState(row);
+        const state = row.state;
         const failures = row.scans.reduce((sum, scan) => sum + countNodes(scan.failures), 0);
         const review = row.scans.reduce((sum, scan) => sum + countNodes(scan.toReview), 0);
         const body = row.scans
@@ -187,7 +210,7 @@ function renderHtml(rows: Row[], status: FullResult["status"], generatedAt: stri
             .join("");
 
         return `
-            <details class="row row--${state}" ${state === "failed" ? "open" : ""}>
+            <details class="row row--${state}" ${state === "failed" || state === "flaky" ? "open" : ""}>
                 <summary>
                     <span class="badge badge--${state}">${state}</span>
                     <span class="row__title">${escapeHtml(row.title)}</span>
@@ -232,6 +255,7 @@ function renderHtml(rows: Row[], status: FullResult["status"], generatedAt: stri
     .stat--ok strong { color: var(--ok); }
     .row { margin-bottom: 0.5rem; background: var(--raised); border: 1px solid var(--border); }
     .row--failed { border-color: var(--fail); }
+    .row--flaky { border-color: var(--review); }
     .row summary { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; cursor: pointer; }
     .row summary:focus-visible { outline: 2px solid var(--ok); outline-offset: -2px; }
     .row__title { flex: 1; min-width: 12rem; }
@@ -239,6 +263,7 @@ function renderHtml(rows: Row[], status: FullResult["status"], generatedAt: stri
     .badge { padding: 0.1rem 0.5rem; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: #000; }
     .badge--passed { background: var(--ok); }
     .badge--failed { background: var(--fail); }
+    .badge--flaky { background: var(--review); }
     .badge--skipped { background: var(--muted); }
     .count { font-size: 0.85rem; color: var(--muted); }
     .count--fail { color: var(--fail); }
@@ -258,11 +283,11 @@ function renderHtml(rows: Row[], status: FullResult["status"], generatedAt: stri
 </head>
 <body>
 <main>
-    <h1>Accessibility report ${status === "passed" ? "· passed" : "· failed"}</h1>
+    <h1>Accessibility report ${status !== "passed" ? "· failed" : total.flaky ? "· passed with flaky checks" : "· passed"}</h1>
     <p class="muted">WCAG 2.2 AA, checked with axe-core · generated ${escapeHtml(generatedAt)}</p>
 
     <div class="stats">
-        <div class="stat ${total.failedTests ? "stat--fail" : "stat--ok"}"><strong>${total.tests - total.failedTests}/${total.tests}</strong>checks passing</div>
+        <div class="stat ${total.failed ? "stat--fail" : total.flaky ? "stat--review" : "stat--ok"}"><strong>${total.passed}/${total.tests}</strong>checks passing${total.flaky ? `, ${total.flaky} flaky` : ""}</div>
         <div class="stat ${total.failures ? "stat--fail" : "stat--ok"}"><strong>${total.failures}</strong>issues</div>
         <div class="stat ${total.toReview ? "stat--review" : "stat--ok"}"><strong>${total.toReview}</strong>to review by hand</div>
     </div>

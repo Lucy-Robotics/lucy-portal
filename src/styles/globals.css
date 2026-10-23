@@ -180,7 +180,7 @@
 
 .header__button--main:hover,
 .header__button--main:focus-visible {
-    background-color: #000000;
+    background-color: var(--color-on-highlight);
 
     color: var(--color-highlight);
 }
@@ -411,6 +411,13 @@
     color: var(--color-text-muted);
     transition: color .2s;
     font-size: .9rem;
+}
+
+/* WCAG 2.2 target size: stacked text links need a 24px-tall hit area. */
+.footer__column a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
 }
 
 .footer__column a:hover,

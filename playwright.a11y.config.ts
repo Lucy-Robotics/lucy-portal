@@ -1,6 +1,8 @@
 import { defineConfig } from "@playwright/test";
 
 const PORT = 4321;
+// Built apart from dist/: this build talks to the fake backend and has auth off.
+const OUT_DIR = "dist-a11y";
 
 /* Accessibility scan of the production build, with the backend mocked by the tests. */
 export default defineConfig({
@@ -23,7 +25,9 @@ export default defineConfig({
         { name: "phone", use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
     ],
     webServer: {
-        command: `npm run build && npx vite preview --port ${PORT} --strictPort`,
+        command:
+            `npx tsc -b && npx vite build --outDir ${OUT_DIR} --emptyOutDir` +
+            ` && npx vite preview --outDir ${OUT_DIR} --port ${PORT} --strictPort`,
         port: PORT,
         reuseExistingServer: false,
         timeout: 180_000,

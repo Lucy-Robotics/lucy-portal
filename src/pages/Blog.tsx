@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { BlogPost, BlogPostInput } from '../types/blog';
-import { useAuth } from '../providers/AuthProvider';
+import { useAuth } from '../hooks/useAuth';
 import BlogModal from '../components/BlogModal';
 import BlogPostPreview from '../components/BlogPostPreview';
 import ConfirmModal from '../components/ConfirmModal';

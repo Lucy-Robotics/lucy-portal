@@ -118,7 +118,13 @@ const Download = () => {
                             </p>
 
                             <div className="download__terminal">
-                                <pre className="download__terminal-body" tabIndex={0}>
+                                {/* Focusable so keyboard users can scroll it horizontally. */}
+                                <pre
+                                    className="download__terminal-body"
+                                    tabIndex={0}
+                                    role="region"
+                                    aria-label="Linux and macOS install commands"
+                                >
                                     <code>
                                         <span className="download__terminal-line">
                                             <span className="download__terminal-prompt">
@@ -212,7 +218,12 @@ const Download = () => {
                     <h3 className="download__curl-title">OR use the curl installer</h3>
 
                     <div className="download__terminal download__terminal--wide">
-                        <pre className="download__terminal-body" tabIndex={0}>
+                        <pre
+                            className="download__terminal-body"
+                            tabIndex={0}
+                            role="region"
+                            aria-label="curl installer command"
+                        >
                             <code>{curlCommand}</code>
                         </pre>
                     </div>
