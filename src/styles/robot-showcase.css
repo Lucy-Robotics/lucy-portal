@@ -1,7 +1,8 @@
 /* Above the header, since the arm reaches its logo on phones; click-through so links work. */
 .robot-layer {
     position: fixed;
-    inset: 0;
+    inset: 0 0 auto;
+    height: 100vh;
     z-index: 20;
 
     pointer-events: none;
@@ -9,7 +10,8 @@
 
 .robot-backdrop {
     position: fixed;
-    inset: 0;
+    inset: 0 0 auto;
+    height: 100vh;
     z-index: -1;
 
     pointer-events: none;
@@ -18,7 +20,8 @@
 /* The scene sets the drop-shadow per mark. */
 .robot-glow {
     position: fixed;
-    inset: 0;
+    inset: 0 0 auto;
+    height: 100vh;
     z-index: 19;
 
     pointer-events: none;
@@ -77,6 +80,14 @@
     .robot-click-hint {
         --hint-x: -20px;
         --hint-y: -20px;
+    }
+}
+
+@media (max-width: 959px) {
+    .robot-layer,
+    .robot-backdrop,
+    .robot-glow {
+        position: absolute;
     }
 }
 

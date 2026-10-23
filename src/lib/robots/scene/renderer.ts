@@ -31,15 +31,18 @@ export class SceneRenderer {
     // Draws the robots into the depth buffer only, so they hide what's behind them.
     private readonly depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false });
     private gridDrawn = false;
+    private height = 0;
 
     /* Each WebGL context takes a while to create, so the page runs in between. */
     static async create(layer: HTMLElement, backdrop: HTMLElement, glowLayer: HTMLElement) {
-        const main = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        // MSAA makes phones scroll badly.
+        const antialias = !window.matchMedia("(pointer: coarse)").matches;
+        const main = new THREE.WebGLRenderer({ antialias, alpha: true });
         main.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         main.autoClear = false;
         layer.appendChild(main.domElement);
         await nextTask();
-        const grid = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        const grid = new THREE.WebGLRenderer({ antialias, alpha: true });
         grid.setPixelRatio(main.getPixelRatio());
         backdrop.appendChild(grid.domElement);
         return new SceneRenderer(main, grid, glowLayer);
@@ -60,10 +63,11 @@ export class SceneRenderer {
     }
 
     fit() {
+        this.height = this.main.domElement.parentElement!.clientHeight;
         const size = this.main.getSize(new THREE.Vector2());
-        if (size.x === viewWidth() && size.y === window.innerHeight) return;
-        this.main.setSize(viewWidth(), window.innerHeight, false);
-        this.grid.setSize(viewWidth(), window.innerHeight, false);
+        if (size.x === viewWidth() && size.y === this.height) return;
+        this.main.setSize(viewWidth(), this.height, false);
+        this.grid.setSize(viewWidth(), this.height, false);
     }
 
     /* Compiles every material ahead so none stalls mid-scroll; `alsoShown` joins the depth pass.
@@ -93,7 +97,7 @@ export class SceneRenderer {
     render(f: Frame) {
         const { main, glowCanvas, glowContext } = this;
         const { scene, camera, drawRect, glowArea: area } = f;
-        const height = window.innerHeight;
+        const { height } = this;
         main.setScissorTest(false);
         main.setClearColor(0x000000, 0);
         main.clear();

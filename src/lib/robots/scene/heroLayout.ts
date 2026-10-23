@@ -15,7 +15,7 @@ import { forEachOwnMesh } from "../robotModel.ts";
 import { So101PickDemo } from "../so101PickDemo.ts";
 import type { Framing } from "./framing.ts";
 import type { Payload } from "./parts.ts";
-import { rayFrom, toScreen, topRect, viewWidth, type Rect, type TopRect } from "./screen.ts";
+import { rayFrom, toScreen, topRect, viewHeight, viewWidth, type Rect, type TopRect } from "./screen.ts";
 
 export type HeroTarget = "hero" | "header";
 
@@ -65,7 +65,7 @@ type HeroLayout = {
 export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex = 0): Generator<void, HeroLayout> {
     const { page, compact, camera } = s;
     const width = viewWidth();
-    const height = window.innerHeight;
+    const height = viewHeight();
     const chamferSize = parseFloat(getComputedStyle(page.frame).getPropertyValue("--chamfer")) * 16 || 24;
 
     const hero = page.hero.getBoundingClientRect();
