@@ -715,12 +715,6 @@ select:focus {
    Chamfer
    ============================== */
 
-/* Chamfered top-right and bottom-left corners. The element keeps a real
-   background and border, so contrast checkers can resolve the colours behind
-   its text; clip-path cuts the corners and ::before/::after draw the diagonal
-   border edges as rotated zero-height lines (border only, no background, which
-   checkers would otherwise treat as an unknown backdrop). clip-path also clips
-   outlines, so hover/focus states recolour --chamfer-border instead. */
 .chamfer {
     --chamfer: 1rem;
     --chamfer-border: var(--color-border);
