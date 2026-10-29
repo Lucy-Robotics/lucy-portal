@@ -192,7 +192,13 @@ const Home = () => {
                             <div className="home__terminal-header">
                                 Lucy quickstart
                             </div>
-                            <pre className="home__terminal-body">
+                            {/* Focusable so keyboard users can scroll it horizontally. */}
+                            <pre
+                                className="home__terminal-body"
+                                tabIndex={0}
+                                role="region"
+                                aria-label="Quickstart commands"
+                            >
                                 <code>
                                     <span className="home__terminal-line">
                                         <span className="home__terminal-prompt">

@@ -165,7 +165,7 @@ html.robot-hover * {
     margin: 0;
 }
 
-/* See-through so the grid shows inside: the border is a ring, not the usual filled chamfer. */
+/* See-through so the grid shows inside: only the chamfer's border ring remains. */
 .robot-showcase__frame[data-live] {
     background: none;
     opacity: 0;
@@ -175,31 +175,6 @@ html.robot-hover * {
 
 .robot-showcase__frame[data-live][data-landed] {
     opacity: 1;
-}
-
-.robot-showcase__frame[data-live]::before {
-    --ring: var(--border-width);
-
-    inset: 0;
-
-    background: var(--color-border);
-    clip-path: polygon(
-        evenodd,
-        0 0,
-        calc(100% - var(--chamfer)) 0,
-        100% var(--chamfer),
-        100% 100%,
-        var(--chamfer) 100%,
-        0 calc(100% - var(--chamfer)),
-        0 0,
-        var(--ring) var(--ring),
-        var(--ring) calc(100% - var(--chamfer-inner) - var(--ring)),
-        calc(var(--chamfer-inner) + var(--ring)) calc(100% - var(--ring)),
-        calc(100% - var(--ring)) calc(100% - var(--ring)),
-        calc(100% - var(--ring)) calc(var(--chamfer-inner) + var(--ring)),
-        calc(100% - var(--chamfer-inner) - var(--ring)) var(--ring),
-        var(--ring) var(--ring)
-    );
 }
 
 /* Until the arm lands, the invisible box column overlaps the hero and must not catch the pointer. */

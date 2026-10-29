@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
 import Logo from "./Logo.tsx";
 import { FaGithub, FaLinkedin, FaDiscord } from "react-icons/fa";
-import { useAuth } from "../providers/AuthProvider.tsx";
+import { useAuth } from "../hooks/useAuth.ts";
 import { isAuthConfigured } from "../config/env.ts";
 
 type FooterProps = {
