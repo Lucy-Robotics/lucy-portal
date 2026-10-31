@@ -196,7 +196,7 @@ const Download = () => {
 
                         <div className="download__install-card-footer">
                             <a
-                                href="https://github.com/Lucy-Robotics/Lucy-Windows-Installer/releases/latest"
+                                href="https://github.com/Lucy-Robotics/Lucy_windows/releases/latest"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="header__button header__button--main download__install-button"
