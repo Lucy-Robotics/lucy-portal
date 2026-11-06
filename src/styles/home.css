@@ -1,9 +1,7 @@
 .home {
-    --header-height: 65px;
-
     flex: 1;
 
-    padding: 0 1.5rem 3rem;
+    padding-bottom: clamp(5rem, 10vw, 8rem);
 }
 
 /* DOM order is hero, stage, main so that narrow screens stack the box right after the hero. */
@@ -12,7 +10,7 @@
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     column-gap: clamp(2rem, 4vw, 4rem);
 
-    max-width: 1360px;
+    width: var(--page-width);
     margin: 0 auto;
 }
 
@@ -22,16 +20,17 @@
 
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 
-    text-align: center;
+    text-align: left;
 
     position: relative;
     container-type: inline-size;
 
     min-height: calc(100svh - var(--header-height));
-    padding: 3rem 0 4rem;
+    /* The text keeps the left side; the arm stands on the right. The tagline may run past it. */
+    padding: 3rem 55% 4rem 0;
 }
 
 /* The height the box settles at; invisible and click-through over the hero until the arm lands. */
@@ -52,6 +51,7 @@
     flex: 1;
 }
 
+/* The two chapters, beside the arm's box. */
 .home__main {
     grid-column: 1;
     grid-row: 2;
@@ -60,7 +60,7 @@
 .home__scroll-hint {
     position: absolute;
     bottom: 1.25rem;
-    left: 50%;
+    left: calc(100% / 6);
     translate: -50% 0;
 
     display: flex;
@@ -102,7 +102,7 @@
 
     color: var(--color-highlight);
 
-    font-size: clamp(3rem, 10vw, 5rem);
+    font-size: clamp(3.5rem, 7vw, 6rem);
     font-weight: var(--font-weight-bold);
     line-height: 1;
 }
@@ -113,43 +113,43 @@
     color: var(--color-text-pri);
 
     font-family: var(--font-brand);
-    font-size: clamp(1rem, 6.2cqi, 3.125rem);
+    font-size: clamp(1.75rem, 2.9vw, 3.25rem);
     font-weight: var(--font-weight-bold);
+    line-height: 1.3;
+    white-space: nowrap;
 }
 
 .home__tagline-accent {
     color: var(--color-highlight);
 }
 
-.home__headline {
-    margin: 2rem 0 0;
-
-    font-size: clamp(2rem, 4vw, 2.25rem);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.35;
+/* Phones: as big as still fits the width on one line. */
+@media (max-width: 959px) {
+    .home__tagline {
+        font-size: min(2.5rem, calc((100vw - 3rem) / 15.8));
+    }
 }
 
-.home__headline-highlight {
+/* ─── Shared type ─────────────────────────────────────────────────────── */
+
+.home__accent {
     color: var(--color-highlight);
 }
 
-.home__headline-sub {
-    color: var(--color-text-pri);
-}
-
-.home__intro {
-    scroll-margin-top: 6rem;
-
-    padding-top: 3rem;
-}
-
-.home__description {
+.home__kicker {
     margin: 0;
 
     color: var(--color-text-sec);
 
-    font-size: var(--font-size-caption);
-    line-height: 1.6;
+    font-family: var(--font-brand);
+    font-size: 0.8rem;
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.home__kicker-sep {
+    color: var(--color-highlight);
 }
 
 .home__actions {
@@ -158,111 +158,7 @@
     align-items: center;
     gap: 1rem;
 
-    margin-top: 2.5rem;
-}
-
-.home__button {
-    min-height: 48px;
-    padding: 0.65rem 2rem;
-
-    font-size: 1.05rem;
-}
-
-.home__discord {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-
-    margin-top: 1.5rem;
-
-    color: var(--color-text-sec);
-    text-decoration: none;
-
-    font-size: 0.95rem;
-    font-weight: var(--font-weight-bold);
-
-    transition: color 0.15s ease;
-}
-
-.home__discord:hover {
-    color: var(--color-highlight);
-}
-
-.home__discord svg {
-    width: 1.25rem;
-    height: 1.25rem;
-}
-
-.home__quickstart {
-    max-width: 36rem;
-    margin-top: 4.5rem;
-}
-
-.home__terminal {
-    overflow: hidden;
-
-    border: var(--border-width) solid var(--color-border);
-    background: var(--color-bg-comp);
-}
-
-.home__terminal-header {
-    padding: 0.5rem 1rem;
-
-    border-bottom: var(--border-width) solid var(--color-border);
-    background: var(--color-bg-raised);
-
-    color: var(--color-text-sec);
-
-    font-size: 0.8rem;
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
-
-.home__terminal-body {
-    margin: 0;
-    padding: 1rem 1.25rem;
-    overflow-x: auto;
-
-    color: var(--color-text-pri);
-
-    font-family: var(--font-primary);
-    font-size: 0.85rem;
-    line-height: 1.7;
-}
-
-/* Inset: the terminal frame clips anything drawn outside. */
-.home__terminal-body:focus-visible {
-    outline: 2px solid var(--color-highlight);
-    outline-offset: -2px;
-}
-
-.home__terminal-line {
-    display: block;
-    white-space: pre;
-}
-
-.home__terminal-prompt {
-    color: var(--color-highlight);
-    user-select: none;
-}
-
-.home__quickstart-note {
-    margin: 1rem 0 0;
-
-    color: var(--color-text-sec);
-
-    font-size: var(--font-size-caption);
-    line-height: 1.6;
-}
-
-.home__quickstart-disclaimer {
-    margin: 0.75rem 0 0;
-
-    color: var(--color-border);
-
-    font-size: 0.7rem;
-    font-style: italic;
+    margin-top: 3rem;
 }
 
 .home__highlight {
@@ -275,69 +171,472 @@ a.home__highlight:hover {
     text-decoration: underline;
 }
 
-.home__separator {
-    width: 100%;
-    height: 0;
-    margin: 3.5rem 0 0;
-    border: none;
-    border-top: var(--border-width) solid var(--color-border);
+/* ─── Chapters beside the robots: a screen each ───────────────────────── */
+
+.home__chapter {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+
+    min-height: calc(100svh - var(--header-height));
+    padding: 4rem 0;
 }
 
-.home__features {
-    margin-top: 2.5rem;
+.home__intro {
+    scroll-margin-top: var(--header-height);
 }
 
-.home__features-title {
+.home__chapter-title {
+    max-width: 40rem;
+    margin: 1.25rem 0 0;
+
+    color: var(--color-text-pri);
+
+    font-size: clamp(2rem, 3.6vw, 3.25rem);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.15;
+}
+
+.home__description {
+    max-width: 38rem;
+    margin: 1.75rem 0 0;
+
+    color: var(--color-text-sec);
+
+    font-size: 1.25rem;
+    line-height: 1.7;
+}
+
+.home__points {
+    display: grid;
+    gap: 1.5rem;
+
+    max-width: 38rem;
+    margin: 2.5rem 0 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.home__point {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.home__point-icon {
+    flex-shrink: 0;
+
+    width: 2rem;
+    height: 2rem;
+
+    color: var(--color-highlight);
+}
+
+.home__point-title {
     margin: 0;
 
     color: var(--color-text-pri);
 
-    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-size: 1.125rem;
     font-weight: var(--font-weight-bold);
-    line-height: 1.35;
 }
 
-.home__features-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-
-    margin-top: 2rem;
-}
-
-.home__feature-card {
-    padding: 1.25rem;
-}
-
-.home__feature-card-title {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-
-    margin: 0;
-
-    color: var(--color-highlight);
-
-    font-size: 1rem;
-    font-weight: var(--font-weight-bold);
-    line-height: 1.35;
-}
-
-.home__feature-card-title svg {
-    flex-shrink: 0;
-
-    width: 1.15rem;
-    height: 1.15rem;
-}
-
-.home__feature-card-text {
-    margin: 0.75rem 0 0;
+.home__point-text {
+    margin: 0.25rem 0 0;
 
     color: var(--color-text-sec);
 
-    font-size: var(--font-size-caption);
+    font-size: 1rem;
     line-height: 1.6;
 }
+
+.home__discord {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    margin-top: 2.5rem;
+
+    color: var(--color-text-sec);
+    text-decoration: none;
+
+    font-size: 1rem;
+    font-weight: var(--font-weight-bold);
+
+    transition: color 0.15s ease;
+}
+
+.home__discord:hover {
+    color: var(--color-highlight);
+}
+
+.home__discord svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.home__stack {
+    margin-top: 2.5rem;
+}
+
+.home__stack-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0;
+
+    margin: 0.75rem 0 0;
+    padding: 0;
+
+    list-style: none;
+
+    color: var(--color-text-pri);
+
+    font-size: 1rem;
+    font-weight: var(--font-weight-bold);
+}
+
+.home__stack-list li:not(:last-child)::after {
+    content: "//";
+
+    margin: 0 0.85rem;
+
+    color: var(--color-highlight);
+}
+
+/* Quickstart: numbered steps, a command each. */
+.home__steps {
+    display: grid;
+    gap: 2rem;
+
+    width: 100%;
+    max-width: 40rem;
+    margin: 2.5rem 0 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.home__step {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    align-items: start;
+}
+
+.home__step-index {
+    color: var(--color-highlight);
+
+    font-family: var(--font-brand);
+    font-size: 2rem;
+    font-weight: var(--font-weight-bold);
+    line-height: 1;
+}
+
+.home__step-title {
+    margin: 0;
+
+    color: var(--color-text-pri);
+
+    font-size: 1.125rem;
+    font-weight: var(--font-weight-bold);
+}
+
+.home__step-command {
+    margin: 0.75rem 0 0;
+    padding: 0.85rem 1.25rem;
+    overflow-x: auto;
+
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-bg-comp);
+
+    color: var(--color-text-pri);
+
+    font-family: var(--font-primary);
+    font-size: 0.95rem;
+    white-space: pre;
+}
+
+.home__step-command:focus-visible {
+    outline: 2px solid var(--color-highlight);
+    outline-offset: 2px;
+}
+
+.home__terminal-prompt {
+    color: var(--color-highlight);
+    user-select: none;
+}
+
+.home__quickstart-note {
+    max-width: 40rem;
+    margin: 1.25rem 0 0;
+
+    color: var(--color-text-sec);
+
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.home__steps + div {
+    margin-top: 1rem;
+}
+
+/* ─── Features: one screen each ───────────────────────────────────────── */
+
+/* Outside the layout grid, so the sticky box lets go before it. */
+.home__features {
+    width: var(--page-width);
+    margin: clamp(5rem, 10vw, 9rem) auto 0;
+}
+
+.home__features-title {
+    max-width: 52rem;
+    margin: 1.25rem 0 0;
+
+    color: var(--color-text-pri);
+
+    font-size: clamp(2rem, 5vw, 4rem);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.1;
+}
+
+/* The arm on one side, the text over its illustration on the other; every other feature swaps them,
+   so the arm slides across, behind the text, from one feature to the next. */
+.home__feature {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+        "perch body"
+        "perch media";
+    grid-template-rows: auto auto;
+    align-content: center;
+    column-gap: clamp(2.5rem, 6vw, 6rem);
+    row-gap: 3rem;
+
+    min-height: calc(100svh - var(--header-height));
+    padding: 4rem 0;
+}
+
+.home__feature:nth-of-type(even) {
+    grid-template-areas:
+        "body perch"
+        "media perch";
+}
+
+/* Above the robot layer (robot-showcase.css), so the arm passes behind it. */
+.home__feature-body {
+    position: relative;
+    z-index: 21;
+
+    grid-area: body;
+}
+
+.home__feature-index {
+    display: block;
+
+    color: var(--color-highlight);
+
+    font-family: var(--font-brand);
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: var(--font-weight-bold);
+    line-height: 1;
+}
+
+.home__feature-title {
+    margin: 1.5rem 0 0;
+
+    color: var(--color-text-pri);
+
+    font-size: clamp(2rem, 4.5vw, 3.75rem);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.1;
+}
+
+.home__feature-icon {
+    display: block;
+
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-bottom: 1rem;
+
+    color: var(--color-highlight);
+}
+
+.home__feature-text {
+    max-width: 32rem;
+    margin: 1.5rem 0 0;
+
+    color: var(--color-text-sec);
+
+    font-size: 1.25rem;
+    line-height: 1.7;
+}
+
+.home__feature-media {
+    position: relative;
+
+    grid-area: media;
+
+    aspect-ratio: 4 / 3;
+}
+
+.home__feature-media img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+}
+
+.home__feature-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+
+    height: 100%;
+
+    border: var(--border-width) dashed var(--color-border);
+
+    color: var(--color-text-sec);
+
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.home__feature-placeholder svg {
+    width: 8rem;
+    height: 8rem;
+
+    color: var(--color-border);
+}
+
+/* Where the arm stands while the feature is on screen: beside the text, level with it. */
+.home__feature-perch {
+    grid-area: perch;
+    align-self: start;
+
+    width: 100%;
+    aspect-ratio: 1;
+
+    pointer-events: none;
+}
+
+/* ─── One last thing: InMoov ──────────────────────────────────────────── */
+
+.home__finale {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(2.5rem, 6vw, 6rem);
+
+    width: var(--page-width);
+    min-height: calc(100svh - var(--header-height));
+    margin: clamp(4rem, 8vw, 7rem) auto 0;
+    padding: 4rem 0;
+}
+
+.home__finale-frame {
+    --chamfer: 1.5rem;
+    --chamfer-fill: transparent;
+
+    width: 100%;
+    max-height: calc(100svh - var(--header-height) - 8rem);
+    aspect-ratio: 4 / 5;
+    margin: 0 auto;
+}
+
+/* ─── Closing call to action ──────────────────────────────────────────── */
+
+.home__outro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    width: var(--page-width);
+    margin: clamp(7rem, 14vw, 12rem) auto 0;
+
+    text-align: center;
+}
+
+.home__outro-title {
+    margin: 0;
+
+    color: var(--color-text-pri);
+
+    font-family: var(--font-brand);
+    font-size: clamp(2rem, 6vw, 4.5rem);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.15;
+}
+
+.home__outro-text {
+    max-width: 36rem;
+    margin: 1.5rem 0 0;
+
+    color: var(--color-text-sec);
+
+    font-size: 1.125rem;
+    line-height: 1.7;
+}
+
+.home__outro-actions {
+    justify-content: center;
+}
+
+/* ─── Scroll reveal (see useScrollReveal) ─────────────────────────────── */
+
+/* Hidden only once the hook runs, so content never stays invisible. */
+.js-reveal [data-reveal] {
+    transition:
+        opacity 0.8s ease,
+        translate 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.js-reveal [data-reveal]:not([data-revealed]) {
+    opacity: 0;
+    translate: 0 2.5rem;
+}
+
+.js-reveal .home__feature-body[data-reveal]:not([data-revealed]) {
+    translate: -3rem 0;
+}
+
+.js-reveal .home__feature:nth-of-type(even) .home__feature-body[data-reveal]:not([data-revealed]) {
+    translate: 3rem 0;
+}
+
+.js-reveal .home__feature-media[data-reveal] {
+    transition:
+        opacity 0.9s ease 0.15s,
+        scale 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s;
+}
+
+.js-reveal .home__feature-media[data-reveal]:not([data-revealed]) {
+    translate: none;
+    scale: 0.96;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .js-reveal [data-reveal],
+    .js-reveal .home__feature-media[data-reveal] {
+        transition: none;
+    }
+
+    .js-reveal [data-reveal]:not([data-revealed]),
+    .js-reveal .home__feature-body[data-reveal]:not([data-revealed]),
+    .js-reveal .home__feature:nth-of-type(even) .home__feature-body[data-reveal]:not([data-revealed]),
+    .js-reveal .home__feature-media[data-reveal]:not([data-revealed]) {
+        opacity: 1;
+        translate: none;
+        scale: none;
+    }
+}
+
+/* ─── Narrower screens ────────────────────────────────────────────────── */
 
 @media (max-width: 959px) {
     .home__layout {
@@ -355,9 +654,12 @@ a.home__highlight:hover {
     }
 
     .home__hero {
+        align-items: center;
         justify-content: flex-start;
 
-        padding-top: 2.5rem;
+        text-align: center;
+
+        padding: 2.5rem 0 4rem;
     }
 
     .home__actions {
@@ -371,41 +673,85 @@ a.home__highlight:hover {
         padding: 0 0 3rem;
     }
 
-    .home__intro {
+    .home__chapter {
+        align-items: center;
+
+        min-height: 0;
+
         text-align: center;
     }
 
-    .home__quickstart {
-        margin: 4.5rem auto 0;
+    .home__stack-list {
+        justify-content: center;
+    }
+
+    .home__points,
+    .home__steps {
+        text-align: left;
+    }
+
+    /* No companion on phones: the arm stays in its box. */
+    .home__feature-perch {
+        display: none;
+    }
+
+    .home__finale {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 0;
+
+        text-align: center;
+    }
+
+    .home__finale-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .home__finale-frame {
+        max-width: 26rem;
+    }
+
+    /* Stacked, the text first. */
+    .home__feature,
+    .home__feature:nth-of-type(even) {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "body" "media";
+        gap: 2.5rem;
+
+        min-height: 0;
+        padding: 4rem 0;
     }
 }
 
 @media (max-width: 560px) {
     .home {
-        --header-height: 57px;
-
-        padding: 0 1rem 2rem;
+        padding-bottom: 2rem;
     }
 
-    .home__features-grid {
-        grid-template-columns: 1fr;
+    .home__feature-text {
+        font-size: 1.0625rem;
     }
 
-    .home__headline {
-        font-size: clamp(1.35rem, 5.5vw, 2rem);
+    .home__feature-placeholder svg {
+        width: 5rem;
+        height: 5rem;
     }
 
+    /* Side by side, so the arm below keeps its room. */
     .home__actions {
-        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 0.75rem;
         width: 100%;
+        margin-top: 1.75rem;
     }
 
-    .home__actions .home__button,
-    .home__actions a {
-        width: 100%;
+    .home__actions .header__button {
+        flex: 1;
+        padding-inline: 16px;
     }
 
-    .home__terminal-body {
-        font-size: 0.75rem;
+    .home__step-command {
+        font-size: 0.8rem;
     }
 }

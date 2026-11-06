@@ -5,6 +5,8 @@ type Pick = { progress: number; goal: number; holding: boolean };
 type State = {
     enter: number;
     view: number;
+    perch: number | null;
+    greeting: boolean;
     heroTarget: "hero" | "header" | null;
     logoOut: "hero" | "header" | null;
     plans: Record<string, {
@@ -15,6 +17,9 @@ type State = {
     waving: boolean;
     so101: { left: number; right: number; top: number; bottom: number };
     heroRect: { left: number; top: number; width: number; height: number };
+    drawRect: { left: number; top: number; width: number; height: number };
+    drawn: boolean;
+    inmoov: { left: number; right: number; top: number; bottom: number } | null;
     heroLogoVisible: boolean | null;
     headerLogoVisible: boolean | null;
     animating: boolean;
@@ -216,5 +221,73 @@ test("InMoov waves", async ({ page }) => {
     await expect.poll(async () => (await state(page)).waving).toBe(true);
     const s = await settle(page);
     expect(s.waving).toBe(false);
+    expectLogosConsistent(s);
+});
+
+test("the arm greets each feature it stands by", async ({ page, isMobile }) => {
+    test.skip(isMobile, "phones keep the arm in its box");
+    await open(page);
+    for (const index of [0, 1]) {
+        await page.locator("[data-robot-perch]").nth(index).evaluate((perch) => {
+            perch.closest("article")?.scrollIntoView({ block: "center" });
+        });
+        await expect.poll(async () => (await state(page)).perch).toBe(index);
+        await expect.poll(async () => (await state(page)).greeting).toBe(true);
+        // Standing at its perch once slid in, alone: no InMoov beside it.
+        await expect.poll(async () => {
+            const perch = await page.locator("[data-robot-perch]").nth(index).boundingBox();
+            const { drawRect } = await state(page);
+            return Math.max(Math.abs(drawRect.top - (perch?.y ?? NaN)), Math.abs(drawRect.left - (perch?.x ?? NaN)));
+        }).toBeLessThan(2);
+        expect((await state(page)).inmoov, "InMoov waits for the finale").toBeNull();
+    }
+    const s = await settle(page);
+    expect(s.greeting).toBe(false);
+    expect(s.view, "still the arm's shot").toBe(0);
+});
+
+test("the arm slides across from one feature to the next", async ({ page, isMobile }) => {
+    test.skip(isMobile, "phones keep the arm in its box");
+    await open(page);
+    await page.locator("article.home__feature").first().evaluate((feature) => feature.scrollIntoView({ block: "center" }));
+    await expect.poll(async () => (await state(page)).perch).toBe(0);
+    // Halfway between the two features' centres: the arm is between their perches, on its way across.
+    const perches = await page.evaluate(() => {
+        const header = document.querySelector(".header")?.getBoundingClientRect().bottom ?? 0;
+        const middle = header + (window.innerHeight - header) / 2;
+        const [a, b] = [...document.querySelectorAll("article.home__feature")].map((feature) => {
+            const rect = feature.getBoundingClientRect();
+            return rect.top + rect.height / 2;
+        });
+        window.scrollBy(0, (a + b) / 2 - middle);
+        return [...document.querySelectorAll("[data-robot-perch]")].slice(0, 2).map((perch) => perch.getBoundingClientRect().left);
+    });
+    await page.waitForTimeout(300);
+    const midway = await state(page);
+    expect(midway.drawn).toBe(true);
+    const [left, right] = [Math.min(...perches), Math.max(...perches)];
+    expect(midway.drawRect.left, "past the first perch").toBeGreaterThan(left + 1);
+    expect(midway.drawRect.left, "short of the next").toBeLessThan(right - 1);
+    // Once the next feature is centred, it stands at its perch.
+    await page.locator("article.home__feature").nth(1).evaluate((feature) => feature.scrollIntoView({ block: "center" }));
+    await expect.poll(async () => (await state(page)).perch).toBe(1);
+});
+
+test("nothing is drawn with no robot on screen", async ({ page }) => {
+    await open(page);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect.poll(async () => (await state(page)).drawn).toBe(false);
+    const s = await settle(page);
+    expect(s.drawn).toBe(false);
+    expect(s.animating).toBe(false);
+});
+
+test("InMoov waves at the end of the page", async ({ page }) => {
+    await open(page);
+    await page.locator("[data-robot-finale]").evaluate((frame) => frame.scrollIntoView({ block: "center" }));
+    await expect.poll(async () => (await state(page)).view, { timeout: 20_000 }).toBeGreaterThan(0.95);
+    await expect.poll(async () => (await state(page)).waving).toBe(true);
+    const s = await settle(page);
+    expect(s.perch).toBeNull();
     expectLogosConsistent(s);
 });

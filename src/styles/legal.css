@@ -1,5 +1,5 @@
 .legal-page {
-  padding: 2rem 1.5rem 3rem;
+  padding: 2rem var(--page-gutter) 3rem;
   max-width: 900px;
   margin: 0 auto;
 }

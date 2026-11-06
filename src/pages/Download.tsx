@@ -1,53 +1,28 @@
-import {
-    FaCube,
-    FaGitAlt,
-    FaLinux,
-    FaPython,
-    FaWindows,
-} from "react-icons/fa";
-import type { IconType } from "react-icons";
+import type { ComponentType, SVGProps } from "react";
+import { HiOutlineCube } from "react-icons/hi2";
 
+import ExternalLinkIcon from "../components/ExternalLinkIcon.tsx";
+import { GitIcon, LinuxIcon, PythonIcon, WindowsIcon } from "../components/svg/index.ts";
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
 import "../styles/download.css";
 
-function ExternalIcon() {
-    return (
-        <svg
-            className="external-link-icon"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-        >
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-        </svg>
-    );
-}
-
 const REQUIREMENTS: {
-    icon: IconType;
+    icon: ComponentType<SVGProps<SVGSVGElement>>;
     name: string;
     href: string;
 }[] = [
     {
-        icon: FaPython,
+        icon: PythonIcon,
         name: "Python 3",
         href: EXTERNAL_LINKS.PYTHON,
     },
     {
-        icon: FaCube,
+        icon: HiOutlineCube,
         name: "Pixi",
         href: EXTERNAL_LINKS.PIXI,
     },
     {
-        icon: FaGitAlt,
+        icon: GitIcon,
         name: "Git",
         href: EXTERNAL_LINKS.GIT,
     },
@@ -107,7 +82,7 @@ const Download = () => {
                 <div className="download__install-grid">
                     <article className="chamfer download__install-card">
                         <h3 className="download__install-card-title">
-                            <FaLinux aria-hidden="true" />
+                            <LinuxIcon aria-hidden="true" />
                             Linux &amp; macOS
                         </h3>
 
@@ -167,17 +142,17 @@ const Download = () => {
                                 href={EXTERNAL_LINKS.GITHUB}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="header__button header__button--main download__install-button"
+                                className="chamfer header__button header__button--main download__install-button"
                             >
                                 View the README
-                                <ExternalIcon />
+                                <ExternalLinkIcon />
                             </a>
                         </div>
                     </article>
 
                     <article className="chamfer download__install-card">
                         <h3 className="download__install-card-title">
-                            <FaWindows aria-hidden="true" />
+                            <WindowsIcon aria-hidden="true" />
                             Windows
                         </h3>
 
@@ -205,10 +180,10 @@ const Download = () => {
                                 href="https://github.com/Lucy-Robotics/Lucy-Windows-Installer/releases/latest"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="header__button header__button--main download__install-button"
+                                className="chamfer header__button header__button--main download__install-button"
                             >
                                 Download Lucy.exe
-                                <ExternalIcon />
+                                <ExternalLinkIcon />
                             </a>
                         </div>
                     </article>
