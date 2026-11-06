@@ -56,14 +56,21 @@
     top: 0;
 }
 
+/* Over the home features' text (z-index 21, home.css), which scrolls under it. Phones keep it under the
+   robot layer: the arm reaches its logo there. */
+@media (min-width: 960px) {
+    .header {
+        z-index: 22;
+    }
+}
+
 .header__bar {
-    width: 100%;
+    width: var(--page-width);
+    margin-inline: auto;
 
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-
-    padding: 0 2rem;
 
     min-height: 64px;
 }
@@ -144,65 +151,82 @@
 }
 
 
+/* Call-to-action buttons, site-wide. Colours go through the chamfer's custom
+   properties, so they work with or without the .chamfer class (doubled selectors
+   outrank .chamfer's own defaults). Sizes are on an 8px grid. */
+.header__button,
+.header__button.chamfer {
+    --chamfer: 8px;
+    --chamfer-border: var(--color-highlight);
+    --chamfer-fill: transparent;
+}
+
 .header__button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
 
-    min-height: 36px;
+    min-height: 48px;
+    padding: 0 24px;
 
-    padding: 0.45rem 1rem;
-
-    border: var(--border-width) solid var(--color-highlight);
+    border: var(--border-width) solid var(--chamfer-border);
+    background-color: var(--chamfer-fill);
 
     color: var(--color-highlight);
 
     text-decoration: none;
+    white-space: nowrap;
 
-    font-size: 0.95rem;
+    font-family: inherit;
+    font-size: 1rem;
     font-weight: var(--font-weight-bold);
 
     cursor: pointer;
-    background-color: transparent;
-    font-family: inherit;
 
     transition:
         background-color 0.15s ease,
+        border-color 0.15s ease,
         color 0.15s ease;
 }
 
-
-.header__button--main {
-    background-color: var(--color-highlight);
+.header__button--main,
+.header__button--main.chamfer {
+    --chamfer-fill: var(--color-highlight);
 
     color: var(--color-on-highlight);
 }
 
 .header__button--main:hover,
-.header__button--main:focus-visible {
-    background-color: var(--color-on-highlight);
+.header__button--main:focus-visible,
+.header__button--main.chamfer:hover,
+.header__button--main.chamfer:focus-visible {
+    --chamfer-fill: var(--color-on-highlight);
 
     color: var(--color-highlight);
 }
 
 .header__button--primary:hover,
-.header__button--primary:focus-visible {
-    background-color: var(--color-highlight);
+.header__button--primary:focus-visible,
+.header__button--primary.chamfer:hover,
+.header__button--primary.chamfer:focus-visible {
+    --chamfer-fill: var(--color-highlight);
 
     color: var(--color-on-highlight);
 }
 
-
-.header__button--secondary {
-    border-color: var(--color-border);
+.header__button--secondary,
+.header__button--secondary.chamfer {
+    --chamfer-border: var(--color-border);
 
     color: var(--color-text-pri);
 }
 
-
 .header__button--secondary:hover,
-.header__button--secondary:focus-visible {
-    background-color: var(--color-bg-comp);
+.header__button--secondary:focus-visible,
+.header__button--secondary.chamfer:hover,
+.header__button--secondary.chamfer:focus-visible {
+    --chamfer-fill: var(--color-bg-comp);
 
     color: var(--color-highlight);
 }
@@ -291,7 +315,6 @@
 @media (max-width: 900px) {
     .header__bar {
         grid-template-columns: 1fr auto;
-        padding: 0 1rem;
         min-height: 56px;
     }
 
@@ -312,7 +335,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.35rem;
-        padding: 0.75rem 1rem 1.25rem;
+        padding: 0.75rem var(--page-gutter) 1.25rem;
         border-top: 1px solid var(--color-border);
         background: var(--color-bg-comp);
         max-height: min(70vh, 28rem);
@@ -334,8 +357,8 @@
         border: 1px solid transparent;
     }
 
-    .header__mobile-nav a:hover,
-    .header__mobile-nav a:focus-visible {
+    .header__mobile-nav a:not(.header__button):hover,
+    .header__mobile-nav a:not(.header__button):focus-visible {
         border-color: var(--color-border);
     }
 
@@ -352,7 +375,10 @@
     .header__mobile-nav .header__button {
         justify-content: center;
         width: 100%;
-        margin-top: 0.35rem;
+        min-height: 48px;
+        margin-top: 8px;
+        padding: 0 24px;
+        border: var(--border-width) solid var(--chamfer-border);
     }
 }
 
@@ -375,9 +401,9 @@
     display: grid;
     grid-template-columns: 1.5fr repeat(3, 1fr);
     gap: 2rem;
-    max-width: 1200px;
+    width: var(--page-width);
     margin: 0 auto;
-    padding: 2rem 1.5rem;
+    padding: 2rem 0;
 }
 
 .footer__brand {
@@ -436,10 +462,10 @@
     align-items: center;
     gap: 1rem;
 
-    max-width: 1200px;
+    width: var(--page-width);
     margin: 0 auto;
 
-    padding: 1rem 1.5rem;
+    padding: 1rem 0;
 
     border-top: 1px solid var(--color-border);
     color: var(--color-text-muted);
@@ -521,8 +547,8 @@
 }
 
 .footer__socials svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 @media (max-width: 900px) {
@@ -579,7 +605,14 @@ body,
 body {
     margin: 0;
 
-    background: var(--color-bg-page);
+    background-color: var(--color-bg-page);
+    background-image:
+        radial-gradient(circle at 1px 1px, var(--color-grid-dot) 1.2px, transparent 1.2px),
+        radial-gradient(circle at 1px 1px, var(--color-grid-line) 0.75px, transparent 0.75px),
+        radial-gradient(circle at 1px 1px, var(--color-grid-line) 0.75px, transparent 0.75px);
+    background-size: 48px 48px, 8px 48px, 48px 8px;
+    background-repeat: repeat;
+    background-attachment: fixed;
     color: var(--color-text-pri);
 
     font-family: var(--font-primary);
@@ -776,6 +809,14 @@ select:focus {
     --chamfer-border: var(--color-highlight);
 
     outline: none;
+}
+
+/* .chamfer's own transition would drop the button's colour fades. */
+.header__button.chamfer {
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
 }
 
 

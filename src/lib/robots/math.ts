@@ -3,6 +3,8 @@ import * as THREE from "three";
 export const { clamp, damp, degToRad, smoothstep, smootherstep } = THREE.MathUtils;
 
 export const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+/* Close to CSS's cubic-bezier(0.2, 0.7, 0.2, 1), the page's reveal. */
+export const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
 export const UP = new THREE.Vector3(0, 1, 0);
 export const DOWN = new THREE.Vector3(0, -1, 0);

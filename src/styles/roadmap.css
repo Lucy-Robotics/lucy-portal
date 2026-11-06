@@ -3,7 +3,7 @@
 }
 
 .roadmap-page-container {
-  padding: 2rem 1.5rem 3rem;
+  padding: 2rem var(--page-gutter) 3rem;
   max-width: 800px;
   margin: 0 auto;
 }

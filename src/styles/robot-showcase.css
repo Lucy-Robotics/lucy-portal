@@ -8,15 +8,6 @@
     pointer-events: none;
 }
 
-.robot-backdrop {
-    position: fixed;
-    inset: 0 0 auto;
-    height: 100vh;
-    z-index: -1;
-
-    pointer-events: none;
-}
-
 /* The scene sets the drop-shadow per mark. */
 .robot-glow {
     position: fixed;
@@ -28,7 +19,6 @@
 }
 
 .robot-layer canvas,
-.robot-backdrop canvas,
 .robot-glow canvas {
     display: block;
 
@@ -85,7 +75,6 @@
 
 @media (max-width: 959px) {
     .robot-layer,
-    .robot-backdrop,
     .robot-glow {
         position: absolute;
     }
@@ -147,25 +136,15 @@ html.robot-hover * {
     flex-direction: column;
 }
 
-.robot-showcase__row {
-    flex: 1;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(0.75rem, 3vw, 1.5rem);
-}
-
 .robot-showcase__frame {
     --chamfer: 1.5rem;
 
     flex: 1;
-    align-self: stretch;
 
     margin: 0;
 }
 
-/* See-through so the grid shows inside: only the chamfer's border ring remains. */
+/* See-through so the page grid shows inside: only the chamfer's border ring remains. */
 .robot-showcase__frame[data-live] {
     background: none;
     opacity: 0;
@@ -241,62 +220,15 @@ html.robot-hover * {
     pointer-events: none;
 }
 
-/* Arrows only on phones. Wide screens switch robot with the scroll. */
-.robot-showcase__arrow {
-    display: none;
-    flex: none;
-    place-items: center;
-
-    width: 3rem;
-    height: 3rem;
-    padding: 0;
-
-    background: transparent;
-    border: var(--border-width) solid var(--color-border);
-    color: var(--color-text-pri);
-
-    font-size: 1.1rem;
-
-    transition: border-color 0.2s, color 0.2s;
-}
-
-.robot-showcase__arrow:hover:not(:disabled) {
-    background: transparent;
-    border-color: var(--color-highlight);
-    color: var(--color-highlight);
-}
-
-.robot-showcase__arrow:focus-visible {
-    outline: 2px solid var(--color-highlight);
-    outline-offset: 2px;
-}
-
-.robot-showcase__arrow:disabled {
-    background: transparent;
-}
-
 @media (max-width: 959px) {
-    .robot-showcase__arrow {
-        display: grid;
-    }
-
     .robot-showcase__frame {
-        flex: 0 1 26rem;
-        align-self: auto;
+        flex: none;
+
+        width: 100%;
+        max-width: 26rem;
+        margin: 0 auto;
 
         aspect-ratio: 4 / 5;
-    }
-}
-
-@media (max-width: 560px) {
-    .robot-showcase__row {
-        flex-wrap: wrap;
-        row-gap: 1rem;
-    }
-
-    .robot-showcase__frame {
-        flex-basis: 100%;
-        order: -1;
     }
 }
 

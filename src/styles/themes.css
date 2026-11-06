@@ -23,6 +23,16 @@
 
     --color-text-muted: #b7b7b7;
 
+    /* Page frame: content, header and footer share this width and side gutters. */
+    --page-max: 1440px;
+    --page-gutter: clamp(16px, 4vw, 48px);
+    --page-width: min(100% - 2 * var(--page-gutter), var(--page-max));
+    --header-height: 65px;
+
+    /* The page's dot grid, as in the control panel but fainter. */
+    --color-grid-dot: rgba(255, 255, 255, 0.12);
+    --color-grid-line: rgba(255, 255, 255, 0.05);
+
     /* ==============================
        Components
        ============================== */
@@ -64,4 +74,11 @@
     --border-width: 1px;
 
     --focus-glow: 0 0 5px #00ff41;
+}
+
+/* The header's bar is shorter with the phone menu (see .header__bar). */
+@media (max-width: 900px) {
+    :root {
+        --header-height: 57px;
+    }
 }

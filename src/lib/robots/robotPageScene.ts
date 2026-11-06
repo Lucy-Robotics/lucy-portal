@@ -3,7 +3,10 @@
  * It ignores the pointer so the page stays usable; clicks are hit-tested (scene/pointer.ts).
  *
  * One world (the SO-101 and a Lucy infinity, InMoov to the right) through one camera,
- * drawn into a rectangle that moves from the hero into the box (`page.frame`) on scroll.
+ * drawn into a rectangle that moves with the scroll: from the hero into the box
+ * (`page.frame`), then at each feature's picture (`page.perches`), where the arm
+ * acts the feature out, and on to InMoov in the finale (`page.finale`, see
+ * scene/track.ts). Nothing is drawn while the robot's station is off screen.
  *
  * SO-101 uses the LeRobot URDF (TheRobotStudio, Apache 2.0).
  * InMoov's meshes are by Gael Langevin (CC BY-NC 4.0).
@@ -14,19 +17,21 @@ import * as THREE from "three";
 
 import { inBackground, runFor } from "../background.ts";
 import { listen } from "../listen.ts";
-import { ARM_ATTENTION_TIME, ATTENTION_TIME, FOV, REST, RISE_TIME } from "./config.ts";
+import { ARM_ATTENTION_TIME, ARRIVAL, ATTENTION_TIME, FOV, REST, RISE_TIME } from "./config.ts";
 import { loadLucyInfinity } from "./lucyInfinity.ts";
 import { clamp, damp, DOWN } from "./math.ts";
 import { prefetchOtherAssets, ROBOT_ASSETS } from "./robotAssets.ts";
 import { loadRobot } from "./robotModel.ts";
 import { ArmEasing } from "./scene/armEasing.ts";
+import { createCompanion, type Greeting } from "./scene/companion.ts";
 import { Framing } from "./scene/framing.ts";
 import { createHero } from "./scene/hero.ts";
 import { loadInMoov } from "./scene/inmoov.ts";
 import { createMaterials, INFINITY_LAYER } from "./scene/parts.ts";
 import { createPointer } from "./scene/pointer.ts";
 import { SceneRenderer } from "./scene/renderer.ts";
-import { cssColor, screenBounds, viewHeight, type Rect } from "./scene/screen.ts";
+import { cssColor, screenBounds, type Rect } from "./scene/screen.ts";
+import { createTrack, type TrackFrame } from "./scene/track.ts";
 import { createView } from "./scene/view.ts";
 import { createWorld, disposeWorld } from "./scene/world.ts";
 import { So101PickDemo } from "./so101PickDemo.ts";
@@ -40,25 +45,25 @@ type Page = {
     headerLogo: HTMLElement | null;
     /* The box the robots settle into, kept under the header. */
     frame: HTMLElement;
+    /* Wide screens: where the arm stands at each feature's picture, in page order. Their
+       data-robot-gesture names what it does there (config.ts, COMPANION.gestures). */
+    perches: HTMLElement[];
+    /* InMoov's frame at the end of the page. */
+    finale: HTMLElement | null;
     header: HTMLElement | null;
-    /* Behind the page's content, so the spreading grid never crosses text or buttons. */
-    backdrop: HTMLElement;
     /* Just under the robots. The infinities are drawn here and get the logo's CSS drop-shadow. */
     glow: HTMLElement;
     hint: HTMLElement | null;
 };
 
 type Options = {
-    /* Phone layout. The header's logo is the target and arrows drive the view. */
+    /* Phone layout. The header's logo is the target, and the arm skips the perches. */
     compact: () => boolean;
-    onActiveChange?: (robot: RobotName) => void;
 };
 
 export type RobotPageScene = {
     /* Same as clicking the robot. */
     activate(robot: RobotName): void;
-    /* 0 frames the SO-101, 1 frames InMoov. The scroll drives it on wide screens. */
-    setView(t: number): void;
     /* TEST-HOOK: lets a browser test find the robots and check real clicks. */
     testHook: {
         hitTest(x: number, y: number): RobotName | null;
@@ -89,7 +94,7 @@ export async function createRobotPageScene(
     ]);
     timings.assets = performance.now() - started;
     const world = createWorld(so101, shape, materials, accent);
-    const { scene, fog, gridScene, arm, boxInfinity, boxPayload, heroPayload } = world;
+    const { scene, fog, arm, boxInfinity, boxPayload, heroPayload } = world;
 
     scene.updateMatrixWorld(true);
     const shoulder = () => so101.links.shoulder_link.getWorldPosition(new THREE.Vector3());
@@ -113,7 +118,7 @@ export async function createRobotPageScene(
     camera.layers.enable(INFINITY_LAYER);
     const framing = new Framing(camera, fog, armShot);
 
-    const renderer = await SceneRenderer.create(container, page.backdrop, page.glow);
+    const renderer = await SceneRenderer.create(container, page.glow);
 
     let settingUp = true; // nothing draws while the first layout runs in the background
     let disposed = false;
@@ -149,10 +154,27 @@ export async function createRobotPageScene(
         return transitionScroll > 0 ? clamp(window.scrollY / transitionScroll, 0, 1) : 0;
     };
 
-    /* On wide screens, once the hero is past, the scroll pans to InMoov. */
-    const scrollView = () => clamp((window.scrollY - hero.layout.landScroll) / (0.9 * viewHeight()), 0, 1);
-
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Once landed, where the robots are along the page (read each frame).
+    const track = createTrack(page, options.compact, reduceMotion);
+    let trackFrame: TrackFrame | null = null;
+    const companion = createCompanion(so101, reduceMotion);
+    let perch: number | null = null;
+    let station: string | null = null;
+    let arrival = 1; // 0 -> 1 as the robot slides into the station it just reached
+    let wavedAtFinale = false;
+    /* The feature a perch belongs to: what the arm looks at there, and does. */
+    const greetingOf = (index: number): Greeting => {
+        const perchElement = page.perches[index];
+        const feature = perchElement?.closest("article");
+        return {
+            title: feature?.querySelector<HTMLElement>("h3") ?? perchElement ?? null,
+            media: feature?.querySelector<HTMLElement>(".home__feature-media") ?? null,
+            gesture: perchElement?.dataset.robotGesture,
+        };
+    };
+    /* Landed with its station off screen: nothing to draw, nothing to animate. */
+    const offScreen = () => trackFrame !== null && !trackFrame.onScreen;
     const painter = createView({ container, page, world, camera, framing, renderer, boxPick, accent, humanoid: () => inmoov?.humanoid ?? null });
     const hero = createHero({
         page,
@@ -177,8 +199,8 @@ export async function createRobotPageScene(
         arm,
         heroPayload,
         humanoid: () => inmoov?.humanoid ?? null,
-        frame: page.frame,
-        landed,
+        // Only once settled in a frame; perched or flying, the arm is free on screen.
+        shownIn: () => (trackFrame && trackFrame.close >= 0.99 ? trackFrame.clipRect : null),
         onChange: () => wake(),
     });
     const armEasing = new ArmEasing(so101);
@@ -207,8 +229,10 @@ export async function createRobotPageScene(
 
         const panning = followScroll(dt);
         const pick = switchArms();
+        // Off screen, the robots hold still (and the loop sleeps) until scrolled back to.
+        const hidden = offScreen();
         aimLooks(time, pick);
-        const moving = animate(dt, pick);
+        const moving = !hidden && animate(dt, pick);
         backgroundWork();
         draw();
 
@@ -217,7 +241,8 @@ export async function createRobotPageScene(
             prefetchOtherAssets();
         }
         // A click handled in this frame may have woken the loop already.
-        if (moving || panning || armEasing.easing || stillWorking(time)) {
+        const working = hidden ? stillLoading() : armEasing.easing || stillWorking(time);
+        if (moving || panning || working) {
             if (!raf) raf = requestAnimationFrame(tick);
         }
         else last = 0;
@@ -230,15 +255,33 @@ export async function createRobotPageScene(
     const followScroll = (dt: number) => {
         rise = reduceMotion ? 1 : Math.min(1, rise + dt / RISE_TIME);
         enter = enterGoal();
-        if (!options.compact()) viewGoal = scrollView();
-        view = reduceMotion ? viewGoal : damp(view, viewGoal, 6, dt);
+        trackFrame = landed() ? track.read() : null;
+        viewGoal = trackFrame?.view ?? 0;
+        // The track switches shots while the robots are faded out, so it needn't pan.
+        view = reduceMotion || trackFrame ? viewGoal : damp(view, viewGoal, 6, dt);
         if (Math.abs(view - viewGoal) < 1e-4) view = viewGoal;
-        const closest: RobotName = landed() && view >= 0.5 ? "inmoov" : "so101";
-        if (closest !== active) {
-            active = closest;
-            options.onActiveChange?.(active);
+        active = view >= 0.5 ? "inmoov" : "so101";
+        // Arriving at a new station, the robot slides in like the page around it. Not on landing in the box,
+        // nor from one perch to the next: the track slides it across.
+        const nextStation = trackFrame?.station ?? null;
+        if (nextStation !== station) {
+            const perchToPerch = perch !== null && trackFrame?.perch != null;
+            if (station !== null && nextStation !== null && !perchToPerch && !reduceMotion) arrival = 0;
+            station = nextStation;
         }
-        return view !== viewGoal;
+        if (arrival < 1) arrival = Math.min(1, arrival + dt / ARRIVAL.time);
+        // A new feature on screen: the arm greets it.
+        const nextPerch = trackFrame?.perch ?? null;
+        if (nextPerch !== perch) {
+            perch = nextPerch;
+            if (perch !== null) companion.greet(greetingOf(perch));
+        }
+        // InMoov waves once when the visitor first reaches it.
+        if (!wavedAtFinale && inmoov && trackFrame?.nearFinale && view > 0.95) {
+            wavedAtFinale = true;
+            activate("inmoov");
+        }
+        return view !== viewGoal || arrival < 1;
     };
 
     const switchArms = () => {
@@ -256,8 +299,12 @@ export async function createRobotPageScene(
         if (inMotion(pick)) armAttention = time + ARM_ATTENTION_TIME;
         if (reduceMotion) return;
         // After a click the arm holds its pose (presenting the logo) instead of following the cursor.
+        const greeted = companion.lookingAt;
         if (time < armAttention) pick.setLook(null);
-        else if (hovered !== "so101") pick.setLook(pointer.lookFrom(so101.links.shoulder_link));
+        else if (greeted) {
+            const seen = greeted.getBoundingClientRect();
+            pick.setLook(pointer.lookFrom(so101.links.shoulder_link, { x: seen.left + seen.width / 2, y: seen.top + seen.height / 2 }));
+        } else if (hovered !== "so101") pick.setLook(pointer.lookFrom(so101.links.shoulder_link));
         // While waving and a little after, InMoov looks the visitor in the eyes.
         if (inmoov?.wave.waving) inmoovAttention = time + ATTENTION_TIME;
         if (inmoov && time < inmoovAttention) inmoov.wave.setLook(inmoov.lookAt(camera));
@@ -270,16 +317,17 @@ export async function createRobotPageScene(
         hero.growHeld();
         // The wrist twists while it strains for the logo.
         if (caught?.wristTwist) so101.joints.wrist_roll.setJointValue(so101.joints.wrist_roll.angle + caught.wristTwist);
+        const greeting = companion.step(dt, { free: pick.idle && !pick.state.holding, jaws: pick.jaws });
         armEasing.step(dt);
         const waving = inmoov?.wave.update(dt, { instant: reduceMotion }) ?? false;
-        return picking || (caught?.moving ?? false) || waving;
+        return picking || (caught?.moving ?? false) || waving || greeting;
     };
 
     // Once the hero is up, the slower work runs one piece per frame.
     const backgroundWork = () => {
         if (rise >= 1 && !inmoovRequested) {
             inmoovRequested = true;
-            renderer.precompile(scene, gridScene, camera);
+            renderer.precompile(scene, camera);
             showInMoov().catch((error: unknown) => console.error("Failed to load InMoov", error));
         } else if (rise >= 1 && plans.status === "none" && !relayoutTimer && boxPick.idle) {
             plans = { status: "planning", steps: hero.layOut() };
@@ -292,9 +340,10 @@ export async function createRobotPageScene(
         }
     };
 
+    const stillLoading = () => rise < 1 || (!plansReady() && boxPick.idle);
     // Keep going while a robot attends to the visitor, so it turns back to the cursor on its own.
-    const stillWorking = (time: number) => rise < 1 || (!plansReady() && boxPick.idle) || driver() !== lastDriver
-        || time < armAttention + 50 || time < inmoovAttention + 50;
+    const stillWorking = (time: number) => stillLoading() || driver() !== lastDriver
+        || time < armAttention + 50 || time < inmoovAttention + 50 || companion.busy;
 
     const draw = () => {
         drawRect = painter.draw({
@@ -307,6 +356,8 @@ export async function createRobotPageScene(
                 shown: rise >= 1 && inHero() && hero.logo.at === "page" && driver().idle,
                 settled: !armEasing.easing && driver() === lastDriver,
             },
+            track: trackFrame,
+            arrival,
         });
     };
 
@@ -318,6 +369,8 @@ export async function createRobotPageScene(
             pending = () => activate(robot);
         } else if (robot === "inmoov") {
             inmoov?.wave.wave();
+        } else if (perch !== null) {
+            companion.greet(greetingOf(perch)); // perched, it acts its feature out again
         } else if (landed()) {
             boxPick.toggle();
         } else if (inHero()) {
@@ -399,13 +452,13 @@ export async function createRobotPageScene(
         if (disposed) return;
         inmoov = loaded;
         const { humanoid } = loaded;
-        humanoid.visible = landed();
+        humanoid.visible = trackFrame?.nearFinale ?? false;
         scene.add(humanoid);
         // Headroom for the raised hand when it waves, with the arm still in the shot.
         framing.shots.inmoov = new THREE.Box3().setFromObject(humanoid)
             .expandByVector(new THREE.Vector3(0, 0.15, 0))
             .union(armShot);
-        renderer.precompile(scene, gridScene, camera, humanoid);
+        renderer.precompile(scene, camera, humanoid);
         timings.inmoov = performance.now() - started;
         wake();
     };
@@ -451,6 +504,10 @@ export async function createRobotPageScene(
             enter,
             view,
             active,
+            perch,
+            station,
+            drawn: painter.drawn,
+            greeting: companion.busy,
             heroTarget: hero.target,
             layoutMs: Math.round(hero.layoutMs),
             catchReach: (() => {
@@ -483,10 +540,6 @@ export async function createRobotPageScene(
 
     return {
         activate,
-        setView(t) {
-            viewGoal = clamp(t, 0, 1);
-            wake();
-        },
         testHook,
         dispose() {
             disposed = true;
@@ -502,7 +555,7 @@ export async function createRobotPageScene(
             page.hint?.removeAttribute("data-shown");
             hero.clear();
             boxPick.dispose();
-            disposeWorld(scene, gridScene);
+            disposeWorld(scene);
             renderer.dispose();
         },
     };

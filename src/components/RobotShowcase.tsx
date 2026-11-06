@@ -1,17 +1,12 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { FaChevronDown, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { HiOutlineChevronDown } from "react-icons/hi2";
 
 import { prefetchHeroAssets } from "../lib/robots/robotAssets.ts";
-import type { RobotName, RobotPageScene } from "../lib/robots/robotPageScene.ts";
+import type { RobotPageScene } from "../lib/robots/robotPageScene.ts";
 import "../styles/robot-showcase.css";
 
 type Status = "loading" | "ready" | "unavailable";
-
-const ROBOTS: { id: RobotName; name: string; family: string }[] = [
-    { id: "so101", name: "SO-101", family: "LeRobot" },
-    { id: "inmoov", name: "InMoov", family: "Humanoid" },
-];
 
 /* Must match the single-column breakpoint in home.css. */
 const COMPACT = "(max-width: 959px)";
@@ -34,28 +29,27 @@ function hasWebGl() {
 type RobotShowcaseProps = {
     /* Its logo is what the arm takes on wide screens. */
     heroRef: RefObject<HTMLElement | null>;
+    /* Where InMoov stands at the end of the page. */
+    finaleRef: RefObject<HTMLElement | null>;
 };
 
-/* The robots draw on a page-wide fixed canvas (see robotPageScene.ts) and only settle into this box. */
-export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
+/* The robots draw on a page-wide fixed canvas (see robotPageScene.ts): the arm settles into this box,
+   then stands by each feature's [data-robot-perch], and InMoov waits in the finale's frame. */
+export default function RobotShowcase({ heroRef, finaleRef }: RobotShowcaseProps) {
     const layerRef = useRef<HTMLDivElement>(null);
-    const backdropRef = useRef<HTMLDivElement>(null);
     const glowRef = useRef<HTMLDivElement>(null);
     const hintRef = useRef<HTMLButtonElement>(null);
     const frameRef = useRef<HTMLElement>(null);
     const sceneRef = useRef<RobotPageScene | null>(null);
     const [webGl] = useState(hasWebGl);
     const [status, setStatus] = useState<Status>(webGl ? "loading" : "unavailable");
-    const [active, setActive] = useState<RobotName>("so101");
-    const [index, setIndex] = useState(0);
 
     useEffect(() => {
         const layer = layerRef.current;
-        const backdrop = backdropRef.current;
         const glow = glowRef.current;
         const frame = frameRef.current;
         const hero = heroRef.current;
-        if (!webGl || !layer || !backdrop || !glow || !frame || !hero) return;
+        if (!webGl || !layer || !glow || !frame || !hero) return;
 
         let cancelled = false;
         const compact = window.matchMedia(COMPACT);
@@ -71,16 +65,12 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                     headerLogo: document.querySelector<HTMLElement>(".header__brand .logo__mark"),
                     header: document.querySelector<HTMLElement>(".header"),
                     frame,
-                    backdrop,
+                    perches: [...document.querySelectorAll<HTMLElement>("[data-robot-perch]")],
+                    finale: finaleRef.current,
                     glow,
                     hint: hintRef.current,
                 }, {
                     compact: () => compact.matches,
-                    onActiveChange: (robot) => {
-                        setActive(robot);
-                        // On wide screens the scroll picks the robot and the arrows follow.
-                        if (!compact.matches) setIndex(ROBOTS.findIndex(({ id }) => id === robot));
-                    },
                 }),
             )
             .then((scene) => {
@@ -104,74 +94,36 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
             sceneRef.current?.dispose();
             sceneRef.current = null;
         };
-    }, [webGl, heroRef]);
-
-    // On phones the arrows choose the robot, also after leaving a wide layout.
-    useEffect(() => {
-        const scene = sceneRef.current;
-        if (!scene) return;
-        const show = () => scene.setView(index / (ROBOTS.length - 1));
-        show();
-        const compact = window.matchMedia(COMPACT);
-        compact.addEventListener("change", show);
-        return () => compact.removeEventListener("change", show);
-    }, [index, status]);
-
-    const robot = ROBOTS.find(({ id }) => id === active) ?? ROBOTS[0];
-    const isFirst = index === 0;
-    const isLast = index === ROBOTS.length - 1;
+    }, [webGl, heroRef, finaleRef]);
 
     return (
         <section className="robot-showcase" aria-label="Robots running Lucy">
-            <div className="robot-showcase__row">
-                <button
-                    type="button"
-                    className="robot-showcase__arrow"
-                    onClick={() => setIndex(index - 1)}
-                    disabled={isFirst}
-                    aria-label={isFirst ? "Previous robot" : `Previous robot: ${ROBOTS[index - 1].name}`}
-                >
-                    <FaChevronLeft aria-hidden="true" />
-                </button>
+            <figure
+                ref={frameRef}
+                className="robot-showcase__frame chamfer"
+                // Hidden until the arm lands, except to show the unavailable message.
+                data-live={status !== "unavailable" ? "" : undefined}
+            >
+                {status !== "ready" && (
+                    <p className="robot-showcase__status" role="status">
+                        {status === "loading" ? "Loading 3D view..." : "3D view unavailable"}
+                    </p>
+                )}
 
-                <figure
-                    ref={frameRef}
-                    className="robot-showcase__frame chamfer"
-                    // Hidden until the arm lands, except to show the unavailable message.
-                    data-live={status !== "unavailable" ? "" : undefined}
-                >
-                    {status !== "ready" && (
-                        <p className="robot-showcase__status" role="status">
-                            {status === "loading" ? "Loading 3D view..." : "3D view unavailable"}
-                        </p>
-                    )}
+                <figcaption className="robot-showcase__caption">
+                    SO-101 <span className="robot-showcase__caption-sep">//</span> LeRobot
+                </figcaption>
 
-                    <figcaption className="robot-showcase__caption" aria-live="polite">
-                        {robot.name} <span className="robot-showcase__caption-sep">//</span> {robot.family}
-                    </figcaption>
+                {status === "ready" && (
+                    <p className="robot-showcase__hint" aria-hidden="true">
+                        Click!
+                    </p>
+                )}
+            </figure>
 
-                    {status === "ready" && (
-                        <p className="robot-showcase__hint" aria-hidden="true">
-                            Click!
-                        </p>
-                    )}
-                </figure>
-
-                <button
-                    type="button"
-                    className="robot-showcase__arrow"
-                    onClick={() => setIndex(index + 1)}
-                    disabled={isLast}
-                    aria-label={isLast ? "Next robot" : `Next robot: ${ROBOTS[index + 1].name}`}
-                >
-                    <FaChevronRight aria-hidden="true" />
-                </button>
-            </div>
-
-            {/* Portaled out of the sticky column's stacking context, so the grid goes under the content and the robots over it. */}
+            {/* Portaled out of the sticky column's stacking context, so the robots draw over the page. */}
             {createPortal(
                 <>
-                    <div ref={backdropRef} className="robot-backdrop" aria-hidden="true" />
                     <div ref={glowRef} className="robot-glow" aria-hidden="true" />
                     <div ref={layerRef} className="robot-layer" aria-hidden="true" />
                     <button
@@ -183,7 +135,7 @@ export default function RobotShowcase({ heroRef }: RobotShowcaseProps) {
                         onClick={() => sceneRef.current?.activate("so101")}
                     >
                         Click me!
-                        <FaChevronDown />
+                        <HiOutlineChevronDown />
                     </button>
                 </>,
                 document.body,

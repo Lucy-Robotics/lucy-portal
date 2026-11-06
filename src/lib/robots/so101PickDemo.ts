@@ -188,6 +188,11 @@ export class So101PickDemo {
         return { progress: this.progress, goal: this.goal, holding: this.holding };
     }
 
+    /* Gripper joint values with the jaws open and closed on the payload. */
+    get jaws() {
+        return { open: this.gripOpen, closed: this.gripClosed };
+    }
+
     get looking() {
         return { x: this.look.current.x, y: this.look.current.y };
     }

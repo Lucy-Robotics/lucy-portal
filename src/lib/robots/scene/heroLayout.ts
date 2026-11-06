@@ -6,7 +6,7 @@ import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
 import {
-    ARM_INSET, ARM_MAX_WIDTH_SHARE, CARRY, CARRY_COMPACT, CATCH_RANGE, HEADER_REACHES, HERO_GRIPPER, HERO_ROLL,
+    ARM_BASE_X, ARM_HEIGHT_SHARE, ARM_MAX_WIDTH_SHARE, CARRY, CARRY_COMPACT, CATCH_RANGE, HEADER_REACHES, HERO_GRIPPER, HERO_ROLL,
     LOGO_HEIGHT, PHONE_BASE, REST, REST_COMPACT, TRANSITION_SHARE,
 } from "../config.ts";
 import type { InfinityShape } from "../lucyInfinity.ts";
@@ -96,8 +96,9 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
     let scale = 1500;
     let baseX = width * PHONE_BASE;
     if (heroLogo?.width) {
-        scale = Math.min((height - heroLogo.centerY) / LOGO_HEIGHT, (ARM_MAX_WIDTH_SHARE * width) / 0.12);
-        baseX = width - ARM_INSET * scale;
+        const headerBottom = page.header?.getBoundingClientRect().bottom ?? 0;
+        scale = Math.min((ARM_HEIGHT_SHARE * (height - headerBottom)) / LOGO_HEIGHT, (ARM_MAX_WIDTH_SHARE * width) / 0.12);
+        baseX = width * ARM_BASE_X;
     } else if (headerLogo?.width) {
         // Phones get an arm just big enough to reach the header logo.
         const shoulderHeight = s.shoulder().y;
