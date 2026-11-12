@@ -3,7 +3,7 @@
 export const ROBOT_ASSETS = {
     so101: { urdf: "/models/so101/so101.urdf", glb: "/models/so101/so101.glb" },
     inmoov: { urdf: "/models/inmoov/inmoov.urdf", glb: "/models/inmoov/inmoov.glb" },
-    infinity: "/models/lucy/infinity.glb",
+    infinity: "/models/lucy/_infinity.glb",
 } as const;
 
 const responses = new Map<string, Promise<Response>>();

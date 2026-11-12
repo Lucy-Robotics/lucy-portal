@@ -32,9 +32,9 @@ export const CLOSE_FROM = 0.55;
 export const ARRIVAL = { time: 0.8, rise: 40 };
 /* How far past its perch a perched arm can reach, as a share of the perch's size. */
 export const PERCH_OVERFLOW = 0.15;
-/* Scrolling from one feature to the next (0 the first centred, 1 the next), the arm stays by the first
-   until `from`, then slides across to the next one's perch, there by `to`. */
-export const PERCH_SLIDE = { from: 0.2, to: 0.8 };
+/* Scrolling from the last feature to the finale (0 the feature centred, 1 the finale, see scene/track.ts):
+   when the arm fades out at its spot, then InMoov fades and rises in, in his frame. */
+export const FINALE_ENTRY = { armOut: { from: 0.15, to: 0.4 }, inmoovIn: { from: 0.45, to: 0.8 } };
 
 /* ---------------- the hero ---------------- */
 /* Gripper position at rest (shared by every plan) and while holding a logo. */
@@ -88,7 +88,7 @@ const NOD: Move[] = [
     { joint: "jaws", at: 0.55, time: 0.35, depth: 1 },
 ];
 
-export const COMPANION: { greeting: Gesture; gestures: Record<string, Gesture>; wideOpen: number } = {
+export const COMPANION: { greeting: Gesture; gestures: Record<string, Gesture>; wideOpen: number; blend: number } = {
     /* Features without their own gesture: a nod and a snap of the jaws. */
     greeting: { moves: [...NOD, { joint: "wrist_flex", at: 0, time: 1.6, depth: 0 }] },
     /* By feature slug (pages/Home.tsx). */
@@ -138,6 +138,8 @@ export const COMPANION: { greeting: Gesture; gestures: Record<string, Gesture>; 
     },
     /* Past the infinity's width, in radians, when the jaws open wide. */
     wideOpen: 0.9,
+    /* Seconds a greeting cut short by the next one takes to ease out, instead of snapping back. */
+    blend: 0.4,
 };
 
 /* ---------------- InMoov ---------------- */

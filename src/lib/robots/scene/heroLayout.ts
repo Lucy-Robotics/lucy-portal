@@ -15,7 +15,7 @@ import { forEachOwnMesh } from "../robotModel.ts";
 import { So101PickDemo } from "../so101PickDemo.ts";
 import type { Framing } from "./framing.ts";
 import type { Payload } from "./parts.ts";
-import { rayFrom, toScreen, topRect, viewHeight, viewWidth, type Rect, type TopRect } from "./screen.ts";
+import { partsBounds, rayFrom, toScreen, topRect, viewHeight, viewWidth, type Rect, type TopRect } from "./screen.ts";
 
 export type HeroTarget = "hero" | "header";
 
@@ -149,6 +149,16 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
         const b = onHero(point.clone().addScaledVector(right, 0.01));
         return 0.01 / Math.hypot(b.x - a.x, b.y - a.y);
     };
+    /* Wide screens: the arm may cross the header (drawn over it) but not the top of the screen. */
+    const staysOnScreen = (pick: So101PickDemo) => {
+        let top = Infinity;
+        for (let t = 0; t <= 1; t += 0.05) {
+            pick.preview(t);
+            top = Math.min(top, partsBounds(s.arm, camera, heroRect).top);
+        }
+        pick.preview(pick.state.progress);
+        return top >= 0;
+    };
     const carryAt = compact ? CARRY_COMPACT : CARRY;
     const carry = new THREE.Vector3(carryAt.x, carryAt.y, from.z);
 
@@ -160,6 +170,8 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
         const pinchAt = compact ? 0 : s.shape.rightEnd;
         const pinch = center.clone().addScaledVector(right, pinchAt * markScale);
         const towards = pinch.clone().sub(from).normalize();
+        // Reaching from above works for the hero's logo, not the header's: there it comes up from below.
+        const fromAbove = !compact && name === "hero";
         // A logo is thin and round-edged, so the gripper needn't be square to it, and reaches much further.
         const common = compact
             ? { rest: REST_COMPACT.clone(), restLean: DOWN, carry, carryLean: UP, square: false }
@@ -169,10 +181,10 @@ export function* layoutHero(s: HeroLayoutScene, withPlans: boolean, reachIndex =
         const reach = yield* So101PickDemo.create(s.so101, s.arm, {
             object: s.heroPayload.group,
             gripWidth: s.shape.depth * markScale,
-        }, { ...common, grasp: pinch.clone(), lean: compact ? towards : towards.clone().add(DOWN).normalize(), approach: 0.05 },
+        }, { ...common, grasp: pinch.clone(), lean: fromAbove ? towards.clone().add(DOWN).normalize() : towards, approach: 0.05 },
         (holding) => s.onHeroHold(name, holding));
         heroCamera();
-        if (reach.reachable) {
+        if (reach.reachable && (compact || name === "hero" || staysOnScreen(reach))) {
             return { logo, pick: reach, home: { position: pinch, scale: markScale, pinch: pinchAt }, flight: null, phase: "idle", timer: 0 };
         }
         reach.dispose();

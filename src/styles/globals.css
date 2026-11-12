@@ -98,7 +98,7 @@
    Logo
    ============================== */
 
-/* Proportions follow the brand lockup: the mark sits slightly above the
+/* Proportions follow the brand lockup: the mark dips just below the
    baseline and is a bit taller than the x-height. */
 .logo {
     display: inline-flex;
@@ -110,9 +110,9 @@
 
 .logo__mark {
     position: relative;
-    bottom: 0.05em;
+    bottom: -0.03em;
 
-    height: 0.68em;
+    height: 0.816em;
 }
 
 .logo__text {

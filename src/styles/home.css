@@ -1,14 +1,17 @@
 .home {
-    flex: 1;
+    /* The chapters beside the arm's box, and the features beside the arm: the same columns, so the arm
+       stays put when the box lets go of it (robots/scene/track.ts). */
+    --home-columns: minmax(0, 65fr) minmax(0, 35fr);
+    --home-gap: clamp(2rem, 4vw, 4rem);
 
-    padding-bottom: clamp(5rem, 10vw, 8rem);
+    flex: 1;
 }
 
 /* DOM order is hero, stage, main so that narrow screens stack the box right after the hero. */
 .home__layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    column-gap: clamp(2rem, 4vw, 4rem);
+    grid-template-columns: var(--home-columns);
+    column-gap: var(--home-gap);
 
     width: var(--page-width);
     margin: 0 auto;
@@ -400,27 +403,20 @@ a.home__highlight:hover {
     line-height: 1.1;
 }
 
-/* The arm on one side, the text over its illustration on the other; every other feature swaps them,
-   so the arm slides across, behind the text, from one feature to the next. */
+/* The text over its illustration on the left, the arm on the right, where the box was; it stays put on screen from one feature to the next. */
 .home__feature {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: var(--home-columns);
     grid-template-areas:
-        "perch body"
-        "perch media";
+        "body perch"
+        "media perch";
     grid-template-rows: auto auto;
     align-content: center;
-    column-gap: clamp(2.5rem, 6vw, 6rem);
+    column-gap: var(--home-gap);
     row-gap: 3rem;
 
     min-height: calc(100svh - var(--header-height));
     padding: 4rem 0;
-}
-
-.home__feature:nth-of-type(even) {
-    grid-template-areas:
-        "body perch"
-        "media perch";
 }
 
 /* Above the robot layer (robot-showcase.css), so the arm passes behind it. */
@@ -514,13 +510,291 @@ a.home__highlight:hover {
     color: var(--color-border);
 }
 
-/* Where the arm stands while the feature is on screen: beside the text, level with it. */
-.home__feature-perch {
-    grid-area: perch;
-    align-self: start;
+/* A live component (LucyDiagram) instead of a picture: as tall as it needs. */
+.home__feature-media--live {
+    aspect-ratio: auto;
+}
+
+/* ─── Lucy architecture diagram (LucyDiagram.tsx) ─────────────────────── */
+
+.diagram {
+    --chamfer: 1.5rem;
+    --diagram-soft: color-mix(in srgb, var(--color-highlight) 12%, transparent);
+    --diagram-line: color-mix(in srgb, var(--color-border) 70%, transparent);
+
+    margin: 0;
+    padding: 1.5rem;
+
+    font-family: var(--font-primary);
+}
+
+.diagram__svg {
+    display: block;
 
     width: 100%;
-    aspect-ratio: 1;
+    height: auto;
+
+    overflow: visible;
+}
+
+.diagram__column {
+    fill: var(--color-highlight);
+
+    font-size: 11px;
+    letter-spacing: 0.14em;
+}
+
+.diagram__edge {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 1;
+
+    transition: stroke 0.15s ease;
+}
+
+.diagram__edge.is-lit {
+    stroke: var(--color-highlight);
+}
+
+.diagram__edge--ghost {
+    stroke-dasharray: 3 4;
+}
+
+.diagram__node {
+    cursor: pointer;
+    outline: none;
+}
+
+.diagram__node polygon {
+    fill: var(--color-bg-raised);
+    stroke: var(--color-border);
+    stroke-width: 1;
+}
+
+.diagram__node text {
+    fill: var(--color-text-pri);
+
+    font-size: 14px;
+}
+
+.diagram__node polygon,
+.diagram__node text {
+    transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+.diagram__node.is-inner polygon {
+    fill: var(--color-bg-page);
+}
+
+.diagram__node.is-inner text {
+    font-size: 13px;
+}
+
+.diagram__node.is-ghost polygon {
+    stroke: var(--diagram-line);
+    stroke-dasharray: 4 4;
+}
+
+.diagram__node.is-ghost text {
+    fill: var(--color-text-sec);
+}
+
+.diagram__node--core.is-lit polygon {
+    stroke: var(--color-highlight);
+}
+
+.diagram__node.is-active polygon {
+    fill: var(--diagram-soft);
+    stroke: var(--color-highlight);
+}
+
+.diagram__node.is-active text {
+    fill: var(--color-highlight);
+}
+
+.diagram__node .diagram__core-title {
+    font-size: 16px;
+    font-weight: var(--font-weight-bold);
+}
+
+.diagram__node .diagram__note {
+    fill: var(--color-text-sec);
+
+    font-size: 12px;
+}
+
+.diagram__node:focus-visible polygon {
+    stroke: var(--color-text-pri);
+}
+
+/* Drawn in once the feature's media scrolls into view (data-revealed, useScrollReveal). */
+.js-reveal .home__feature-media .diagram__edge {
+    transition:
+        stroke-dashoffset 0.8s ease var(--d, 0s),
+        opacity 0.8s ease var(--d, 0s),
+        stroke 0.15s ease;
+}
+
+.js-reveal .home__feature-media .diagram__edge:not(.diagram__edge--ghost) {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+}
+
+.js-reveal .home__feature-media:not([data-revealed]) .diagram__edge:not(.diagram__edge--ghost) {
+    stroke-dashoffset: 1;
+}
+
+.js-reveal .home__feature-media:not([data-revealed]) .diagram__edge--ghost {
+    opacity: 0;
+}
+
+.js-reveal .home__feature-media .diagram__node--enter {
+    transition:
+        opacity 0.4s ease var(--d, 0s),
+        translate 0.4s ease var(--d, 0s);
+}
+
+.js-reveal .home__feature-media:not([data-revealed]) .diagram__node--enter {
+    opacity: 0;
+    translate: 0 8px;
+}
+
+/* Phones: the same nodes as stacked groups of chips. */
+.diagram__stack {
+    display: none;
+}
+
+.diagram__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.diagram__group-label {
+    color: var(--color-highlight);
+
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.diagram__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.diagram__chip {
+    padding: 0.5rem 0.75rem;
+
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-bg-raised);
+    color: var(--color-text-pri);
+
+    font: inherit;
+    font-size: 0.875rem;
+
+    cursor: pointer;
+}
+
+/* Beats the site-wide button:hover fill (globals.css). */
+.diagram__chip:hover:not(:disabled) {
+    border-color: var(--color-highlight);
+    background: var(--color-bg-raised);
+}
+
+.diagram__chip.is-ghost {
+    border-style: dashed;
+    color: var(--color-text-sec);
+}
+
+.diagram__chip.is-active,
+.diagram__chip.is-active:hover:not(:disabled) {
+    border-color: var(--color-highlight);
+    background: var(--diagram-soft);
+    color: var(--color-highlight);
+}
+
+.diagram__chip:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-glow);
+}
+
+.diagram__connector {
+    align-self: center;
+
+    width: 1px;
+    height: 1.5rem;
+    margin: 0.25rem 0;
+
+    background: var(--color-highlight);
+}
+
+@media (max-width: 600px) {
+    .diagram__svg {
+        display: none;
+    }
+
+    .diagram__stack {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+.diagram__caption {
+    min-height: 8.5em;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+
+    border-top: var(--border-width) solid var(--diagram-line);
+}
+
+.diagram__caption-body {
+    animation: diagram-caption-in 0.15s ease both;
+}
+
+@keyframes diagram-caption-in {
+    from {
+        opacity: 0;
+        translate: 0 6px;
+    }
+}
+
+.diagram__caption strong {
+    display: block;
+    margin-bottom: 0.25rem;
+
+    color: var(--color-highlight);
+
+    font-weight: var(--font-weight-medium);
+}
+
+.diagram__caption p {
+    margin: 0;
+
+    color: var(--color-text-sec);
+
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.diagram__caption .diagram__hint {
+    margin-top: 0.75rem;
+
+    font-size: 0.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .diagram__caption-body {
+        animation: none;
+    }
+}
+
+/* The column the arm stands in while the feature is on screen (drawn where the box was). */
+.home__feature-perch {
+    grid-area: perch;
+
+    width: 100%;
 
     pointer-events: none;
 }
@@ -551,13 +825,17 @@ a.home__highlight:hover {
 
 /* ─── Closing call to action ──────────────────────────────────────────── */
 
+/* With the footer below it, one whole screen under the header, like the hero (--footer-height: pages/Home.tsx). */
 .home__outro {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
 
     width: var(--page-width);
+    min-height: calc(100svh - var(--header-height) - var(--footer-height, 0px));
     margin: clamp(7rem, 14vw, 12rem) auto 0;
+    padding: 4rem 0;
 
     text-align: center;
 }
@@ -605,10 +883,6 @@ a.home__highlight:hover {
     translate: -3rem 0;
 }
 
-.js-reveal .home__feature:nth-of-type(even) .home__feature-body[data-reveal]:not([data-revealed]) {
-    translate: 3rem 0;
-}
-
 .js-reveal .home__feature-media[data-reveal] {
     transition:
         opacity 0.9s ease 0.15s,
@@ -628,7 +902,6 @@ a.home__highlight:hover {
 
     .js-reveal [data-reveal]:not([data-revealed]),
     .js-reveal .home__feature-body[data-reveal]:not([data-revealed]),
-    .js-reveal .home__feature:nth-of-type(even) .home__feature-body[data-reveal]:not([data-revealed]),
     .js-reveal .home__feature-media[data-reveal]:not([data-revealed]) {
         opacity: 1;
         translate: none;
@@ -713,8 +986,7 @@ a.home__highlight:hover {
     }
 
     /* Stacked, the text first. */
-    .home__feature,
-    .home__feature:nth-of-type(even) {
+    .home__feature {
         grid-template-columns: minmax(0, 1fr);
         grid-template-areas: "body" "media";
         gap: 2.5rem;
@@ -725,10 +997,6 @@ a.home__highlight:hover {
 }
 
 @media (max-width: 560px) {
-    .home {
-        padding-bottom: 2rem;
-    }
-
     .home__feature-text {
         font-size: 1.0625rem;
     }
