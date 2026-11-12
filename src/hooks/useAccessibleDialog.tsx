@@ -5,7 +5,6 @@ import {
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
-  type ReactNode,
   type RefObject,
 } from 'react';
 
@@ -121,38 +120,4 @@ export function useAccessibleDialog({ isOpen, onClose }: UseAccessibleDialogOpti
       onKeyDown,
     },
   };
-}
-
-type AccessibleDialogProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: ReactNode;
-  overlayClassName?: string;
-  contentClassName?: string;
-};
-
-export function AccessibleDialog({
-  isOpen,
-  onClose,
-  title,
-  children,
-  overlayClassName = 'a11y-dialog-overlay',
-  contentClassName = 'a11y-dialog-content',
-}: AccessibleDialogProps) {
-  const { titleId, overlayProps, dialogProps } = useAccessibleDialog({
-    isOpen,
-    onClose,
-  });
-
-  if (!isOpen) return null;
-
-  return (
-    <div className={overlayClassName} {...overlayProps}>
-      <div className={contentClassName} {...dialogProps}>
-        <h2 id={titleId}>{title}</h2>
-        {children}
-      </div>
-    </div>
-  );
 }

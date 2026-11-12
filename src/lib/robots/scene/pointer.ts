@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { HIT_SLOP } from "../config.ts";
 import type { RobotName } from "../robotPageScene.ts";
 import type { Payload } from "./parts.ts";
-import { contains, rayFrom, toRect, toScreen, viewWidth, type Rect } from "./screen.ts";
+import { contains, rayFrom, toScreen, viewHeight, viewWidth, type Rect } from "./screen.ts";
 
 type PointerScene = {
     camera: THREE.Camera;
@@ -12,8 +12,8 @@ type PointerScene = {
     arm: THREE.Object3D;
     heroPayload: Payload;
     humanoid: () => THREE.Object3D | null;
-    frame: HTMLElement;
-    landed: () => boolean;
+    /* Where the robots are drawn (a box or frame), or null when they're free on screen. */
+    shownIn: () => Rect | null;
     onChange: () => void;
 };
 
@@ -31,8 +31,9 @@ export function createPointer(s: PointerScene) {
         return null;
     };
     const hitTest = (x: number, y: number): RobotName | null => {
-        // In the box, only what's inside the box counts.
-        if (s.landed() && !contains(toRect(s.frame.getBoundingClientRect()), x, y)) return null;
+        // In a box, only what's inside it counts.
+        const shown = s.shownIn();
+        if (shown && !contains(shown, x, y)) return null;
         const exact = hitAt(x, y);
         if (exact) return exact;
         for (let i = 0; i < 8; i++) {
@@ -56,12 +57,13 @@ export function createPointer(s: PointerScene) {
             return hovered;
         },
 
-        lookFrom(object: THREE.Object3D) {
-            if (!pointer) return null;
+        /* Look direction from `object` towards a screen point, the cursor by default. */
+        lookFrom(object: THREE.Object3D, at = pointer) {
+            if (!at) return null;
             const from = toScreen(object.getWorldPosition(new THREE.Vector3()), s.camera, s.drawRect());
             return {
-                x: Math.tanh(((pointer.x - from.x) / (viewWidth() / 2)) * 1.6),
-                y: Math.tanh((-(pointer.y - from.y) / (window.innerHeight / 2)) * 1.6),
+                x: Math.tanh(((at.x - from.x) / (viewWidth() / 2)) * 1.6),
+                y: Math.tanh((-(at.y - from.y) / (viewHeight() / 2)) * 1.6),
             };
         },
 

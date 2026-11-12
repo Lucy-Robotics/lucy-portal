@@ -13,7 +13,7 @@ import { stepCatch } from "./catchFlight.ts";
 import type { Framing } from "./framing.ts";
 import { layoutHero, type HeroPlan, type HeroTarget } from "./heroLayout.ts";
 import type { Payload } from "./parts.ts";
-import { topRect, viewWidth, type Rect } from "./screen.ts";
+import { topRect, viewHeight, viewWidth, type Rect } from "./screen.ts";
 
 /* "hero" is in the jaws or flying to or from them. What shows the logo only follows this. */
 export type LogoState = { at: "page" } | { at: "hero" | "box"; logo: HeroTarget };
@@ -87,7 +87,7 @@ export function createHero(s: HeroScene) {
             const at = logo ? topRect(logo) : null;
             return at ? [at.centerX, at.centerY, at.width] : [];
         });
-        return [viewWidth(), window.innerHeight, frame.width, frame.height, ...logos]
+        return [viewWidth(), viewHeight(), frame.width, frame.height, ...logos]
             .map(Math.round).join() + (s.compact() ? "c" : "");
     };
     let laidOutFor = "";

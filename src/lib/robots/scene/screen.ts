@@ -8,6 +8,9 @@ export type Rect = { left: number; top: number; width: number; height: number };
    the hit tests and the box by a few px. */
 export const viewWidth = () => document.documentElement.clientWidth;
 
+/* Unlike innerHeight, ignores the phone's URL bar. */
+export const viewHeight = () => document.documentElement.clientHeight;
+
 export const lerpRect = (a: Rect, b: Rect, t: number): Rect => ({
     left: a.left + (b.left - a.left) * t,
     top: a.top + (b.top - a.top) * t,

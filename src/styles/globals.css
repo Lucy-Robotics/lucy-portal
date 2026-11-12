@@ -27,7 +27,7 @@
     z-index: 2000;
     padding: 0.65rem 1rem;
     background: var(--color-highlight);
-    color: #000;
+    color: var(--color-on-highlight);
     font-weight: var(--font-weight-bold);
     text-decoration: none;
 }
@@ -56,14 +56,21 @@
     top: 0;
 }
 
+/* Over the home features' text (z-index 21, home.css), which scrolls under it. Phones keep it under the
+   robot layer: the arm reaches its logo there. */
+@media (min-width: 960px) {
+    .header {
+        z-index: 22;
+    }
+}
+
 .header__bar {
-    width: 100%;
+    width: var(--page-width);
+    margin-inline: auto;
 
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-
-    padding: 0 2rem;
 
     min-height: 64px;
 }
@@ -91,7 +98,7 @@
    Logo
    ============================== */
 
-/* Proportions follow the brand lockup: the mark sits slightly above the
+/* Proportions follow the brand lockup: the mark dips just below the
    baseline and is a bit taller than the x-height. */
 .logo {
     display: inline-flex;
@@ -103,9 +110,9 @@
 
 .logo__mark {
     position: relative;
-    bottom: 0.05em;
+    bottom: -0.03em;
 
-    height: 0.68em;
+    height: 0.816em;
 }
 
 .logo__text {
@@ -144,64 +151,84 @@
 }
 
 
+/* Call-to-action buttons, site-wide. Colours go through the chamfer's custom
+   properties, so they work with or without the .chamfer class (doubled selectors
+   outrank .chamfer's own defaults). Sizes are on an 8px grid. */
+.header__button,
+.header__button.chamfer {
+    --chamfer: 8px;
+    --chamfer-border: var(--color-highlight);
+    --chamfer-fill: transparent;
+}
+
 .header__button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
 
-    min-height: 36px;
+    min-height: 48px;
+    padding: 0 24px;
 
-    padding: 0.45rem 1rem;
+    border: var(--border-width) solid var(--chamfer-border);
+    background-color: var(--chamfer-fill);
 
-    border: var(--border-width) solid var(--color-highlight);
-
-    color: var(--color-highlight) !important;
+    color: var(--color-highlight);
 
     text-decoration: none;
+    white-space: nowrap;
 
-    font-size: 0.95rem;
+    font-family: inherit;
+    font-size: 1rem;
     font-weight: var(--font-weight-bold);
 
     cursor: pointer;
-    background: transparent;
-    font-family: inherit;
 
     transition:
-        background 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease,
         color 0.15s ease;
 }
 
+.header__button--main,
+.header__button--main.chamfer {
+    --chamfer-fill: var(--color-highlight);
 
-.header__button--main {
-    background: var(--color-highlight);
-
-    color: #000000 !important;
+    color: var(--color-on-highlight);
 }
 
-.header__button--main:hover {
-    background: #000000 !important;
+.header__button--main:hover,
+.header__button--main:focus-visible,
+.header__button--main.chamfer:hover,
+.header__button--main.chamfer:focus-visible {
+    --chamfer-fill: var(--color-on-highlight);
 
-    color: var(--color-highlight) !important;
+    color: var(--color-highlight);
 }
 
-.header__button--primary:hover {
-    background: var(--color-highlight);
+.header__button--primary:hover,
+.header__button--primary:focus-visible,
+.header__button--primary.chamfer:hover,
+.header__button--primary.chamfer:focus-visible {
+    --chamfer-fill: var(--color-highlight);
 
-    color: #000000 !important;
+    color: var(--color-on-highlight);
 }
 
+.header__button--secondary,
+.header__button--secondary.chamfer {
+    --chamfer-border: var(--color-border);
 
-.header__button--secondary {
-    border-color: var(--color-border);
-
-    color: var(--color-text-pri) !important;
+    color: var(--color-text-pri);
 }
 
+.header__button--secondary:hover,
+.header__button--secondary:focus-visible,
+.header__button--secondary.chamfer:hover,
+.header__button--secondary.chamfer:focus-visible {
+    --chamfer-fill: var(--color-bg-comp);
 
-.header__button--secondary:hover {
-    background: var(--color-bg-comp) !important;
-
-    color: var(--color-highlight) !important;
+    color: var(--color-highlight);
 }
 
 .header__user {
@@ -288,7 +315,6 @@
 @media (max-width: 900px) {
     .header__bar {
         grid-template-columns: 1fr auto;
-        padding: 0 1rem;
         min-height: 56px;
     }
 
@@ -309,7 +335,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.35rem;
-        padding: 0.75rem 1rem 1.25rem;
+        padding: 0.75rem var(--page-gutter) 1.25rem;
         border-top: 1px solid var(--color-border);
         background: var(--color-bg-comp);
         max-height: min(70vh, 28rem);
@@ -325,23 +351,34 @@
         align-items: center;
         min-height: 2.75rem;
         padding: 0.55rem 0.75rem;
-        color: var(--color-text-pri);
         text-decoration: none;
         font-size: 1rem;
         font-weight: var(--font-weight-bold);
         border: 1px solid transparent;
     }
 
-    .header__mobile-nav a:hover,
-    .header__mobile-nav a:focus-visible {
+    .header__mobile-nav a:not(.header__button):hover,
+    .header__mobile-nav a:not(.header__button):focus-visible {
         border-color: var(--color-border);
+    }
+
+    /* Buttons keep their own colours. */
+    .header__mobile-nav a:not(.header__button) {
+        color: var(--color-text-pri);
+    }
+
+    .header__mobile-nav a:not(.header__button):hover,
+    .header__mobile-nav a:not(.header__button):focus-visible {
         color: var(--color-highlight);
     }
 
     .header__mobile-nav .header__button {
         justify-content: center;
         width: 100%;
-        margin-top: 0.35rem;
+        min-height: 48px;
+        margin-top: 8px;
+        padding: 0 24px;
+        border: var(--border-width) solid var(--chamfer-border);
     }
 }
 
@@ -364,9 +401,9 @@
     display: grid;
     grid-template-columns: 1.5fr repeat(3, 1fr);
     gap: 2rem;
-    max-width: 1200px;
+    width: var(--page-width);
     margin: 0 auto;
-    padding: 2rem 1.5rem;
+    padding: 2rem 0;
 }
 
 .footer__brand {
@@ -402,6 +439,13 @@
     font-size: .9rem;
 }
 
+/* WCAG 2.2 target size: stacked text links need a 24px-tall hit area. */
+.footer__column a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+}
+
 .footer__column a:hover,
 .footer__socials a:hover {
     color: var(--color-primary);
@@ -418,10 +462,10 @@
     align-items: center;
     gap: 1rem;
 
-    max-width: 1200px;
+    width: var(--page-width);
     margin: 0 auto;
 
-    padding: 1rem 1.5rem;
+    padding: 1rem 0;
 
     border-top: 1px solid var(--color-border);
     color: var(--color-text-muted);
@@ -503,8 +547,8 @@
 }
 
 .footer__socials svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 @media (max-width: 900px) {
@@ -561,7 +605,14 @@ body,
 body {
     margin: 0;
 
-    background: var(--color-bg-page);
+    background-color: var(--color-bg-page);
+    background-image:
+        radial-gradient(circle at 1px 1px, var(--color-grid-dot) 1.2px, transparent 1.2px),
+        radial-gradient(circle at 1px 1px, var(--color-grid-line) 0.75px, transparent 0.75px),
+        radial-gradient(circle at 1px 1px, var(--color-grid-line) 0.75px, transparent 0.75px);
+    background-size: 48px 48px, 8px 48px, 48px 8px;
+    background-repeat: repeat;
+    background-attachment: fixed;
     color: var(--color-text-pri);
 
     font-family: var(--font-primary);
@@ -618,7 +669,7 @@ button {
     padding: 0.75rem 1.25rem;
 
     background: var(--btn-active);
-    color: #000000;
+    color: var(--color-on-highlight);
 
     font-family: inherit;
     font-size: inherit;
@@ -697,21 +748,15 @@ select:focus {
    Chamfer
    ============================== */
 
-/* Chamfered top-right and bottom-left corners. The element background paints
-   the border colour; ::before fills the inside, its chamfer shortened so the
-   diagonal edges keep the same border width. clip-path also clips outlines, so
-   hover/focus states recolour --chamfer-border instead. */
 .chamfer {
     --chamfer: 1rem;
-    --chamfer-inner: calc(var(--chamfer) - 0.586 * var(--border-width));
     --chamfer-border: var(--color-border);
     --chamfer-fill: var(--color-bg-comp);
 
     position: relative;
-    isolation: isolate;
 
-    border: none;
-    background: var(--chamfer-border);
+    border: var(--border-width) solid var(--chamfer-border);
+    background-color: var(--chamfer-fill);
     clip-path: polygon(
         0 0,
         calc(100% - var(--chamfer)) 0,
@@ -721,30 +766,57 @@ select:focus {
         0 calc(100% - var(--chamfer))
     );
 
-    transition: background 0.15s ease;
+    transition: border-color 0.15s ease;
 }
 
-.chamfer::before {
+/* Each line starts on the cut and rotates about its start so its border lies
+   just inside the diagonal. Offsets are from the padding box, hence the
+   border-width terms. */
+.chamfer::before,
+.chamfer::after {
     content: "";
     position: absolute;
-    inset: var(--border-width);
-    z-index: -1;
+    z-index: 1;
 
-    background: var(--chamfer-fill);
-    clip-path: polygon(
-        0 0,
-        calc(100% - var(--chamfer-inner)) 0,
-        100% var(--chamfer-inner),
-        100% 100%,
-        var(--chamfer-inner) 100%,
-        0 calc(100% - var(--chamfer-inner))
-    );
+    width: calc(var(--chamfer) * 1.4143);
+    height: 0;
+
+    border-top: var(--border-width) solid var(--chamfer-border);
+    transform-origin: 0 0;
+
+    pointer-events: none;
+
+    transition: border-color 0.15s ease;
+}
+
+/* From (100% - chamfer, 0) down-right to (100%, chamfer). */
+.chamfer::before {
+    top: calc(-1 * var(--border-width));
+    left: calc(100% + var(--border-width) - var(--chamfer));
+
+    transform: rotate(45deg);
+}
+
+/* From (chamfer, 100%) up-left to (0, 100% - chamfer). */
+.chamfer::after {
+    top: calc(100% + var(--border-width));
+    left: calc(var(--chamfer) - var(--border-width));
+
+    transform: rotate(225deg);
 }
 
 .chamfer:focus-visible {
     --chamfer-border: var(--color-highlight);
 
     outline: none;
+}
+
+/* .chamfer's own transition would drop the button's colour fades. */
+.header__button.chamfer {
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
 }
 
 

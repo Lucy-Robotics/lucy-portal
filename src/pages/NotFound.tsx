@@ -22,7 +22,7 @@ const NotFound = () => {
                 <div className="not-found__actions">
                     <Link
                         to="/"
-                        className="header__button header__button--main not-found__button"
+                        className="chamfer header__button header__button--main not-found__button"
                     >
                         Back to home
                     </Link>

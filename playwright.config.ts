@@ -6,6 +6,7 @@ const PORT = 4320;
 export default defineConfig({
     testDir: "tests",
     testMatch: "*.spec.ts",
+    testIgnore: "a11y/**",
     fullyParallel: true,
     retries: process.env.CI ? 1 : 0,
     use: {

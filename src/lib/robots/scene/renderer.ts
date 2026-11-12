@@ -1,6 +1,5 @@
 /*
- * The robots' canvas sits fixed over the page. The grid has its own canvas
- * behind the page, so it needs no per-frame copy. The glow layer gets a copy
+ * The robots' canvas sits fixed over the page. The glow layer gets a copy
  * of the infinities.
  */
 import * as THREE from "three";
@@ -11,8 +10,6 @@ import { viewWidth, type Rect } from "./screen.ts";
 
 type Frame = {
     scene: THREE.Scene;
-    gridScene: THREE.Scene;
-    gridVisible: boolean;
     camera: THREE.PerspectiveCamera;
     // Where on screen the camera's view is drawn.
     drawRect: Rect;
@@ -23,31 +20,28 @@ type Frame = {
 
 export class SceneRenderer {
     private readonly main: THREE.WebGLRenderer;
-    private readonly grid: THREE.WebGLRenderer;
     private readonly glowLayer: HTMLElement;
     // Only as big as the infinities and their glow: the CSS drop-shadow is cheap on a small canvas, not the whole screen.
     private readonly glowCanvas = document.createElement("canvas");
     private readonly glowContext: CanvasRenderingContext2D;
     // Draws the robots into the depth buffer only, so they hide what's behind them.
     private readonly depthOnly = new THREE.MeshBasicMaterial({ colorWrite: false });
-    private gridDrawn = false;
+    private height = 0;
 
-    /* Each WebGL context takes a while to create, so the page runs in between. */
-    static async create(layer: HTMLElement, backdrop: HTMLElement, glowLayer: HTMLElement) {
-        const main = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    static async create(layer: HTMLElement, glowLayer: HTMLElement) {
+        // MSAA makes phones scroll badly.
+        const antialias = !window.matchMedia("(pointer: coarse)").matches;
+        const main = new THREE.WebGLRenderer({ antialias, alpha: true });
         main.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         main.autoClear = false;
         layer.appendChild(main.domElement);
+        // A WebGL context takes a while to create, so the page runs before the first draw.
         await nextTask();
-        const grid = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        grid.setPixelRatio(main.getPixelRatio());
-        backdrop.appendChild(grid.domElement);
-        return new SceneRenderer(main, grid, glowLayer);
+        return new SceneRenderer(main, glowLayer);
     }
 
-    private constructor(main: THREE.WebGLRenderer, grid: THREE.WebGLRenderer, glowLayer: HTMLElement) {
+    private constructor(main: THREE.WebGLRenderer, glowLayer: HTMLElement) {
         this.main = main;
-        this.grid = grid;
         this.glowLayer = glowLayer;
         this.glowCanvas.style.position = "absolute";
         glowLayer.appendChild(this.glowCanvas);
@@ -60,17 +54,16 @@ export class SceneRenderer {
     }
 
     fit() {
+        this.height = this.main.domElement.parentElement!.clientHeight;
         const size = this.main.getSize(new THREE.Vector2());
-        if (size.x === viewWidth() && size.y === window.innerHeight) return;
-        this.main.setSize(viewWidth(), window.innerHeight, false);
-        this.grid.setSize(viewWidth(), window.innerHeight, false);
+        if (size.x === viewWidth() && size.y === this.height) return;
+        this.main.setSize(viewWidth(), this.height, false);
     }
 
     /* Compiles every material ahead so none stalls mid-scroll; `alsoShown` joins the depth pass.
        Skipped without parallel compiling, where it would only move the stall to page load. */
-    precompile(scene: THREE.Scene, gridScene: THREE.Scene, camera: THREE.Camera, alsoShown?: THREE.Object3D) {
+    precompile(scene: THREE.Scene, camera: THREE.Camera, alsoShown?: THREE.Object3D) {
         if (!this.parallelCompile) return;
-        this.grid.compileAsync(gridScene, camera).catch(() => {});
         this.main.compileAsync(scene, camera).catch(() => {});
         // compileAsync skips override materials, so depthOnly is drawn once on one pixel.
         const wasVisible = alsoShown?.visible ?? false;
@@ -93,17 +86,13 @@ export class SceneRenderer {
     render(f: Frame) {
         const { main, glowCanvas, glowContext } = this;
         const { scene, camera, drawRect, glowArea: area } = f;
-        const height = window.innerHeight;
+        const { height } = this;
         main.setScissorTest(false);
         main.setClearColor(0x000000, 0);
         main.clear();
         // The whole screen is a window onto the draw rectangle, so a logo flying in from the header is still drawn.
         main.setViewport(0, 0, viewWidth(), height);
         camera.setViewOffset(drawRect.width, drawRect.height, -drawRect.left, -drawRect.top, viewWidth(), height);
-
-        // Drawn once more after it's hidden, to clear it.
-        if (f.gridVisible || this.gridDrawn) this.grid.render(f.gridScene, camera);
-        this.gridDrawn = f.gridVisible;
 
         glowCanvas.style.display = area ? "" : "none";
         this.glowLayer.style.filter = f.glowFilter;
@@ -144,11 +133,9 @@ export class SceneRenderer {
     }
 
     dispose() {
-        for (const renderer of [this.main, this.grid]) {
-            renderer.dispose();
-            renderer.forceContextLoss();
-            renderer.domElement.remove();
-        }
+        this.main.dispose();
+        this.main.forceContextLoss();
+        this.main.domElement.remove();
         this.glowCanvas.remove();
         this.depthOnly.dispose();
     }

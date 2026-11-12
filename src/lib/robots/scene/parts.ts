@@ -59,7 +59,7 @@ export function createPayload(shape: InfinityShape, material: THREE.Material, ac
 }
 export type Payload = ReturnType<typeof createPayload>;
 
-/* InMoov comes in Blender units, so it's scaled to its real height and stood on the grid. */
+/* InMoov comes in Blender units, so it's scaled to its real height and stood on the floor. */
 export function standInMoov(inmoov: URDFRobot, materials: Materials, irisColor: string) {
     const eyes: THREE.Mesh[] = [];
     for (const [name, link] of Object.entries(inmoov.links)) {

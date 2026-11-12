@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import type { TimelineItem } from '../types/timeline';
-import { useAuth } from '../providers/AuthProvider';
+import { useAuth } from '../hooks/useAuth';
 import RoadmapForm from '../components/RoadmapForm';
 import { SortableItem } from '../components/SortableItem';
 import ConfirmModal from '../components/ConfirmModal';
@@ -148,7 +148,7 @@ const Roadmap: React.FC = () => {
   const handleSave = async (item: TimelineItem) => {
     if (!accessToken) return;
 
-    const { id, ...itemData } = item;
+    const { id: _id, ...itemData } = item;
 
     try {
       if (selectedItem) {

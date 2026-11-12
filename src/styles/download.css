@@ -4,7 +4,7 @@
     align-items: center;
     justify-content: center;
 
-    padding: 2rem 1.5rem;
+    padding: 2rem var(--page-gutter);
 }
 
 .download__content {
@@ -178,6 +178,12 @@
     font-size: 0.85rem;
     line-height: 1.7;
     text-align: left;
+}
+
+/* Inset: the terminal frame clips anything drawn outside. */
+.download__terminal-body:focus-visible {
+    outline: 2px solid var(--color-highlight);
+    outline-offset: -2px;
 }
 
 .download__terminal-line {
