@@ -257,16 +257,15 @@ export async function createRobotPageScene(
         enter = enterGoal();
         trackFrame = landed() ? track.read() : null;
         viewGoal = trackFrame?.view ?? 0;
-        // The track switches shots while the robots are faded out, so it needn't pan.
+        // The track pans along the scroll itself, or switches shots while the robots are faded out.
         view = reduceMotion || trackFrame ? viewGoal : damp(view, viewGoal, 6, dt);
         if (Math.abs(view - viewGoal) < 1e-4) view = viewGoal;
         active = view >= 0.5 ? "inmoov" : "so101";
         // Arriving at a new station, the robot slides in like the page around it. Not on landing in the box,
-        // nor from one perch to the next: the track slides it across.
+        // nor when it glided there along the scroll.
         const nextStation = trackFrame?.station ?? null;
         if (nextStation !== station) {
-            const perchToPerch = perch !== null && trackFrame?.perch != null;
-            if (station !== null && nextStation !== null && !perchToPerch && !reduceMotion) arrival = 0;
+            if (station !== null && nextStation !== null && !trackFrame?.glided && !reduceMotion) arrival = 0;
             station = nextStation;
         }
         if (arrival < 1) arrival = Math.min(1, arrival + dt / ARRIVAL.time);
@@ -277,7 +276,7 @@ export async function createRobotPageScene(
             if (perch !== null) companion.greet(greetingOf(perch));
         }
         // InMoov waves once when the visitor first reaches it.
-        if (!wavedAtFinale && inmoov && trackFrame?.nearFinale && view > 0.95) {
+        if (!wavedAtFinale && inmoov && trackFrame?.view === 1 && view > 0.95) {
             wavedAtFinale = true;
             activate("inmoov");
         }
@@ -359,6 +358,8 @@ export async function createRobotPageScene(
             track: trackFrame,
             arrival,
         });
+        // Going for the header's logo on wide screens, the arm is drawn over the header (robot-showcase.css).
+        document.documentElement.classList.toggle("robot-over-header", !options.compact() && inHero() && hero.target === "header");
     };
 
     const activate = (robot: RobotName) => {
@@ -452,7 +453,7 @@ export async function createRobotPageScene(
         if (disposed) return;
         inmoov = loaded;
         const { humanoid } = loaded;
-        humanoid.visible = trackFrame?.nearFinale ?? false;
+        humanoid.visible = trackFrame?.view === 1;
         scene.add(humanoid);
         // Headroom for the raised hand when it waves, with the arm still in the shot.
         framing.shots.inmoov = new THREE.Box3().setFromObject(humanoid)
@@ -529,6 +530,7 @@ export async function createRobotPageScene(
             headYaw: inmoov?.robot.joints["i01.head.rothead_link_joint"].angle ?? null,
             so101: screenRect(arm),
             inmoov: inmoov?.humanoid.visible ? screenRect(inmoov.humanoid) : null,
+            boxLogo: boxPayload.shown ? (({ left, right, top, bottom }) => ({ x: (left + right) / 2, y: (top + bottom) / 2 }))(screenRect(boxPayload.infinity)) : null,
             timings: Object.fromEntries(Object.entries(timings).map(([k, v]) => [k, Math.round(v)])),
             heroRect: hero.layout.heroRect,
             drawRect,
@@ -550,7 +552,7 @@ export async function createRobotPageScene(
             for (const element of heroText) element.classList.remove("robot-takeable");
             page.heroLogo?.classList.remove("robot-invite");
             page.headerLogo?.classList.remove("robot-invite");
-            document.documentElement.classList.remove("robot-hover");
+            document.documentElement.classList.remove("robot-hover", "robot-over-header");
             page.frame.removeAttribute("data-landed");
             page.hint?.removeAttribute("data-shown");
             hero.clear();

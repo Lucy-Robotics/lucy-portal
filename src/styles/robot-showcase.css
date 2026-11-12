@@ -8,6 +8,16 @@
     pointer-events: none;
 }
 
+/* Going for the header's logo, the arm is drawn over the header (z-index 22 on wide screens, globals.css).
+   Only in the hero, so further down it still passes behind the features' text. */
+html.robot-over-header .robot-glow {
+    z-index: 23;
+}
+
+html.robot-over-header .robot-layer {
+    z-index: 24;
+}
+
 /* The scene sets the drop-shadow per mark. */
 .robot-glow {
     position: fixed;
@@ -47,7 +57,7 @@
     color: var(--color-text-pri);
 
     font-family: var(--font-primary);
-    font-size: 0.8rem;
+    font-size: 1.5rem;
     font-weight: var(--font-weight-bold);
     white-space: nowrap;
 

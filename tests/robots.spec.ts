@@ -20,6 +20,7 @@ type State = {
     drawRect: { left: number; top: number; width: number; height: number };
     drawn: boolean;
     inmoov: { left: number; right: number; top: number; bottom: number } | null;
+    boxLogo: { x: number; y: number } | null;
     heroLogoVisible: boolean | null;
     headerLogoVisible: boolean | null;
     animating: boolean;
@@ -233,11 +234,11 @@ test("the arm greets each feature it stands by", async ({ page, isMobile }) => {
         });
         await expect.poll(async () => (await state(page)).perch).toBe(index);
         await expect.poll(async () => (await state(page)).greeting).toBe(true);
-        // Standing at its perch once slid in, alone: no InMoov beside it.
+        // Standing in the perches' column, alone: no InMoov beside it.
         await expect.poll(async () => {
             const perch = await page.locator("[data-robot-perch]").nth(index).boundingBox();
             const { drawRect } = await state(page);
-            return Math.max(Math.abs(drawRect.top - (perch?.y ?? NaN)), Math.abs(drawRect.left - (perch?.x ?? NaN)));
+            return Math.abs(drawRect.left - (perch?.x ?? NaN));
         }).toBeLessThan(2);
         expect((await state(page)).inmoov, "InMoov waits for the finale").toBeNull();
     }
@@ -246,35 +247,90 @@ test("the arm greets each feature it stands by", async ({ page, isMobile }) => {
     expect(s.view, "still the arm's shot").toBe(0);
 });
 
-test("the arm slides across from one feature to the next", async ({ page, isMobile }) => {
+test("the arm stays put from one feature to the next", async ({ page, isMobile }) => {
     test.skip(isMobile, "phones keep the arm in its box");
     await open(page);
     await page.locator("article.home__feature").first().evaluate((feature) => feature.scrollIntoView({ block: "center" }));
     await expect.poll(async () => (await state(page)).perch).toBe(0);
-    // Halfway between the two features' centres: the arm is between their perches, on its way across.
-    const perches = await page.evaluate(() => {
-        const header = document.querySelector(".header")?.getBoundingClientRect().bottom ?? 0;
-        const middle = header + (window.innerHeight - header) / 2;
-        const [a, b] = [...document.querySelectorAll("article.home__feature")].map((feature) => {
-            const rect = feature.getBoundingClientRect();
-            return rect.top + rect.height / 2;
-        });
-        window.scrollBy(0, (a + b) / 2 - middle);
-        return [...document.querySelectorAll("[data-robot-perch]")].slice(0, 2).map((perch) => perch.getBoundingClientRect().left);
-    });
-    await page.waitForTimeout(300);
-    const midway = await state(page);
-    expect(midway.drawn).toBe(true);
-    const [left, right] = [Math.min(...perches), Math.max(...perches)];
-    expect(midway.drawRect.left, "past the first perch").toBeGreaterThan(left + 1);
-    expect(midway.drawRect.left, "short of the next").toBeLessThan(right - 1);
-    // Once the next feature is centred, it stands at its perch.
-    await page.locator("article.home__feature").nth(1).evaluate((feature) => feature.scrollIntoView({ block: "center" }));
+    // Wherever it is between the two features, the arm stands at the same place on screen.
+    const tops: number[] = [];
+    for (const share of [0, 0.25, 0.6, 1]) {
+        await scrollBetween(page, "article.home__feature:nth-of-type(1)", "article.home__feature:nth-of-type(2)", share);
+        await page.waitForTimeout(300);
+        const s = await state(page);
+        expect(s.drawn).toBe(true);
+        tops.push(s.drawRect.top);
+    }
+    expect(Math.max(...tops) - Math.min(...tops), "fixed on screen").toBeLessThan(2);
+    // Past halfway, it acts out the next feature.
     await expect.poll(async () => (await state(page)).perch).toBe(1);
+});
+
+/* Scrolls `share` of the way from one element's centre reaching the middle of the screen (below the header) to the other's. */
+const scrollBetween = (page: Page, from: string, to: string, share: number) => page.evaluate(({ from, to, share }) => {
+    const header = document.querySelector(".header")?.getBoundingClientRect().bottom ?? 0;
+    const middle = header + (window.innerHeight - header) / 2;
+    const [a, b] = [from, to].map((selector) => {
+        const rect = document.querySelector(selector)!.getBoundingClientRect();
+        return rect.top + rect.height / 2;
+    });
+    window.scrollBy(0, a + (b - a) * share - middle);
+}, { from, to, share });
+
+test("the arm stays put as its box scrolls away, the logo in the box", async ({ page, isMobile }) => {
+    test.skip(isMobile, "phones keep the arm in its box");
+    await open(page);
+    // From the first feature, so the box is no longer sticky and scrolls with the page.
+    await page.locator("article.home__feature").first().evaluate((feature) => feature.scrollIntoView({ block: "center" }));
+    await expect.poll(async () => (await state(page)).perch).toBe(0);
+    await scrollBetween(page, ".robot-showcase__frame", "article.home__feature", 0.3);
+    await page.waitForTimeout(300);
+    const s = await state(page);
+    expect(s.drawn, "seen all the way").toBe(true);
+    const box = (await page.locator(".robot-showcase__frame").boundingBox())!;
+    expect(s.drawRect.top, "left behind by the box").toBeGreaterThan(box.y + 1);
+    // Right where the box was while sticky: lined up with the features' column, not moving.
+    const perch = (await page.locator("[data-robot-perch]").first().boundingBox())!;
+    expect(Math.abs(s.drawRect.left - perch.x)).toBeLessThan(2);
+    expect(Math.abs(s.drawRect.width - perch.width)).toBeLessThan(2);
+    const logo = s.boxLogo!;
+    expect(logo, "the logo stays in the box").not.toBeNull();
+    expect(logo.x).toBeGreaterThan(box.x);
+    expect(logo.x).toBeLessThan(box.x + box.width);
+    expect(logo.y).toBeGreaterThan(box.y);
+    expect(logo.y).toBeLessThan(box.y + box.height);
+});
+
+test("the arm fades out, then InMoov rises into his frame, along the scroll", async ({ page, isMobile }) => {
+    test.skip(isMobile, "phones keep the arm in its box");
+    await open(page);
+    await page.locator("article.home__feature").last().evaluate((feature) => feature.scrollIntoView({ block: "center" }));
+    await expect.poll(async () => (await state(page)).perch).not.toBeNull();
+    const at = async (share: number) => {
+        await scrollBetween(page, "article.home__feature:last-of-type", "[data-robot-finale]", share);
+        await page.waitForTimeout(300);
+        return state(page);
+    };
+    // Fading out at its spot, no pan to InMoov.
+    const leaving = await at(0.25);
+    expect(leaving.view).toBe(0);
+    expect(leaving.perch).not.toBeNull();
+    // InMoov in his frame, rising in; never sliding in from the side.
+    const frame = async () => (await page.locator("[data-robot-finale]").boundingBox())!;
+    const rising = await at(0.6);
+    expect(rising.view).toBe(1);
+    expect(rising.drawn).toBe(true);
+    expect(Math.abs(rising.drawRect.left - (await frame()).x)).toBeLessThan(2);
+    expect(rising.drawRect.top, "still rising").toBeGreaterThan((await frame()).y + 1);
+    const there = await at(0.9);
+    expect(Math.abs(there.drawRect.top - (await frame()).y), "risen into his frame").toBeLessThan(2);
 });
 
 test("nothing is drawn with no robot on screen", async ({ page }) => {
     await open(page);
+    // Straight from the features, where the arm is fixed on screen.
+    await page.locator("article.home__feature").first().evaluate((feature) => feature.scrollIntoView({ block: "center" }));
+    await page.waitForTimeout(300);
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     await expect.poll(async () => (await state(page)).drawn).toBe(false);
     const s = await settle(page);

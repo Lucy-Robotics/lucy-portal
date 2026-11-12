@@ -2,19 +2,20 @@
  * Draws the world into its rectangle on the page. As `enter` goes 0 -> 1 the arm
  * shrinks into the box (landed at 0.8), and the visible area closes in on the box
  * from 0.55, so it stays wider than the box while the arm flies in. Once landed,
- * the track (track.ts) keeps the drawing on the box, a perch or the finale, sliding it
- * in on arrival, and nothing is drawn while that station is off screen.
+ * the track (track.ts) keeps the drawing on the box, a perch or the finale, gliding
+ * or fading it from one to the next, and nothing is drawn while it is off screen. The box's
+ * infinity stays in the box when the arm leaves it.
  */
 import * as THREE from "three";
 
-import { ARRIVAL, BOX_SLIDE, CLOSE_FROM, RESTING_GLOW } from "../config.ts";
-import { easeOutCubic, smoothstep } from "../math.ts";
+import { ARRIVAL, BOX_SLIDE, CLOSE_FROM, FOV, RESTING_GLOW } from "../config.ts";
+import { degToRad, easeOutCubic, smoothstep } from "../math.ts";
 import type { So101PickDemo } from "../so101PickDemo.ts";
 import type { Framing } from "./framing.ts";
 import { glowArea, glowReach, logoGlow, rgbOf } from "./glow.ts";
 import type { SceneRenderer } from "./renderer.ts";
 import type { TrackFrame } from "./track.ts";
-import { chamferedClip, HIDDEN, lerpRect, partsBounds, screenBounds, toRect, viewHeight, viewWidth, type Rect } from "./screen.ts";
+import { chamferedClip, HIDDEN, lerpRect, partsBounds, screenBounds, toRect, toScreen, viewHeight, viewWidth, type Rect } from "./screen.ts";
 import type { createWorld } from "./world.ts";
 
 type ViewScene = {
@@ -43,12 +44,39 @@ export type ViewFrame = {
     arrival: number;
 };
 
+// Scratch space for the per-frame maths.
+const rest = new THREE.Vector3();
+const inBox = new THREE.Vector3();
+const turn = new THREE.Quaternion();
+
 export function createView(s: ViewScene) {
     const { page, camera, boxPick } = s;
     const { scene, arm, boxInfinity, boxPayload, heroPayload } = s.world;
     const glowRgb = rgbOf(s.accent);
     let hintPlaced = false;
     let drawn = false; // the last frame put something on screen
+    let pinned = false; // the box's infinity is placed to stay in the box (pinToBox)
+
+    /* With the drawing elsewhere, places the box's infinity (at rest at `rest`) where it shows in the box
+       just as in the box's own shot: same spot and size on screen, at the same depth, turned with the camera.
+       Call with the camera framed for the box; it is framed for `drawRect` on return. */
+    const pinToBox = (rest: THREE.Vector3, box: Rect, drawRect: Rect, frame: () => void) => {
+        const group = boxPayload.group;
+        inBox.copy(rest).applyMatrix4(camera.matrixWorldInverse);
+        const depth = -inBox.z;
+        // Where it shows on screen, in the box's shot.
+        const { x, y } = toScreen(rest, camera, box);
+        turn.copy(camera.quaternion).invert();
+        frame();
+        // The same spot in the drawing's shot.
+        const ndcX = (x - drawRect.left) / drawRect.width * 2 - 1;
+        const ndcY = 1 - (y - drawRect.top) / drawRect.height * 2;
+        const tan = Math.tan(degToRad(FOV / 2));
+        group.position.set(ndcX * depth * tan * camera.aspect, ndcY * depth * tan, -depth).applyMatrix4(camera.matrixWorld);
+        group.quaternion.copy(camera.quaternion).multiply(turn);
+        group.scale.setScalar(box.height / drawRect.height);
+        pinned = true;
+    };
 
     /* "Click me!" above the arm while it waits in the hero. It stays put once placed. */
     const placeHint = (hint: ViewFrame["hint"], drawRect: Rect) => {
@@ -85,20 +113,34 @@ export function createView(s: ViewScene) {
             const drawRect = track ? { ...track.drawRect } : lerpRect(f.heroRect, box, settle);
             // Rises into view on load from a screen lower.
             drawRect.top += (1 - f.rise) ** 3 * height;
-            const arrived = track ? easeOutCubic(f.arrival) : 1;
+            // Sliding into a station it just reached, or fading in (or out) along the scroll.
+            const arrived = track ? easeOutCubic(f.arrival) * track.reveal : 1;
             drawRect.top += (1 - arrived) * ARRIVAL.rise;
             const level = f.compact ? 1 - settle : 0;
-            s.framing.place(landed ? f.view : 0, drawRect.width / drawRect.height, level);
+            const frame = () => s.framing.place(landed ? f.view : 0, drawRect.width / drawRect.height, level);
 
             // Slides in and lights up as the arm settles, unless the arm brought one (lit already).
-            // Perched, the arm stands alone by the feature's picture.
+            // Once the arm has left the box, it stays there, and goes with it.
             const held = boxPick.state.holding;
             const arrive = held ? 1 : smoothstep(enter, 0.35, 0.95);
-            boxPayload.shown = arrive > 0 && (held || track?.perch == null);
+            const left = !held && track !== null && !track.boxed;
+            boxPayload.shown = arrive > 0 && (!left || box.top + box.height > headerBottom && box.top < height);
             boxPayload.setGlow(held ? 1 : smoothstep(enter, 0.55, 1));
-            if (!held && boxPick.idle) boxPayload.group.position.x = boxInfinity.x - (1 - arrive) * BOX_SLIDE;
+            const group = boxPayload.group;
+            if (pinned && !left) {
+                group.position.copy(boxInfinity);
+                group.quaternion.identity();
+                group.scale.setScalar(1);
+                pinned = false;
+            }
+            rest.copy(boxInfinity).setX(boxInfinity.x - (1 - arrive) * BOX_SLIDE);
+            if (!held && boxPick.idle) group.position.x = rest.x;
+            if (left && boxPayload.shown && boxPick.idle) {
+                s.framing.place(0, box.width / box.height);
+                pinToBox(rest, box, drawRect, frame);
+            } else frame();
             const humanoid = s.humanoid();
-            if (humanoid) humanoid.visible = track?.nearFinale ?? false;
+            if (humanoid) humanoid.visible = track?.view === 1;
             page.frame.toggleAttribute("data-landed", landed);
 
             const screen: Rect = { left: -1, top: -1, width: viewWidth() + 2, height: height + 2 };

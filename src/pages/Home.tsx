@@ -16,6 +16,7 @@ import { EXTERNAL_LINKS } from "../constants/Links.ts";
 import { useScrollReveal } from "../hooks/useScrollReveal.ts";
 import ExternalLinkIcon from "../components/ExternalLinkIcon.tsx";
 import Logo from "../components/Logo.tsx";
+import LucyDiagram from "../components/LucyDiagram.tsx";
 import RobotShowcase from "../components/RobotShowcase.tsx";
 import { DiscordIcon } from "../components/svg/index.ts";
 import { illustrationFor } from "../lib/featureIllustrations.ts";
@@ -68,6 +69,11 @@ const FEATURES: { slug: string; icon: Icon; title: string; description: string }
     },
 ];
 
+/* Features shown with a live component instead of a picture. */
+const LIVE_MEDIA: Partial<Record<string, ComponentType>> = {
+    "open-portable": LucyDiagram,
+};
+
 const POINTS: { icon: Icon; title: string; text: string }[] = [
     { icon: HiOutlineCodeBracketSquare, title: "Open source", text: "GPLv3, built in the open." },
     { icon: HiOutlineCpuChip, title: "Simulation & real hardware", text: "Same code in Gazebo or on the robot." },
@@ -96,6 +102,21 @@ const Home = () => {
         onScroll();
         window.addEventListener("scroll", onScroll, { passive: true });
         return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    // The outro and the footer fill the last screen together (home.css), so the outro needs the footer's height.
+    useEffect(() => {
+        const home = homeRef.current;
+        const footer = document.querySelector<HTMLElement>(".footer");
+        if (!home || !footer) return;
+        const measure = () => {
+            const margin = parseFloat(getComputedStyle(footer).marginTop) || 0;
+            home.style.setProperty("--footer-height", `${footer.offsetHeight + margin}px`);
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(footer);
+        return () => observer.disconnect();
     }, []);
 
     const scrollToContent = () => {
@@ -282,6 +303,7 @@ const Home = () => {
                 </header>
 
                 {FEATURES.map(({ slug, icon: Icon, title, description }, i) => {
+                    const Live = LIVE_MEDIA[slug];
                     const illustration = illustrationFor(slug);
                     return (
                         <article key={slug} className="home__feature" aria-labelledby={`home-feature-${slug}`}>
@@ -296,8 +318,10 @@ const Home = () => {
                                 <p className="home__feature-text">{description}</p>
                             </div>
 
-                            <div className="home__feature-media" data-reveal>
-                                {illustration ? (
+                            <div className={`home__feature-media${Live ? " home__feature-media--live" : ""}`} data-reveal>
+                                {Live ? (
+                                    <Live />
+                                ) : illustration ? (
                                     <img src={illustration} alt="" loading="lazy" decoding="async" />
                                 ) : (
                                     <div className="home__feature-placeholder">
@@ -307,8 +331,8 @@ const Home = () => {
                                 )}
                             </div>
 
-                            {/* Where the arm stands, beside the text, while this feature is on screen; it slides across
-                                to the next one's (robots/scene/track.ts). data-robot-gesture is what it acts out (robots/config.ts). */}
+                            {/* The column the arm stands in, beside the text, while this feature is on screen; it stays put
+                                on screen from one feature to the next (robots/scene/track.ts). data-robot-gesture is what it acts out (robots/config.ts). */}
                             <div className="home__feature-perch" data-robot-perch data-robot-gesture={slug} aria-hidden="true" />
                         </article>
                     );
@@ -321,11 +345,13 @@ const Home = () => {
                         <span className="home__kicker-sep">//</span> One last thing
                     </p>
                     <h2 id="home-finale-title" className="home__chapter-title" data-reveal>
-                        Lucy isn&apos;t just for <span className="home__accent">arms</span>.
+                        Lucy isn&apos;t built for one robot. It&apos;s built for{" "}
+                        <span className="home__accent">every robot</span>.
                     </h2>
                     <p className="home__description" data-reveal>
-                        The same platform drives full humanoids, like InMoov: the open-source,
-                        3D-printed robot by Gael Langevin. Go on, say hi.
+                        Arms, mobile bases, full humanoids: Lucy speaks to them all the same way.
+                        Here&apos;s InMoov, the open-source 3D-printed humanoid by Gael Langevin,
+                        running on Lucy. Go on, say hi.
                     </p>
                 </div>
 

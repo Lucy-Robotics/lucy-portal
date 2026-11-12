@@ -258,6 +258,12 @@ export class So101PickDemo {
         this.pose(this.progress, 0);
     }
 
+    /* Strike the pose at `t` on the timeline without moving along it, to measure it; preview(state.progress) puts it back. */
+    preview(t: number) {
+        this.pose(t, 0);
+        this.robot.updateMatrixWorld(true);
+    }
+
     /* Timeline target. 0 is rest, 0.5 at the grasp with jaws open, 1 holding. */
     setGoal(goal: number) {
         if (this.reachable) this.goal = clamp(goal, 0, 1);
