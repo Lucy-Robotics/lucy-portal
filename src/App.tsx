@@ -8,8 +8,12 @@ import Home from "./pages/Home";
 import Download from "./pages/Download";
 import Roadmap from "./pages/Roadmap";
 import Blog from "./pages/Blog";
+import Feedback from "./pages/Feedback";
+import FeedbackFormPage from "./pages/FeedbackFormPage";
 
 const BlogPostDetail = lazy(() => import("./pages/BlogPostDetail"));
+const FeedbackEditor = lazy(() => import("./pages/FeedbackEditor"));
+const FeedbackResults = lazy(() => import("./pages/FeedbackResults"));
 const Accessibility = lazy(() => import("./pages/Accessibility"));
 const Legal = lazy(() => import("./pages/Legal"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
@@ -34,6 +38,10 @@ const App = () => {
                         <Route path="/roadmap" element={<Roadmap />} />
                         <Route path="/blog" element={<Blog />} />
                         <Route path="/blog/:id" element={<BlogPostDetail />} />
+                        <Route path="/feedback" element={<Feedback />} />
+                        <Route path="/feedback/:slug" element={<FeedbackFormPage />} />
+                        <Route path="/feedback/:formId/edit" element={<FeedbackEditor />} />
+                        <Route path="/feedback/:formId/results" element={<FeedbackResults />} />
                         <Route path="/accessibility" element={<Accessibility />} />
                         <Route path="/legal" element={<Legal />} />
                         <Route path="*" element={<NotFound />} />

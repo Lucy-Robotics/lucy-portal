@@ -101,6 +101,24 @@ const pages: PageReport[] = [
     ],
   },
   {
+    name: "Feedback",
+    path: "/feedback",
+    level: "Good",
+    summary:
+      "Beta feedback forms with grouped, labelled questions, plus an admin editor and results with chart alternatives.",
+    done: [
+      "Choice and rating questions are fieldsets with a legend; text questions have visible labels",
+      "Required questions are marked visually and announced as “(required)”",
+      "Validation errors are tied to each question with aria-describedby and summed up in an alert that takes focus",
+      "Rating scale uses native radio buttons, so arrow keys work",
+      "Admins can reorder questions with Move up / Move down buttons as well as drag-and-drop",
+      "Each results chart has a screen-reader table; the timeline can be read day by day with the arrow keys",
+    ],
+    gaps: [
+      "The individual responses table scrolls horizontally when a form has many questions",
+    ],
+  },
+  {
     name: "404 Not found",
     path: "*",
     level: "Good",
