@@ -101,6 +101,7 @@ export default function Header({ sticky = true }: HeaderProps) {
                 <nav className="header__center" aria-label="Primary">
                     <a href="/blog">Blog</a>
                     <a href="/roadmap">Roadmap</a>
+                    <a href="/feedback">Feedback</a>
 
                     <ExternalLink href={EXTERNAL_LINKS.GITHUB}>
                         GitHub
@@ -156,6 +157,9 @@ export default function Header({ sticky = true }: HeaderProps) {
                 </a>
                 <a href="/roadmap" onClick={closeMenu}>
                     Roadmap
+                </a>
+                <a href="/feedback" onClick={closeMenu}>
+                    Feedback
                 </a>
                 <ExternalLink href={EXTERNAL_LINKS.GITHUB} onClick={closeMenu}>
                     GitHub

@@ -7,6 +7,8 @@ interface ImportMetaEnv {
     readonly KEYCLOAK_CLIENT_ID: string;
     /* The Vite server (dev or preview) proxies the token exchange. */
     readonly KEYCLOAK_TOKEN_PROXY: boolean;
+    /* Fake admin sign-in, no Keycloak needed. Only honored by `npm run dev`. */
+    readonly DEVELOPMENT_MODE: boolean;
 }
 
 interface ImportMeta {

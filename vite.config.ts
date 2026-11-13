@@ -64,6 +64,7 @@ export default defineConfig(({ mode, command }) => {
       "import.meta.env.KEYCLOAK_CLIENT_ID": JSON.stringify(env.KEYCLOAK_CLIENT_ID ?? ""),
       // Only the flag, never the secret, reaches the bundle.
       "import.meta.env.KEYCLOAK_TOKEN_PROXY": JSON.stringify(Boolean(env.KEYCLOAK_CLIENT_SECRET)),
+      "import.meta.env.DEVELOPMENT_MODE": JSON.stringify(env.DEVELOPMENT_MODE === "true"),
     },
     server: {
       ...listen,
