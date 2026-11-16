@@ -122,7 +122,7 @@ const Download = () => {
                         <div className="download__install-card-body">
                             <p className="download__install-text">
                                 Clone the repository, install the environment,
-                                build it, and then launch Lucy normally.
+                                build it, and then launch Lucy.
                             </p>
 
                             <CommandTerminal
