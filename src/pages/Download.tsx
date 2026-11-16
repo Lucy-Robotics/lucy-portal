@@ -166,19 +166,7 @@ const Download = () => {
                         <div className="download__install-card-body">
                             <p className="download__install-text">
                                 Download the latest Lucy.exe from the Lucy
-                                Windows releases page, run it, then use the
-                                launcher as usual.
-                            </p>
-
-                            <p className="download__install-text">
-                                Once installed, launch Lucy from the Start Menu
-                                and enable Core + Control Panel.
-                            </p>
-
-                            <p className="download__install-text">
-                                Native GUI apps (RViz, Gazebo, rqt) additionally
-                                need a third-party X server. The browser control
-                                panel does not.
+                                Windows releases page and run it.
                             </p>
                         </div>
 
