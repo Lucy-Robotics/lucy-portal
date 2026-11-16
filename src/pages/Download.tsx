@@ -62,6 +62,12 @@ const CURL_LINES = [
     "  && python3 Lucy.py",
 ];
 
+const LINUX_LINES = [
+    "git clone https://github.com/Lucy-Robotics/lucy_ws.git",
+    "cd lucy_ws",
+    "python3 Lucy.py",
+];
+
 const Download = () => {
     return (
         <div className="download">
@@ -119,6 +125,13 @@ const Download = () => {
                                 build it, and then launch Lucy normally.
                             </p>
 
+                            <div className="download__terminal-actions">
+                                <CopyButton
+                                    text={LINUX_LINES.join("\n")}
+                                    label="Linux and macOS install commands"
+                                />
+                            </div>
+
                             <div className="download__terminal">
                                 {/* Focusable so keyboard users can scroll it horizontally. */}
                                 <pre
@@ -128,25 +141,17 @@ const Download = () => {
                                     aria-label="Linux and macOS install commands"
                                 >
                                     <code>
-                                        <span className="download__terminal-line">
-                                            <span className="download__terminal-prompt">
-                                                ${" "}
+                                        {LINUX_LINES.map((line) => (
+                                            <span
+                                                key={line}
+                                                className="download__terminal-line"
+                                            >
+                                                <span className="download__terminal-prompt">
+                                                    ${" "}
+                                                </span>
+                                                {line}
                                             </span>
-                                            git clone
-                                            https://github.com/Lucy-Robotics/lucy_ws.git
-                                        </span>
-                                        <span className="download__terminal-line">
-                                            <span className="download__terminal-prompt">
-                                                ${" "}
-                                            </span>
-                                            cd lucy_ws
-                                        </span>
-                                        <span className="download__terminal-line">
-                                            <span className="download__terminal-prompt">
-                                                ${" "}
-                                            </span>
-                                            python3 Lucy.py
-                                        </span>
+                                        ))}
                                     </code>
                                 </pre>
                             </div>
@@ -226,7 +231,7 @@ const Download = () => {
                         />
                     </div>
 
-                    <div className="download__terminal download__terminal--wide download__terminal--featured">
+                    <div className="download__terminal download__terminal--wide">
                         <pre
                             className="download__terminal-body"
                             tabIndex={0}
