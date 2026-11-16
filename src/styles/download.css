@@ -264,8 +264,9 @@ a.download__highlight:hover {
     cursor: pointer;
 }
 
-.copy-button:hover,
+.copy-button:hover:not(:disabled),
 .copy-button:focus-visible {
+    background: transparent;
     color: var(--color-highlight);
 }
 
