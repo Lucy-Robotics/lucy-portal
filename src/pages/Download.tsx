@@ -7,6 +7,7 @@ import {
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
+import CopyButton from "../components/CopyButton.tsx";
 import { EXTERNAL_LINKS, INSTALLER_URL } from "../constants/Links.ts";
 import "../styles/download.css";
 
@@ -185,9 +186,9 @@ const Download = () => {
 
                         <div className="download__install-card-body">
                             <p className="download__install-text">
-                                Open the Lucy Windows releases page, download
-                                the latest Lucy.exe, run the installer, then use
-                                the launcher as normal.
+                                Download the latest Lucy.exe from the Lucy
+                                Windows releases page, run it, then use the
+                                launcher as usual.
                             </p>
 
                             <p className="download__install-text">
@@ -217,7 +218,13 @@ const Download = () => {
                 </div>
 
                 <div className="chamfer download__curl-panel">
-                    <h3 className="download__curl-title">Or use the curl installer</h3>
+                    <div className="download__curl-header">
+                        <h3 className="download__curl-title">Or use the curl installer</h3>
+                        <CopyButton
+                            text={CURL_LINES.join("\n")}
+                            label="curl installer command"
+                        />
+                    </div>
 
                     <div className="download__terminal download__terminal--wide download__terminal--featured">
                         <pre

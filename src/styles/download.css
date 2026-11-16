@@ -230,6 +230,18 @@ a.download__highlight:hover {
     padding: 1.75rem;
 }
 
+.download__curl-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.copy-button {
+    gap: 0.5rem;
+}
+
 .download__curl-title {
     margin: 0;
 
