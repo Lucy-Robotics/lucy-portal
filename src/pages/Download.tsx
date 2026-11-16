@@ -129,19 +129,6 @@ const Download = () => {
                                 lines={LINUX_LINES}
                                 label="Linux and macOS install commands"
                             />
-
-                            <p className="download__install-text">
-                                Then use the launcher as usual. In the launcher,
-                                enable Core + Control Panel, then open the Control
-                                Panel at{" "}
-                                <a
-                                    href="http://localhost:4004"
-                                    className="download__highlight"
-                                >
-                                    http://localhost:4004
-                                </a>
-                                .
-                            </p>
                         </div>
 
                         <div className="download__install-card-footer">
