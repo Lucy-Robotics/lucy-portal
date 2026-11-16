@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
-import { EXTERNAL_LINKS } from "../constants/Links.ts";
+import { EXTERNAL_LINKS, INSTALLER_URL } from "../constants/Links.ts";
 import "../styles/download.css";
 
 function ExternalIcon() {
@@ -53,14 +53,15 @@ const REQUIREMENTS: {
     },
 ];
 
+const CURL_LINES = [
+    `curl -fsSL "${INSTALLER_URL}" -o installer.py \\`,
+    "  && python3 installer.py \\",
+    "  && rm installer.py \\",
+    "  && cd lucy_ws \\",
+    "  && python3 Lucy.py",
+];
+
 const Download = () => {
-    const installerUrl =
-        typeof window !== "undefined"
-            ? new URL("/installer", window.location.origin).toString()
-            : "/installer";
-
-    const curlCommand = `curl -fsSL "${installerUrl}" -o installer.py && python3 installer.py`;
-
     return (
         <div className="download">
             <div className="download__content">
@@ -158,7 +159,8 @@ const Download = () => {
                                     className="download__highlight"
                                 >
                                     http://localhost:4004
-                                </a>{" "}
+                                </a>
+                                .
                             </p>
                         </div>
 
@@ -183,8 +185,8 @@ const Download = () => {
 
                         <div className="download__install-card-body">
                             <p className="download__install-text">
-                                Go to the latest Lucy Windows Installer release,
-                                download Lucy.exe, run the installer, then use
+                                Open the Lucy Windows releases page, download
+                                the latest Lucy.exe, run the installer, then use
                                 the launcher as normal.
                             </p>
 
@@ -202,7 +204,7 @@ const Download = () => {
 
                         <div className="download__install-card-footer">
                             <a
-                                href="https://github.com/Lucy-Robotics/Lucy-Windows-Installer/releases/latest"
+                                href={EXTERNAL_LINKS.WINDOWS_RELEASES}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="header__button header__button--main download__install-button"
@@ -215,16 +217,30 @@ const Download = () => {
                 </div>
 
                 <div className="chamfer download__curl-panel">
-                    <h3 className="download__curl-title">OR use the curl installer</h3>
+                    <h3 className="download__curl-title">Or use the curl installer</h3>
 
-                    <div className="download__terminal download__terminal--wide">
+                    <div className="download__terminal download__terminal--wide download__terminal--featured">
                         <pre
                             className="download__terminal-body"
                             tabIndex={0}
                             role="region"
                             aria-label="curl installer command"
                         >
-                            <code>{curlCommand}</code>
+                            <code>
+                                {CURL_LINES.map((line, index) => (
+                                    <span
+                                        key={line}
+                                        className="download__terminal-line"
+                                    >
+                                        {index === 0 && (
+                                            <span className="download__terminal-prompt">
+                                                ${" "}
+                                            </span>
+                                        )}
+                                        {line}
+                                    </span>
+                                ))}
+                            </code>
                         </pre>
                     </div>
                 </div>

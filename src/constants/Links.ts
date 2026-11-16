@@ -9,4 +9,7 @@ export const EXTERNAL_LINKS = {
     PYTHON: "https://www.python.org/downloads/",
     PIXI: "https://pixi.sh/latest/",
     GIT: "https://git-scm.com/downloads",
+    WINDOWS_RELEASES: "https://github.com/Lucy-Robotics/Lucy_windows/releases",
 } as const;
+
+export const INSTALLER_URL = "https://lucy-robotics.com/installer";

@@ -223,9 +223,11 @@ a.download__highlight:hover {
 }
 
 .download__curl-panel {
+    --chamfer-border: var(--color-highlight);
+
     width: 100%;
     margin-top: 2rem;
-    padding: 1.5rem;
+    padding: 1.75rem;
 }
 
 .download__curl-title {
@@ -233,7 +235,7 @@ a.download__highlight:hover {
 
     color: var(--color-text-pri);
 
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     font-weight: var(--font-weight-bold);
     text-align: left;
 }
@@ -242,10 +244,19 @@ a.download__highlight:hover {
     margin-top: 1rem;
 }
 
-.download__curl-actions {
-    display: flex;
-    justify-content: flex-start;
-    margin-top: 1rem;
+.download__terminal--featured {
+    border-color: var(--color-highlight);
+}
+
+.download__terminal--featured .download__terminal-body {
+    padding: 1.5rem;
+
+    font-size: 1rem;
+    font-weight: var(--font-weight-bold);
+}
+
+.download__terminal--featured .download__terminal-line:first-child {
+    color: var(--color-highlight);
 }
 
 .download__install-footer {
