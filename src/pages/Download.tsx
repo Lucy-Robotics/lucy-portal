@@ -7,7 +7,7 @@ import {
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
-import CopyButton from "../components/CopyButton.tsx";
+import CommandTerminal from "../components/CommandTerminal.tsx";
 import { EXTERNAL_LINKS, INSTALLER_URL } from "../constants/Links.ts";
 import "../styles/download.css";
 
@@ -125,36 +125,10 @@ const Download = () => {
                                 build it, and then launch Lucy normally.
                             </p>
 
-                            <div className="download__terminal-actions">
-                                <CopyButton
-                                    text={LINUX_LINES.join("\n")}
-                                    label="Linux and macOS install commands"
-                                />
-                            </div>
-
-                            <div className="download__terminal">
-                                {/* Focusable so keyboard users can scroll it horizontally. */}
-                                <pre
-                                    className="download__terminal-body"
-                                    tabIndex={0}
-                                    role="region"
-                                    aria-label="Linux and macOS install commands"
-                                >
-                                    <code>
-                                        {LINUX_LINES.map((line) => (
-                                            <span
-                                                key={line}
-                                                className="download__terminal-line"
-                                            >
-                                                <span className="download__terminal-prompt">
-                                                    ${" "}
-                                                </span>
-                                                {line}
-                                            </span>
-                                        ))}
-                                    </code>
-                                </pre>
-                            </div>
+                            <CommandTerminal
+                                lines={LINUX_LINES}
+                                label="Linux and macOS install commands"
+                            />
 
                             <p className="download__install-text">
                                 Then use the launcher as usual. In the launcher,
@@ -223,44 +197,18 @@ const Download = () => {
                 </div>
 
                 <div className="chamfer download__curl-panel">
-                    <div className="download__curl-header">
-                        <h3 className="download__curl-title">Or use the curl installer</h3>
-                        <CopyButton
-                            text={CURL_LINES.join("\n")}
+                    <h3 className="download__curl-title">Or use the curl installer</h3>
+
+                    <div className="download__terminal--wide">
+                        <CommandTerminal
+                            lines={CURL_LINES}
                             label="curl installer command"
                         />
-                    </div>
-
-                    <div className="download__terminal download__terminal--wide">
-                        <pre
-                            className="download__terminal-body"
-                            tabIndex={0}
-                            role="region"
-                            aria-label="curl installer command"
-                        >
-                            <code>
-                                {CURL_LINES.map((line, index) => (
-                                    <span
-                                        key={line}
-                                        className="download__terminal-line"
-                                    >
-                                        {index === 0 && (
-                                            <span className="download__terminal-prompt">
-                                                ${" "}
-                                            </span>
-                                        )}
-                                        {line}
-                                    </span>
-                                ))}
-                            </code>
-                        </pre>
                     </div>
                 </div>
 
                 <p className="download__install-footer">
-                    Prefer to read first? The full guide (launcher options, GUI
-                    over VNC, developer mode and environment overrides) lives in
-                    the{" "}
+                    Prefer to read first? The full guide lives in the{" "}
                     <a
                         href={EXTERNAL_LINKS.GITHUB}
                         target="_blank"

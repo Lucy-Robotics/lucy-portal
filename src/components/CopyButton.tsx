@@ -33,20 +33,22 @@ const CopyButton = ({ text, label }: CopyButtonProps) => {
         timer.current = window.setTimeout(() => setState("idle"), RESET_DELAY_MS);
     };
 
+    const copied = state === "copied";
+
     return (
         <>
             <button
                 type="button"
-                className="header__button header__button--primary copy-button"
+                className="copy-button"
                 onClick={copy}
+                aria-label={`Copy ${label}`}
+                title={copied ? "Copied" : "Copy"}
             >
-                {state === "copied" ? (
+                {copied ? (
                     <FaCheck aria-hidden="true" />
                 ) : (
                     <FaRegCopy aria-hidden="true" />
                 )}
-                {state === "copied" ? "Copied" : "Copy"}
-                <span className="sr-only"> {label}</span>
             </button>
             <span className="sr-only" role="status" aria-live="polite">
                 {STATUS_MESSAGES[state]}
