@@ -5,6 +5,7 @@ import {
     FaPython,
     FaWindows,
 } from "react-icons/fa";
+import { SiTmux } from "react-icons/si";
 import type { IconType } from "react-icons";
 
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
@@ -51,6 +52,11 @@ const REQUIREMENTS: {
         name: "Git",
         href: EXTERNAL_LINKS.GIT,
     },
+    {
+        icon: SiTmux,
+        name: "tmux",
+        href: EXTERNAL_LINKS.TMUX,
+    },
 ];
 
 const Download = () => {
@@ -76,7 +82,7 @@ const Download = () => {
                 <h2 className="download__section-title">Requirements</h2>
 
                 <p className="download__section-subtext">
-                    You only need Python, Pixi and Git on the host. The
+                    You only need Python, Pixi, Git and tmux on the host. The
                     project environment is managed with Pixi.
                 </p>
 
