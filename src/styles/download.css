@@ -159,6 +159,7 @@
 }
 
 .download__terminal {
+    position: relative;
     overflow: hidden;
 
     border: var(--border-width) solid var(--color-border);
@@ -169,7 +170,7 @@
 
 .download__terminal-body {
     margin: 0;
-    padding: 1rem 1.25rem;
+    padding: 1rem 3rem 1rem 1.25rem;
     overflow-x: auto;
 
     color: var(--color-text-pri);
@@ -242,10 +243,36 @@ a.download__highlight:hover {
     margin-top: 1rem;
 }
 
-.download__curl-actions {
-    display: flex;
-    justify-content: flex-start;
-    margin-top: 1rem;
+.copy-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 1;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+    color: var(--color-text-sec);
+
+    cursor: pointer;
+}
+
+.copy-button:hover:not(:disabled),
+.copy-button:focus-visible {
+    background: transparent;
+    color: var(--color-highlight);
+}
+
+.copy-button:focus-visible {
+    outline: 2px solid var(--color-highlight);
+    outline-offset: -2px;
 }
 
 .download__install-footer {

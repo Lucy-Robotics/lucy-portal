@@ -10,13 +10,11 @@ declare global {
     }
 }
 
-const WINDOWS_INSTALLER = "https://github.com/Lucy-Robotics/Lucy-Windows-Installer/releases";
-
 // First match wins, so more specific prefixes come before broader ones.
 const TRACKED_LINKS: [prefix: string, event: string][] = [
     [EXTERNAL_LINKS.LIVE_DEMO, "Live demo"],
     [EXTERNAL_LINKS.DISCORD, "Discord"],
-    [WINDOWS_INSTALLER, "Windows installer"],
+    [EXTERNAL_LINKS.WINDOWS_RELEASES, "Windows installer"],
     [EXTERNAL_LINKS.GITHUB_RELEASES, "GitHub releases"],
     [EXTERNAL_LINKS.GITHUB, "GitHub"],
     [EXTERNAL_LINKS.GITHUB_ORG, "GitHub org"],

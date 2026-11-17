@@ -7,7 +7,8 @@ import {
 } from "react-icons/fa";
 import type { IconType } from "react-icons";
 
-import { EXTERNAL_LINKS } from "../constants/Links.ts";
+import CommandTerminal from "../components/CommandTerminal.tsx";
+import { EXTERNAL_LINKS, INSTALLER_URL } from "../constants/Links.ts";
 import "../styles/download.css";
 
 function ExternalIcon() {
@@ -53,14 +54,21 @@ const REQUIREMENTS: {
     },
 ];
 
+const CURL_LINES = [
+    `curl -fsSL "${INSTALLER_URL}" -o installer.py \\`,
+    "  && python3 installer.py \\",
+    "  && rm installer.py \\",
+    "  && cd lucy_ws \\",
+    "  && python3 Lucy.py",
+];
+
+const LINUX_LINES = [
+    "git clone https://github.com/Lucy-Robotics/lucy_ws.git",
+    "cd lucy_ws",
+    "python3 Lucy.py",
+];
+
 const Download = () => {
-    const installerUrl =
-        typeof window !== "undefined"
-            ? new URL("/installer", window.location.origin).toString()
-            : "/installer";
-
-    const curlCommand = `curl -fsSL "${installerUrl}" -o installer.py && python3 installer.py`;
-
     return (
         <div className="download">
             <div className="download__content">
@@ -114,52 +122,13 @@ const Download = () => {
                         <div className="download__install-card-body">
                             <p className="download__install-text">
                                 Clone the repository, install the environment,
-                                build it, and then launch Lucy normally.
+                                build it, and then launch Lucy.
                             </p>
 
-                            <div className="download__terminal">
-                                {/* Focusable so keyboard users can scroll it horizontally. */}
-                                <pre
-                                    className="download__terminal-body"
-                                    tabIndex={0}
-                                    role="region"
-                                    aria-label="Linux and macOS install commands"
-                                >
-                                    <code>
-                                        <span className="download__terminal-line">
-                                            <span className="download__terminal-prompt">
-                                                ${" "}
-                                            </span>
-                                            git clone
-                                            https://github.com/Lucy-Robotics/lucy_ws.git
-                                        </span>
-                                        <span className="download__terminal-line">
-                                            <span className="download__terminal-prompt">
-                                                ${" "}
-                                            </span>
-                                            cd lucy_ws
-                                        </span>
-                                        <span className="download__terminal-line">
-                                            <span className="download__terminal-prompt">
-                                                ${" "}
-                                            </span>
-                                            python3 Lucy.py
-                                        </span>
-                                    </code>
-                                </pre>
-                            </div>
-
-                            <p className="download__install-text">
-                                Then use the launcher as usual. In the launcher,
-                                enable Core + Control Panel, then open the Control
-                                Panel at{" "}
-                                <a
-                                    href="http://localhost:4004"
-                                    className="download__highlight"
-                                >
-                                    http://localhost:4004
-                                </a>{" "}
-                            </p>
+                            <CommandTerminal
+                                lines={LINUX_LINES}
+                                label="Linux and macOS install commands"
+                            />
                         </div>
 
                         <div className="download__install-card-footer">
@@ -183,26 +152,14 @@ const Download = () => {
 
                         <div className="download__install-card-body">
                             <p className="download__install-text">
-                                Go to the latest Lucy Windows Installer release,
-                                download Lucy.exe, run the installer, then use
-                                the launcher as normal.
-                            </p>
-
-                            <p className="download__install-text">
-                                Once installed, launch Lucy from the Start Menu
-                                and enable Core + Control Panel.
-                            </p>
-
-                            <p className="download__install-text">
-                                Native GUI apps (RViz, Gazebo, rqt) additionally
-                                need a third-party X server. The browser control
-                                panel does not.
+                                Download the latest Lucy.exe from the Lucy
+                                Windows releases page and run it.
                             </p>
                         </div>
 
                         <div className="download__install-card-footer">
                             <a
-                                href="https://github.com/Lucy-Robotics/Lucy-Windows-Installer/releases/latest"
+                                href={EXTERNAL_LINKS.WINDOWS_RELEASES}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="header__button header__button--main download__install-button"
@@ -215,24 +172,18 @@ const Download = () => {
                 </div>
 
                 <div className="chamfer download__curl-panel">
-                    <h3 className="download__curl-title">OR use the curl installer</h3>
+                    <h3 className="download__curl-title">Or use the curl installer</h3>
 
-                    <div className="download__terminal download__terminal--wide">
-                        <pre
-                            className="download__terminal-body"
-                            tabIndex={0}
-                            role="region"
-                            aria-label="curl installer command"
-                        >
-                            <code>{curlCommand}</code>
-                        </pre>
+                    <div className="download__terminal--wide">
+                        <CommandTerminal
+                            lines={CURL_LINES}
+                            label="curl installer command"
+                        />
                     </div>
                 </div>
 
                 <p className="download__install-footer">
-                    Prefer to read first? The full guide (launcher options, GUI
-                    over VNC, developer mode and environment overrides) lives in
-                    the{" "}
+                    Prefer to read first? The full guide lives in the{" "}
                     <a
                         href={EXTERNAL_LINKS.GITHUB}
                         target="_blank"
