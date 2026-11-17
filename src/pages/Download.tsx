@@ -136,7 +136,7 @@ const Download = () => {
                                             <span className="download__terminal-prompt">
                                                 ${" "}
                                             </span>
-                                            git clone
+                                            git clone -b release/v0.3.0
                                             https://github.com/Lucy-Robotics/lucy_ws.git
                                         </span>
                                         <span className="download__terminal-line">
