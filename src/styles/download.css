@@ -52,11 +52,17 @@
 
 .download__requirements {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.25rem;
 
     width: 100%;
     margin-top: 2rem;
+}
+
+@media (max-width: 900px) {
+    .download__requirements {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .download__requirement-card {
