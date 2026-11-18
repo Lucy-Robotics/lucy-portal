@@ -5,6 +5,7 @@ import {
     FaPython,
     FaWindows,
 } from "react-icons/fa";
+import { SiTmux } from "react-icons/si";
 import type { IconType } from "react-icons";
 
 import CommandTerminal from "../components/CommandTerminal.tsx";
@@ -52,6 +53,11 @@ const REQUIREMENTS: {
         name: "Git",
         href: EXTERNAL_LINKS.GIT,
     },
+    {
+        icon: SiTmux,
+        name: "tmux",
+        href: EXTERNAL_LINKS.TMUX,
+    },
 ];
 
 const CURL_LINES = [
@@ -63,7 +69,7 @@ const CURL_LINES = [
 ];
 
 const LINUX_LINES = [
-    "git clone https://github.com/Lucy-Robotics/lucy_ws.git",
+    "git clone -b release/v0.3.0 https://github.com/Lucy-Robotics/lucy_ws.git",
     "cd lucy_ws",
     "python3 Lucy.py",
 ];
@@ -84,7 +90,7 @@ const Download = () => {
                 <h2 className="download__section-title">Requirements</h2>
 
                 <p className="download__section-subtext">
-                    You only need Python, Pixi and Git on the host. The
+                    You only need Python, Pixi, Git and tmux on the host. The
                     project environment is managed with Pixi.
                 </p>
 

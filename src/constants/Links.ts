@@ -9,6 +9,7 @@ export const EXTERNAL_LINKS = {
     PYTHON: "https://www.python.org/downloads/",
     PIXI: "https://pixi.sh/latest/",
     GIT: "https://git-scm.com/downloads",
+    TMUX: "https://github.com/tmux/tmux/wiki/Installing",
     WINDOWS_RELEASES: "https://github.com/Lucy-Robotics/Lucy_windows/releases",
 } as const;
 
