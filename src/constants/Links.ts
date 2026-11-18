@@ -10,4 +10,7 @@ export const EXTERNAL_LINKS = {
     PIXI: "https://pixi.sh/latest/",
     GIT: "https://git-scm.com/downloads",
     TMUX: "https://github.com/tmux/tmux/wiki/Installing",
+    WINDOWS_RELEASES: "https://github.com/Lucy-Robotics/Lucy_windows/releases",
 } as const;
+
+export const INSTALLER_URL = "https://lucy-robotics.com/installer";
