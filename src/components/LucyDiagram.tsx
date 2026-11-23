@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { chamferPoints, classes, CUT, delay } from "../lib/diagram.ts";
+import { centerX, centerY, chamferPoints, classes, CUT, delay, selectable, type CaptionText } from "../lib/diagram.ts";
 import DiagramCaption from "./DiagramCaption.tsx";
 
 /*
@@ -29,7 +29,7 @@ type DiagramNode = {
 
 const COLUMNS: Record<Column, string> = { interfaces: "Interfaces", core: "Lucy core", robots: "Robots" };
 
-const NODE_TEXT: Record<NodeId, { title: string; description: string }> = {
+const NODE_TEXT: Record<NodeId, CaptionText> = {
     lcp: {
         title: "Lucy Control Panel",
         description: "The main interface: a web app to drive the robot, move each actuator and follow its telemetry in real time.",
@@ -111,7 +111,6 @@ const GROUPS = (Object.keys(COLUMNS) as Column[]).map((column) => ({
     ids: [...(column === "core" ? ["core" as const] : []), ...NODES.filter((n) => n.column === column).map((n) => n.id)],
 }));
 
-const centerY = (n: DiagramNode) => n.y + n.h / 2;
 
 // Every interface plugs into the core; the core drives every robot.
 const EDGES = NODES.filter((n) => !inCore(n)).map((n) => {
@@ -128,11 +127,7 @@ const CAPTIONS = Object.values(NODE_TEXT);
 export default function LucyDiagram() {
     const [active, setActive] = useState<NodeId>("core");
 
-    const select = (id: NodeId) => ({
-        onMouseEnter: () => setActive(id),
-        onFocus: () => setActive(id),
-        onClick: () => setActive(id),
-    });
+    const select = (id: NodeId) => selectable(() => setActive(id), () => setActive(id));
     const edgeLit = (node: NodeId) => node === active || isCorePart(active);
 
     return (
@@ -158,8 +153,6 @@ export default function LucyDiagram() {
 
                 <g
                     className={classes("diagram__node", "diagram__node--core", active === "core" && "is-active", isCorePart(active) && "is-lit")}
-                    tabIndex={0}
-                    role="button"
                     aria-pressed={active === "core"}
                     aria-label={NODE_TEXT.core.title}
                     {...select("core")}
@@ -190,14 +183,12 @@ export default function LucyDiagram() {
                             node.id === active && "is-active",
                         )}
                         style={delay(i * 0.06)}
-                        tabIndex={0}
-                        role="button"
                         aria-pressed={node.id === active}
                         aria-label={NODE_TEXT[node.id].title}
                         {...select(node.id)}
                     >
                         <polygon points={chamferPoints(node, inCore(node) ? 7 : CUT)} />
-                        <text x={node.x + node.w / 2} y={centerY(node)} textAnchor="middle" dominantBaseline="central">
+                        <text x={centerX(node)} y={centerY(node)} textAnchor="middle" dominantBaseline="central">
                             {NODE_TEXT[node.id].title}
                         </text>
                     </g>

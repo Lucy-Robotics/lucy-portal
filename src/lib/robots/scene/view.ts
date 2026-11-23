@@ -141,8 +141,8 @@ export function createView(s: ViewScene) {
             } else frame();
             const humanoid = s.humanoid();
             if (humanoid) humanoid.visible = track?.view === 1;
-            // Only standing by the features: the box and the hero frame the arm well enough.
-            ground.visible = track?.standing ?? false;
+            // Only standing by the features, unclipped: the box and the hero frame the arm well enough.
+            ground.visible = track !== null && track.clipRect === null;
             page.frame.toggleAttribute("data-landed", landed);
 
             const screen: Rect = { left: -1, top: -1, width: viewWidth() + 2, height: height + 2 };

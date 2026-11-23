@@ -139,20 +139,8 @@
     color: var(--color-highlight);
 }
 
-.home__kicker {
+.home .kicker {
     margin: 0;
-
-    color: var(--color-text-sec);
-
-    font-family: var(--font-brand);
-    font-size: 0.8rem;
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-}
-
-.home__kicker-sep {
-    color: var(--color-highlight);
 }
 
 .home__actions {
@@ -546,7 +534,6 @@ a.home__highlight:hover {
 /* Short screens: the caption gives up its room to the diagram, then goes. */
 @media (max-height: 800px) {
     .home__feature-media--live .diagram__caption {
-        min-height: 0;
         margin-top: 0.75rem;
         padding-top: 0.75rem;
     }
@@ -717,19 +704,17 @@ a.home__highlight:hover {
     font-size: 21px;
 }
 
-.diagram--clients .diagram__node text.diagram__role {
-    fill: var(--color-text-sec);
-
+.diagram--clients .diagram__node .diagram__note {
     font-size: 16px;
 }
 
-.diagram--clients .diagram__node text.diagram__role.is-driver,
-.diagram--clients .diagram__node.is-active text.diagram__role {
-    fill: var(--color-highlight);
-}
-
+/* The client in control. */
 .diagram__node.is-driver polygon {
     stroke: var(--color-highlight);
+}
+
+.diagram__node.is-driver .diagram__note {
+    fill: var(--color-highlight);
 }
 
 /* Phones: the same nodes as stacked groups of chips. */
@@ -864,7 +849,6 @@ a.home__highlight:hover {
 }
 
 .diagram__caption {
-    min-height: 8.5em;
     margin-top: 1.25rem;
     padding-top: 1.25rem;
 

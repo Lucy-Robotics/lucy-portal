@@ -6,7 +6,7 @@
  *
  * From one station to the next the robot follows the scroll: once the sticky box
  * lets go, the arm scrolls away in it, so the features' header has the screen to
- * itself. It comes back up with the first feature, standing (`standing`) where
+ * itself. It comes back up with the first feature, standing (unclipped) where
  * the box was while sticky (the features' arm column lines up with it, home.css),
  * and stays there from one feature to the next, then fades out as InMoov fades
  * and rises in, in the finale's frame (FINALE_ENTRY).
@@ -51,8 +51,6 @@ export type TrackFrame = {
     view: number;
     /* The feature the arm is perched by, if any. */
     perch: number | null;
-    /* The arm stands at its spot by the features: perched, or out of the box already on the way there. */
-    standing: boolean;
 };
 
 const centerY = (rect: Rect) => rect.top + rect.height / 2;
@@ -135,15 +133,12 @@ export function createTrack(page: TrackPage, compact: () => boolean, reduceMotio
                     reveal: 1,
                     view: at.kind === "finale" ? 1 : 0,
                     perch: framed ? null : at.index,
-                    standing: !framed,
                     ...overrides,
                 };
                 shown = frame.station;
                 return frame;
             };
 
-            // Out of the box to the features: once the box lets go (scrolls up from its spot), the arm stays
-            // put, unclipped, as the box scrolls away.
             // Out of the box to the features, with their header between: the arm scrolls away in its box,
             // then comes up with the first feature, from below its spot to it (the feature then under the
             // header). It's by that feature once the feature reaches the middle of the screen.

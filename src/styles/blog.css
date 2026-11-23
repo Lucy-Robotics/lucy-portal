@@ -192,18 +192,6 @@
   gap: 0.5rem;
 }
 
-.back-link {
-  display: inline-block;
-  margin-bottom: 1.5rem;
-  color: var(--color-highlight);
-  font-weight: var(--font-weight-bold);
-  text-decoration: none;
-}
-
-.back-link:hover {
-  text-decoration: underline;
-}
-
 @media (max-width: 640px) {
   .blog-page-container {
     padding: 1.25rem 1rem 2rem;

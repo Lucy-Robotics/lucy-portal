@@ -132,6 +132,8 @@ export default function RobotShowcase({ heroRef, finaleRef }: RobotShowcaseProps
                         className="robot-click-hint"
                         tabIndex={-1}
                         aria-hidden="true"
+                        // Not focused by a click either: it would light up as keyboard focus at the next key.
+                        onMouseDown={(event) => event.preventDefault()}
                         onClick={() => sceneRef.current?.activate("so101")}
                     >
                         Click me!

@@ -178,8 +178,8 @@ const Home = () => {
                         className="home__chapter home__intro"
                         aria-labelledby="home-about-title"
                     >
-                        <p className="home__kicker" data-reveal>
-                            01 <span className="home__kicker-sep">//</span> What is Lucy
+                        <p className="kicker" data-reveal>
+                            01 <span className="kicker__sep">//</span> What is Lucy
                         </p>
                         <h2 id="home-about-title" className="home__chapter-title" data-reveal>
                             An open-source robotics framework, powered by{" "}
@@ -216,7 +216,7 @@ const Home = () => {
                         </a>
 
                         <div className="home__stack" data-reveal>
-                            <p className="home__kicker">Built on</p>
+                            <p className="kicker">Built on</p>
                             <ul className="home__stack-list">
                                 {STACK.map((name) => (
                                     <li key={name}>{name}</li>
@@ -229,8 +229,8 @@ const Home = () => {
                         className="home__chapter home__quickstart"
                         aria-labelledby="home-quickstart-title"
                     >
-                        <p className="home__kicker" data-reveal>
-                            02 <span className="home__kicker-sep">//</span> Quickstart
+                        <p className="kicker" data-reveal>
+                            02 <span className="kicker__sep">//</span> Quickstart
                         </p>
                         <h2 id="home-quickstart-title" className="home__chapter-title" data-reveal>
                             Up and running in{" "}
@@ -295,8 +295,8 @@ const Home = () => {
                 aria-labelledby="home-features-title"
             >
                 <header className="home__features-header">
-                    <p className="home__kicker" data-reveal>
-                        03 <span className="home__kicker-sep">//</span> Features
+                    <p className="kicker" data-reveal>
+                        03 <span className="kicker__sep">//</span> Features
                     </p>
                     <h2 id="home-features-title" className="home__features-title" data-reveal>
                         Everything you need,{" "}
@@ -343,8 +343,8 @@ const Home = () => {
 
             <section className="home__finale" aria-labelledby="home-finale-title">
                 <div className="home__finale-body">
-                    <p className="home__kicker" data-reveal>
-                        <span className="home__kicker-sep">//</span> One last thing
+                    <p className="kicker" data-reveal>
+                        <span className="kicker__sep">//</span> One last thing
                     </p>
                     <h2 id="home-finale-title" className="home__chapter-title" data-reveal>
                         Lucy isn&apos;t built for one robot. It&apos;s built for{" "}

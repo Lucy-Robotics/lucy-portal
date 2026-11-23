@@ -38,27 +38,6 @@
   color: var(--color-highlight);
 }
 
-.feedback-page-container .back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
-  font-weight: var(--font-weight-bold);
-  text-decoration: none;
-}
-
-.feedback-page-container .back-link:hover {
-  text-decoration: underline;
-}
-
-.feedback-page-container .back-link svg {
-  transition: translate 0.15s ease;
-}
-
-.feedback-page-container .back-link:hover svg {
-  translate: -4px 0;
-}
-
 /* Icons in the call-to-action buttons (globals.css). */
 .feedback-page-container .header__button svg,
 .roadmap-form .header__button svg {

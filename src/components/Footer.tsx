@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { HiOutlineArrowUp } from "react-icons/hi2";
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
 import ExternalLinkIcon from "./ExternalLinkIcon.tsx";
 import Logo from "./Logo.tsx";
@@ -97,6 +98,13 @@ const socials = [
     },
 ];
 
+/* Back to the top of the page, and keyboard focus with it (the skip link's target, layouts/MainLayout.tsx). */
+function backToTop() {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+    document.getElementById("main-content")?.focus({ preventScroll: true });
+}
+
 export default function Footer({ children }: FooterProps) {
     const year = new Date().getFullYear();
     const { isAuthenticated, isLoading, displayName, login, logout } = useAuth();
@@ -150,6 +158,11 @@ export default function Footer({ children }: FooterProps) {
                         </p>
 
                         <div className="footer__bottom-right">
+                            <button type="button" className="footer__top-button" onClick={backToTop}>
+                                Back to top
+                                <HiOutlineArrowUp aria-hidden="true" />
+                            </button>
+
                             <div className="footer__admin">
                                 {isAuthenticated ? (
                                     <>

@@ -20,6 +20,12 @@
     flex-direction: column;
 }
 
+/* Focusable (tabindex="-1") only as the skip link's target, so a click anywhere on the page focuses it too:
+   no focus ring around the whole page, even once a key (a lone Cmd/Super) makes it "keyboard" focus. */
+.app-content:focus {
+    outline: none;
+}
+
 .skip-link {
     position: absolute;
     top: -100px;
@@ -508,6 +514,42 @@
     gap: 1.25rem;
 }
 
+.footer__top-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    padding: 0;
+
+    border: none;
+    background: none;
+    color: var(--color-text-sec);
+
+    font: inherit;
+    font-size: 0.8rem;
+
+    cursor: pointer;
+}
+
+/* Beats the site-wide button:hover fill. */
+.footer__top-button:hover:not(:disabled) {
+    background: none;
+    color: var(--color-highlight);
+}
+
+.footer__top-button svg {
+    transition: translate 0.15s ease;
+}
+
+.footer__top-button:hover svg {
+    translate: 0 -2px;
+}
+
+.footer__top-button:focus-visible {
+    outline: 2px solid var(--color-highlight);
+    outline-offset: 2px;
+}
+
 .footer__admin {
     display: flex;
     align-items: center;
@@ -880,6 +922,31 @@ select:focus {
     line-height: 1.6;
 }
 
+
+/* "Back to ..." above a page (blog posts, feedback forms); its arrow, if any, nudges back on hover. */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+
+    color: var(--color-highlight);
+
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.back-link svg {
+    transition: translate 0.15s ease;
+}
+
+.back-link:hover svg {
+    translate: -4px 0;
+}
 
 /* The small label over a section or page title ("03 // Features"), as on the landing page. */
 .kicker {
