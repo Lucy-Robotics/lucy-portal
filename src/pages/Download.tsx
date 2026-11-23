@@ -1,14 +1,10 @@
-import {
-    FaCube,
-    FaGitAlt,
-    FaLinux,
-    FaPython,
-    FaWindows,
-} from "react-icons/fa";
+import type { ComponentType, SVGProps } from "react";
+import { HiOutlineCube } from "react-icons/hi2";
 import { SiTmux } from "react-icons/si";
-import type { IconType } from "react-icons";
 
 import CommandTerminal from "../components/CommandTerminal.tsx";
+import ExternalLinkIcon from "../components/ExternalLinkIcon.tsx";
+import { GitIcon, LinuxIcon, PythonIcon, WindowsIcon } from "../components/svg/index.ts";
 import { EXTERNAL_LINKS, INSTALLER_URL } from "../constants/Links.ts";
 import "../styles/download.css";
 

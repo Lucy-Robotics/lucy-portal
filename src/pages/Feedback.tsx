@@ -1,8 +1,22 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import {
+  HiOutlineArrowRight,
+  HiOutlineChartBar,
+  HiOutlineCog6Tooth,
+  HiOutlineDocumentDuplicate,
+  HiOutlineEye,
+  HiOutlineLockClosed,
+  HiOutlineLockOpen,
+  HiOutlinePencilSquare,
+  HiOutlinePlus,
+  HiOutlineTrash,
+} from 'react-icons/hi2';
 import { useAuth } from '../providers/AuthProvider';
 import ConfirmModal from '../components/ConfirmModal';
 import FormMetaModal from '../components/feedback/FormMetaModal';
+import { BUTTON } from '../components/feedback/buttons';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 import {
   ApiError,
   createFeedbackForm,
@@ -54,6 +68,8 @@ const Feedback: React.FC = () => {
   const [selectedForm, setSelectedForm] = useState<FeedbackFormListItem | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [formToDelete, setFormToDelete] = useState<FeedbackFormListItem | null>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  useScrollReveal(pageRef, !loading && !authLoading);
 
   const fetchForms = useCallback(async () => {
     try {
@@ -156,7 +172,7 @@ const Feedback: React.FC = () => {
   }
 
   return (
-    <div className="feedback-page-container">
+    <div ref={pageRef} className="feedback-page-container">
       {isFormOpen && (
         <FormMetaModal
           form={selectedForm}
@@ -178,11 +194,16 @@ const Feedback: React.FC = () => {
       </ConfirmModal>
 
       <header className="page-header">
+        <p className="kicker">
+          <span className="kicker__sep">//</span> Beta testing
+        </p>
         <h1 className="page-title">
           <span className="page-title__accent" aria-hidden="true">&gt;</span> Feedback
         </h1>
         <p className="page-subtitle">
-          Testing a beta of Lucy? Tell us what works and what doesn't. Answers are anonymous.
+          Testing a beta of Lucy? Tell us{' '}
+          <span className="page-title__accent">what works and what doesn't</span>. Answers are
+          anonymous.
         </p>
       </header>
 
@@ -195,8 +216,14 @@ const Feedback: React.FC = () => {
       {adminForms && (
         <section className="feedback-admin" aria-labelledby="feedback-admin-title">
           <div className="feedback-section-header">
-            <h2 id="feedback-admin-title">All forms</h2>
-            <button type="button" onClick={handleCreate}>
+            <div>
+              <p className="kicker">
+                01 <span className="kicker__sep">//</span> Admin
+              </p>
+              <h2 id="feedback-admin-title">All forms</h2>
+            </div>
+            <button type="button" className={BUTTON.mainAction} onClick={handleCreate}>
+              <HiOutlinePlus aria-hidden="true" />
               Create form
             </button>
           </div>
@@ -206,7 +233,7 @@ const Feedback: React.FC = () => {
           ) : (
             <ul className="feedback-form-list">
               {adminForms.map((form) => (
-                <li key={form.id} className="chamfer card feedback-form-item">
+                <li key={form.id} className="chamfer card feedback-form-item" data-reveal>
                   <div className="card-body">
                     <div className="feedback-form-item__header">
                       <span className="title">{form.title}</span>
@@ -219,25 +246,57 @@ const Feedback: React.FC = () => {
                       {form.responseCount} responses
                     </p>
                     <div className="admin-controls feedback-actions">
-                      <Link to={`/feedback/${form.id}/edit`}>Questions</Link>
-                      <Link to={`/feedback/${form.id}/results`}>Results</Link>
-                      {form.status !== 'DRAFT' && <Link to={`/feedback/${form.slug}`}>View</Link>}
-                      <button type="button" onClick={() => handleEdit(form)}>
+                      <Link to={`/feedback/${form.id}/edit`} className={BUTTON.action}>
+                        <HiOutlinePencilSquare aria-hidden="true" />
+                        Questions
+                      </Link>
+                      <Link to={`/feedback/${form.id}/results`} className={BUTTON.action}>
+                        <HiOutlineChartBar aria-hidden="true" />
+                        Results
+                      </Link>
+                      {form.status !== 'DRAFT' && (
+                        <Link to={`/feedback/${form.slug}`} className={BUTTON.action}>
+                          <HiOutlineEye aria-hidden="true" />
+                          View
+                        </Link>
+                      )}
+                      <button type="button" className={BUTTON.action} onClick={() => handleEdit(form)}>
+                        <HiOutlineCog6Tooth aria-hidden="true" />
                         Settings
                       </button>
                       {form.status === 'OPEN' ? (
-                        <button type="button" onClick={() => setStatus(form, 'CLOSED')}>
+                        <button
+                          type="button"
+                          className={BUTTON.action}
+                          onClick={() => setStatus(form, 'CLOSED')}
+                        >
+                          <HiOutlineLockClosed aria-hidden="true" />
                           Close
                         </button>
                       ) : (
-                        <button type="button" onClick={() => setStatus(form, 'OPEN')}>
+                        <button
+                          type="button"
+                          className={BUTTON.action}
+                          onClick={() => setStatus(form, 'OPEN')}
+                        >
+                          <HiOutlineLockOpen aria-hidden="true" />
                           Open
                         </button>
                       )}
-                      <button type="button" onClick={() => handleDuplicate(form)}>
+                      <button
+                        type="button"
+                        className={BUTTON.action}
+                        onClick={() => handleDuplicate(form)}
+                      >
+                        <HiOutlineDocumentDuplicate aria-hidden="true" />
                         Duplicate
                       </button>
-                      <button type="button" onClick={() => setFormToDelete(form)}>
+                      <button
+                        type="button"
+                        className={BUTTON.danger}
+                        onClick={() => setFormToDelete(form)}
+                      >
+                        <HiOutlineTrash aria-hidden="true" />
                         Delete
                       </button>
                     </div>
@@ -250,24 +309,41 @@ const Feedback: React.FC = () => {
       )}
 
       <section aria-labelledby="feedback-open-title">
-        {adminForms && <h2 id="feedback-open-title">Open forms</h2>}
+        {adminForms && (
+          <div className="feedback-section-header">
+            <div>
+              <p className="kicker">
+                02 <span className="kicker__sep">//</span> Public
+              </p>
+              <h2 id="feedback-open-title">Open forms</h2>
+            </div>
+          </div>
+        )}
         {!adminForms && (
           <h2 id="feedback-open-title" className="sr-only">
             Open forms
           </h2>
         )}
         {openForms.length === 0 ? (
-          <p>There is no feedback form open right now. Come back during the next beta!</p>
+          <p className="feedback-empty">
+            There is no feedback form open right now. Come back during the next beta!
+          </p>
         ) : (
           <ul className="feedback-form-list">
-            {openForms.map((form) => (
-              <li key={form.id}>
+            {openForms.map((form, index) => (
+              <li key={form.id} data-reveal>
                 <Link to={`/feedback/${form.slug}`} className="chamfer card feedback-form-link">
                   <span className="card-body">
-                    <span className="title">{form.title}</span>
-                    {form.description && (
-                      <span className="feedback-form-link__description">{form.description}</span>
-                    )}
+                    <span className="feedback-form-link__index" aria-hidden="true">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="feedback-form-link__text">
+                      <span className="title">{form.title}</span>
+                      {form.description && (
+                        <span className="feedback-form-link__description">{form.description}</span>
+                      )}
+                    </span>
+                    <HiOutlineArrowRight className="feedback-form-link__arrow" aria-hidden="true" />
                   </span>
                 </Link>
               </li>

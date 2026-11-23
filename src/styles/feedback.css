@@ -8,17 +8,20 @@
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
+  padding: 32px var(--page-gutter) 48px;
 }
 
 .feedback-page-container--wide {
   max-width: 1100px;
 }
 
+/* Section titles as on the landing page, under their kicker. */
 .feedback-page-container h2 {
-  margin: 2rem 0 1rem;
-  font-size: 1.25rem;
+  margin: 0 0 16px;
+  color: var(--color-text-pri);
+  font-size: clamp(1.5rem, 3vw, 2rem);
   font-weight: var(--font-weight-bold);
+  line-height: 1.2;
 }
 
 .feedback-page-container p {
@@ -36,9 +39,48 @@
 }
 
 .feedback-page-container .back-link {
-  display: inline-block;
-  margin-bottom: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-weight: var(--font-weight-bold);
   text-decoration: none;
+}
+
+.feedback-page-container .back-link:hover {
+  text-decoration: underline;
+}
+
+.feedback-page-container .back-link svg {
+  transition: translate 0.15s ease;
+}
+
+.feedback-page-container .back-link:hover svg {
+  translate: -4px 0;
+}
+
+/* Icons in the call-to-action buttons (globals.css). */
+.feedback-page-container .header__button svg,
+.roadmap-form .header__button svg {
+  flex: none;
+  width: 1.15em;
+  height: 1.15em;
+}
+
+.feedback-page-container .header__button.feedback-button--danger:hover:not(:disabled),
+.feedback-page-container .header__button.feedback-button--danger:focus-visible {
+  --chamfer-border: var(--color-alert);
+  color: var(--color-alert);
+}
+
+/* A square button holding only an icon. */
+.roadmap-form .header__button.feedback-icon-button {
+  width: 40px;
+  padding: 0;
+}
+
+.feedback-empty {
+  color: var(--color-text-sec);
 }
 
 .feedback-prewrap {
@@ -49,17 +91,28 @@
 .feedback-panel {
   --chamfer: 0.75rem;
 
-  margin-bottom: 1rem;
-  padding: 1.25rem 1.5rem;
+  margin-bottom: 16px;
+  padding: 24px;
+}
+
+/* The question's number, like the landing page's features. */
+.feedback-panel__index {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-highlight);
+  font-family: var(--font-brand);
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
 }
 
 .feedback-section-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
-  margin: 2rem 0 1rem;
+  gap: 16px;
+  margin: 48px 0 24px;
 }
 
 .feedback-section-header h2 {
@@ -71,12 +124,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem 1rem;
-  margin-top: 1rem;
-}
-
-.feedback-actions button {
-  padding: 0.4rem 0.9rem;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .feedback-badge {
@@ -110,6 +159,7 @@
 .feedback-form .form-buttons {
   display: flex;
   justify-content: flex-end;
+  margin-top: 24px;
 }
 
 .feedback-form__status:focus {
@@ -129,18 +179,14 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 16px 24px;
   border: var(--border-width) solid var(--color-warning);
 }
 
 .feedback-notice p {
   margin: 0;
-}
-
-.feedback-notice button {
-  padding: 0.4rem 0.9rem;
 }
 
 .feedback-thanks h2,
@@ -298,7 +344,7 @@
 .feedback-question-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -341,11 +387,14 @@
 
 .feedback-question-item .admin-controls {
   flex-wrap: wrap;
-  margin-top: 0.75rem;
+  gap: 8px;
+  margin-top: 16px;
 }
 
-.feedback-question-item .admin-controls button {
-  padding: 0.4rem 0.9rem;
+.feedback-question-item__index {
+  margin-right: 12px;
+  color: var(--color-highlight);
+  font-family: var(--font-brand);
 }
 
 .feedback-form-link {
@@ -358,10 +407,32 @@
   --chamfer-border: var(--color-highlight);
 }
 
+/* Number, title and description, then an arrow that nudges forward on hover. */
 .feedback-form-link .card-body {
   display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.feedback-form-link__index {
+  flex: none;
+  color: var(--color-highlight);
+  font-family: var(--font-brand);
+  font-size: 2rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+}
+
+.feedback-form-link__text {
+  display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 8px;
+  min-width: 0;
+}
+
+.feedback-form-link .title {
+  font-size: 1.15rem;
 }
 
 .feedback-form-link__description {
@@ -369,8 +440,21 @@
   font-size: 0.9rem;
 }
 
+.feedback-form-link__arrow {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-highlight);
+  transition: translate 0.15s ease;
+}
+
+.feedback-form-link:hover .feedback-form-link__arrow,
+.feedback-form-link:focus-visible .feedback-form-link__arrow {
+  translate: 4px 0;
+}
+
 .feedback-archived {
-  margin-top: 2rem;
+  margin-top: 32px;
   color: var(--color-text-sec);
 }
 
@@ -396,9 +480,6 @@
   border-bottom: var(--border-width) solid var(--color-border);
 }
 
-.feedback-archived button {
-  padding: 0.35rem 0.8rem;
-}
 
 .feedback-options-editor {
   margin: 0;
@@ -425,9 +506,6 @@
   min-width: 0;
 }
 
-.feedback-options-editor li button {
-  padding: 0 0.7rem;
-}
 
 .feedback-rating-labels-editor {
   display: grid;
@@ -475,7 +553,7 @@
 .feedback-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 16px;
 }
 
 .feedback-stat {
@@ -486,7 +564,8 @@
 }
 
 .feedback-stat__value {
-  color: var(--color-text-pri);
+  color: var(--color-highlight);
+  font-family: var(--font-brand);
   font-size: 2.5rem;
   font-weight: var(--font-weight-bold);
   line-height: 1.1;
@@ -498,13 +577,13 @@
 }
 
 .feedback-page-container .feedback-results-heading {
-  margin-top: 2.5rem;
+  margin-top: 48px;
 }
 
 .feedback-results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
-  gap: 1rem;
+  gap: 16px;
 }
 
 .feedback-results-card {
@@ -792,21 +871,13 @@
   min-width: 0;
 }
 
-.feedback-table button {
-  padding: 0.3rem 0.7rem;
-  white-space: nowrap;
-}
 
 .feedback-pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.feedback-pagination button {
-  padding: 0.4rem 0.9rem;
+  gap: 16px;
+  margin-top: 16px;
 }
 
 /* ==============================
@@ -815,11 +886,15 @@
 
 @media (max-width: 640px) {
   .feedback-page-container {
-    padding: 1.5rem 1rem 2.5rem;
+    padding: 24px var(--page-gutter) 40px;
   }
 
   .feedback-panel {
-    padding: 1rem;
+    padding: 16px;
+  }
+
+  .feedback-form-link .card-body {
+    gap: 16px;
   }
 
   .feedback-summary {
@@ -836,7 +911,8 @@
     gap: 1rem;
   }
 
-  .feedback-form .form-buttons button {
-    flex: 1;
+  .feedback-form .form-buttons button,
+  .feedback-actions .header__button {
+    flex: 1 1 auto;
   }
 }

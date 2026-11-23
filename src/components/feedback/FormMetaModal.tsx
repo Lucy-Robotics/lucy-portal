@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAccessibleDialog } from '../../hooks/useAccessibleDialog';
+import { BUTTON } from './buttons';
 import { STATUS_LABELS, type FeedbackForm, type FormInput } from '../../types/feedback';
 import '../../styles/roadmap-form.css';
 
@@ -107,9 +108,11 @@ const FormMetaModal: React.FC<FormMetaModalProps> = ({ form, error, onSave, onCl
             </p>
           )}
           <div className="form-buttons">
-            <button type="submit">Save</button>
-            <button type="button" className="secondary" onClick={onClose}>
+            <button type="button" className={BUTTON.secondary} onClick={onClose}>
               Cancel
+            </button>
+            <button type="submit" className={BUTTON.main}>
+              Save
             </button>
           </div>
         </form>

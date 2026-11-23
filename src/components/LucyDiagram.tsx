@@ -233,10 +233,20 @@ export default function LucyDiagram() {
             </div>
 
             <figcaption className="diagram__caption" aria-live="polite">
-                {/* Re-mounted on change so the fade replays. */}
-                <div key={active} className="diagram__caption-body">
-                    <strong>{NODE_TEXT[active].title}</strong>
-                    <p>{NODE_TEXT[active].description}</p>
+                {/* Every description is laid out, unseen, in the same cell, so the caption is always as tall as
+                    the longest one: the diagram above never resizes as the selection changes. */}
+                <div className="diagram__caption-slot">
+                    {(Object.keys(NODE_TEXT) as NodeId[]).map((id) => (
+                        <div key={id} className="diagram__caption-sizer" aria-hidden="true">
+                            <strong>{NODE_TEXT[id].title}</strong>
+                            <p>{NODE_TEXT[id].description}</p>
+                        </div>
+                    ))}
+                    {/* Re-mounted on change so the fade replays. */}
+                    <div key={active} className="diagram__caption-body">
+                        <strong>{NODE_TEXT[active].title}</strong>
+                        <p>{NODE_TEXT[active].description}</p>
+                    </div>
                 </div>
                 <p className="diagram__hint">Hover or select a block to learn more.</p>
             </figcaption>

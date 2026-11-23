@@ -1,6 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
+  HiOutlineArrowDown,
+  HiOutlineArrowLeft,
+  HiOutlineArrowUp,
+  HiOutlineArrowUturnLeft,
+  HiOutlineChartBar,
+  HiOutlineCog6Tooth,
+  HiOutlineEye,
+  HiOutlinePencil,
+  HiOutlinePlus,
+  HiOutlineArchiveBox,
+  HiOutlineTrash,
+} from 'react-icons/hi2';
+import {
   DndContext,
   closestCenter,
   PointerSensor,
@@ -20,6 +33,7 @@ import { SortableItem } from '../components/SortableItem';
 import ConfirmModal from '../components/ConfirmModal';
 import FormMetaModal from '../components/feedback/FormMetaModal';
 import QuestionEditModal from '../components/feedback/QuestionEditModal';
+import { BUTTON } from '../components/feedback/buttons';
 import {
   ApiError,
   createFeedbackQuestion,
@@ -216,7 +230,10 @@ const FeedbackEditor: React.FC = () => {
         <p className="error-message" role="alert">
           {isAuthenticated ? error : 'Sign in as an administrator to edit feedback forms.'}
         </p>
-        <Link to="/feedback">Back to feedback</Link>
+        <Link to="/feedback" className="back-link">
+          <HiOutlineArrowLeft aria-hidden="true" />
+          Back to feedback
+        </Link>
       </div>
     );
   }
@@ -253,9 +270,13 @@ const FeedbackEditor: React.FC = () => {
       </ConfirmModal>
 
       <Link to="/feedback" className="back-link">
-        ← All forms
+        <HiOutlineArrowLeft aria-hidden="true" />
+        All forms
       </Link>
       <header className="page-header">
+        <p className="kicker">
+          <span className="kicker__sep">//</span> Form editor
+        </p>
         <h1 className="page-title">
           <span className="page-title__accent" aria-hidden="true">&gt;</span> {form.title}
         </h1>
@@ -265,15 +286,25 @@ const FeedbackEditor: React.FC = () => {
         <div className="admin-controls feedback-actions">
           <button
             type="button"
+            className={BUTTON.action}
             onClick={() => {
               setModalError(null);
               setIsSettingsOpen(true);
             }}
           >
+            <HiOutlineCog6Tooth aria-hidden="true" />
             Settings
           </button>
-          <Link to={`/feedback/${form.id}/results`}>Results</Link>
-          {form.status !== 'DRAFT' && <Link to={`/feedback/${form.slug}`}>View form</Link>}
+          <Link to={`/feedback/${form.id}/results`} className={BUTTON.action}>
+            <HiOutlineChartBar aria-hidden="true" />
+            Results
+          </Link>
+          {form.status !== 'DRAFT' && (
+            <Link to={`/feedback/${form.slug}`} className={BUTTON.action}>
+              <HiOutlineEye aria-hidden="true" />
+              View form
+            </Link>
+          )}
         </div>
       </header>
 
@@ -284,8 +315,14 @@ const FeedbackEditor: React.FC = () => {
       )}
 
       <div className="feedback-section-header">
-        <h2>Questions</h2>
-        <button type="button" onClick={() => openEditor('new')}>
+        <div>
+          <p className="kicker">
+            {String(active.length).padStart(2, '0')} <span className="kicker__sep">//</span> Questions
+          </p>
+          <h2>Questions</h2>
+        </div>
+        <button type="button" className={BUTTON.mainAction} onClick={() => openEditor('new')}>
+          <HiOutlinePlus aria-hidden="true" />
           Add question
         </button>
       </div>
@@ -303,7 +340,10 @@ const FeedbackEditor: React.FC = () => {
                     <div className="card-body">
                       <div className="feedback-question-item__header">
                         <span className="title">
-                          {index + 1}. {question.label}
+                          <span className="feedback-question-item__index" aria-hidden="true">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          {question.label}
                           {question.required && (
                             <span className="feedback-question__required" aria-label="(required)">
                               {' '}
@@ -320,24 +360,42 @@ const FeedbackEditor: React.FC = () => {
                       <div className="admin-controls">
                         <button
                           type="button"
+                          className={BUTTON.action}
                           onClick={() => moveQuestion(index, -1)}
                           disabled={index === 0}
                           aria-label={`Move ${question.label} up`}
                         >
+                          <HiOutlineArrowUp aria-hidden="true" />
                           Move up
                         </button>
                         <button
                           type="button"
+                          className={BUTTON.action}
                           onClick={() => moveQuestion(index, 1)}
                           disabled={index === active.length - 1}
                           aria-label={`Move ${question.label} down`}
                         >
+                          <HiOutlineArrowDown aria-hidden="true" />
                           Move down
                         </button>
-                        <button type="button" onClick={() => openEditor(question)}>
+                        <button
+                          type="button"
+                          className={BUTTON.action}
+                          onClick={() => openEditor(question)}
+                        >
+                          <HiOutlinePencil aria-hidden="true" />
                           Edit
                         </button>
-                        <button type="button" onClick={() => setToDelete(question)}>
+                        <button
+                          type="button"
+                          className={BUTTON.danger}
+                          onClick={() => setToDelete(question)}
+                        >
+                          {question.answerCount ? (
+                            <HiOutlineArchiveBox aria-hidden="true" />
+                          ) : (
+                            <HiOutlineTrash aria-hidden="true" />
+                          )}
                           {question.answerCount ? 'Archive' : 'Delete'}
                         </button>
                       </div>
@@ -362,7 +420,12 @@ const FeedbackEditor: React.FC = () => {
                     ({QUESTION_TYPE_LABELS[question.type]}, {question.answerCount} answers)
                   </span>
                 </span>
-                <button type="button" className="secondary" onClick={() => handleRestore(question)}>
+                <button
+                  type="button"
+                  className={BUTTON.action}
+                  onClick={() => handleRestore(question)}
+                >
+                  <HiOutlineArrowUturnLeft aria-hidden="true" />
                   Restore
                 </button>
               </li>

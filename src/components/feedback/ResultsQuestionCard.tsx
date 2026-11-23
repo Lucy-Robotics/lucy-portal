@@ -19,7 +19,7 @@ const ResultsQuestionCard: React.FC<ResultsQuestionCardProps> = ({
   totalResponses,
 }) => {
   return (
-    <article className="chamfer feedback-panel feedback-results-card">
+    <article className="chamfer feedback-panel feedback-results-card" data-reveal>
       <header className="feedback-results-card__header">
         <h3>{question.label}</h3>
         <span className="feedback-results-card__badges">

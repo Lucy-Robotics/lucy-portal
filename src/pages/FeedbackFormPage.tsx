@@ -1,6 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import {
+  HiOutlineArrowLeft,
+  HiOutlineArrowPath,
+  HiOutlineChartBar,
+  HiOutlinePaperAirplane,
+  HiOutlinePencilSquare,
+} from 'react-icons/hi2';
 import QuestionField from '../components/feedback/QuestionField';
+import { BUTTON } from '../components/feedback/buttons';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 import { useAuth } from '../providers/AuthProvider';
 import { ApiError, getFeedbackForm, submitFeedback } from '../lib/api';
 import { isBackendConfigured } from '../config/env';
@@ -59,6 +68,8 @@ const FeedbackFormPage: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submissions, setSubmissions] = useState(() => readSubmissions(slug));
   const [noticeDismissed, setNoticeDismissed] = useState(false);
+  const pageRef = useRef<HTMLDivElement>(null);
+  useScrollReveal(pageRef, !loading && form !== null);
   const honeypotRef = useRef<HTMLInputElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
 
@@ -161,7 +172,10 @@ const FeedbackFormPage: React.FC = () => {
         <p className="error-message" role="alert">
           {loadError ?? 'Feedback forms are unavailable.'}
         </p>
-        <Link to="/feedback">Back to feedback</Link>
+        <Link to="/feedback" className="back-link">
+          <HiOutlineArrowLeft aria-hidden="true" />
+          Back to feedback
+        </Link>
       </div>
     );
   }
@@ -170,16 +184,25 @@ const FeedbackFormPage: React.FC = () => {
   const lastSubmission = submissions.at(-1);
 
   return (
-    <div className="feedback-page-container">
+    <div ref={pageRef} className="feedback-page-container">
       <header className="page-header">
+        <p className="kicker">
+          <span className="kicker__sep">//</span> Feedback
+        </p>
         <h1 className="page-title">
           <span className="page-title__accent" aria-hidden="true">&gt;</span> {form.title}
         </h1>
         {form.description && <p className="page-subtitle feedback-prewrap">{form.description}</p>}
         {isAuthenticated && (
           <div className="admin-controls feedback-admin-links">
-            <Link to={`/feedback/${form.id}/edit`}>Edit form</Link>
-            <Link to={`/feedback/${form.id}/results`}>Results</Link>
+            <Link to={`/feedback/${form.id}/edit`} className={BUTTON.action}>
+              <HiOutlinePencilSquare aria-hidden="true" />
+              Edit form
+            </Link>
+            <Link to={`/feedback/${form.id}/results`} className={BUTTON.action}>
+              <HiOutlineChartBar aria-hidden="true" />
+              Results
+            </Link>
           </div>
         )}
       </header>
@@ -189,7 +212,8 @@ const FeedbackFormPage: React.FC = () => {
           <h2>Thank you!</h2>
           <p>Your feedback was sent. It helps us make Lucy better.</p>
           {form.allowMultipleResponses && (
-            <button type="button" className="secondary" onClick={resetForm}>
+            <button type="button" className={BUTTON.secondary} onClick={resetForm}>
+              <HiOutlineArrowPath aria-hidden="true" />
               Send another response
             </button>
           )}
@@ -225,7 +249,7 @@ const FeedbackFormPage: React.FC = () => {
           {submissions.length > 0 && !noticeDismissed && (
             <div className="feedback-notice" role="status">
               <p>You already sent feedback with this form from this browser.</p>
-              <button type="button" className="secondary" onClick={() => setNoticeDismissed(true)}>
+              <button type="button" className={BUTTON.action} onClick={() => setNoticeDismissed(true)}>
                 Dismiss
               </button>
             </div>
@@ -242,8 +266,11 @@ const FeedbackFormPage: React.FC = () => {
 
             {form.questions.length === 0 && <p>This form has no questions yet.</p>}
 
-            {form.questions.map((question) => (
-              <div key={question.id} className="chamfer feedback-panel">
+            {form.questions.map((question, index) => (
+              <div key={question.id} className="chamfer feedback-panel" data-reveal>
+                <span className="feedback-panel__index" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
                 <QuestionField
                   question={question}
                   value={answers[question.id]}
@@ -254,7 +281,7 @@ const FeedbackFormPage: React.FC = () => {
             ))}
 
             {form.questions.length > 0 && (
-              <div className="chamfer feedback-panel">
+              <div className="chamfer feedback-panel" data-reveal>
                 <div className="feedback-question">
                   <label htmlFor="feedback-respondent" className="feedback-question__label">
                     Your name or Discord ID (optional)
@@ -292,8 +319,13 @@ const FeedbackFormPage: React.FC = () => {
             </div>
 
             <div className="form-buttons">
-              <button type="submit" disabled={submitting || form.questions.length === 0}>
+              <button
+                type="submit"
+                className={BUTTON.main}
+                disabled={submitting || form.questions.length === 0}
+              >
                 {submitting ? 'Sending...' : 'Send feedback'}
+                <HiOutlinePaperAirplane aria-hidden="true" />
               </button>
             </div>
           </form>

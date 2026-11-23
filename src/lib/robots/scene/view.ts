@@ -51,7 +51,7 @@ const turn = new THREE.Quaternion();
 
 export function createView(s: ViewScene) {
     const { page, camera, boxPick } = s;
-    const { scene, arm, boxInfinity, boxPayload, heroPayload } = s.world;
+    const { scene, arm, ground, boxInfinity, boxPayload, heroPayload } = s.world;
     const glowRgb = rgbOf(s.accent);
     let hintPlaced = false;
     let drawn = false; // the last frame put something on screen
@@ -141,6 +141,8 @@ export function createView(s: ViewScene) {
             } else frame();
             const humanoid = s.humanoid();
             if (humanoid) humanoid.visible = track?.view === 1;
+            // Only standing by the features: the box and the hero frame the arm well enough.
+            ground.visible = track?.standing ?? false;
             page.frame.toggleAttribute("data-landed", landed);
 
             const screen: Rect = { left: -1, top: -1, width: viewWidth() + 2, height: height + 2 };

@@ -1,10 +1,10 @@
-/* The world the robots stand in: lights, the arm and its two infinities. */
+/* The world the robots stand in: lights, the arm, the ground under it and its two infinities. */
 import * as THREE from "three";
 import type { URDFRobot } from "urdf-loader";
 
-import { ARM_YAW, BOX_INFINITY_X } from "../config.ts";
+import { ARM_YAW, BOX_INFINITY_X, GROUND_RADIUS } from "../config.ts";
 import { createLucyGlowMaterial, type InfinityShape } from "../lucyInfinity.ts";
-import { createPayload, type Materials } from "./parts.ts";
+import { createGround, createPayload, type Materials } from "./parts.ts";
 import { cssColor } from "./screen.ts";
 
 export function createWorld(
@@ -30,7 +30,10 @@ export function createWorld(
     const arm = new THREE.Group();
     arm.rotation.y = ARM_YAW;
     arm.add(so101);
-    scene.add(arm);
+    // On the floor under the arm, not in its group: it doesn't turn with the base.
+    const ground = createGround(GROUND_RADIUS, accent);
+    ground.visible = false;
+    scene.add(arm, ground);
 
     // The box's infinity has its own material, so it fades in on its own.
     const boxPayload = createPayload(shape, createLucyGlowMaterial(), accent);
@@ -43,7 +46,7 @@ export function createWorld(
         if (object instanceof THREE.Light) object.layers.enableAll();
     });
 
-    return { scene, fog, arm, boxInfinity, boxPayload, heroPayload };
+    return { scene, fog, arm, ground, boxInfinity, boxPayload, heroPayload };
 }
 
 export function disposeWorld(scene: THREE.Scene) {

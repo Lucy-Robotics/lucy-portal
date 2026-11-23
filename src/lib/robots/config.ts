@@ -15,6 +15,8 @@ export const RESTING_GLOW = 0.35;
 /* Arm yaw at the origin (three-quarters to the viewer), and its infinity's x on the floor. */
 export const ARM_YAW = Math.PI + 0.55;
 export const BOX_INFINITY_X = -0.17;
+/* The ground the perched arm stands on, around its base (scene/parts.ts createGround), in metres. */
+export const GROUND_RADIUS = 0.14;
 /* How far left of its spot the infinity slides in from. */
 export const BOX_SLIDE = 0.35;
 /* InMoov stands to the right, out of the arm's shot. */

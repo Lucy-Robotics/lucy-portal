@@ -5,10 +5,11 @@
  * (InMoov, framed).
  *
  * From one station to the next the robot follows the scroll: once the sticky box
- * lets go, the arm stays put where the box was (the features' arm column lines up
- * with it, home.css) and the box scrolls away without it, unclipped. It stays
- * there from one feature to the next, then fades out as InMoov fades and rises
- * in, in the finale's frame (FINALE_ENTRY).
+ * lets go, the arm scrolls away in it, so the features' header has the screen to
+ * itself. It comes back up with the first feature, standing (`standing`) where
+ * the box was while sticky (the features' arm column lines up with it, home.css),
+ * and stays there from one feature to the next, then fades out as InMoov fades
+ * and rises in, in the finale's frame (FINALE_ENTRY).
  * Between stations that have no glide (phones: the box,
  * then the finale) the robot scrolls with its station like the page around it,
  * and only moves on to the station centred on screen once its own has left the
@@ -50,6 +51,8 @@ export type TrackFrame = {
     view: number;
     /* The feature the arm is perched by, if any. */
     perch: number | null;
+    /* The arm stands at its spot by the features: perched, or out of the box already on the way there. */
+    standing: boolean;
 };
 
 const centerY = (rect: Rect) => rect.top + rect.height / 2;
@@ -132,6 +135,7 @@ export function createTrack(page: TrackPage, compact: () => boolean, reduceMotio
                     reveal: 1,
                     view: at.kind === "finale" ? 1 : 0,
                     perch: framed ? null : at.index,
+                    standing: !framed,
                     ...overrides,
                 };
                 shown = frame.station;
@@ -140,9 +144,14 @@ export function createTrack(page: TrackPage, compact: () => boolean, reduceMotio
 
             // Out of the box to the features: once the box lets go (scrolls up from its spot), the arm stays
             // put, unclipped, as the box scrolls away.
+            // Out of the box to the features, with their header between: the arm scrolls away in its box,
+            // then comes up with the first feature, from below its spot to it (the feature then under the
+            // header). It's by that feature once the feature reaches the middle of the screen.
             if (a.kind === "box" && b.kind === "perch") {
-                const boxed = a.rect.top >= b.rect.top - 0.5;
-                return frameAt(boxed ? a : b, { station: keyOf(t < 0.5 ? a : b), perch: t < 0.5 ? null : b.index });
+                if (a.rect.top + a.rect.height > headerBottom) return frameAt(a);
+                const below = Math.max(0, b.anchor.top - headerBottom);
+                const rising = { ...b, rect: { ...b.rect, top: b.rect.top + below } };
+                return frameAt(rising, { perch: b.anchor.top <= middle ? b.index : null });
             }
             // From the features to the finale: the arm fades out at its spot, then InMoov fades and rises in, in his frame.
             if (a.kind === "perch" && b.kind === "finale") {

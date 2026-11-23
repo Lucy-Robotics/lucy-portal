@@ -1,8 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import {
+  HiOutlineArrowDownTray,
+  HiOutlineArrowLeft,
+  HiOutlineChevronLeft,
+  HiOutlineChevronRight,
+  HiOutlinePencilSquare,
+  HiOutlineTrash,
+} from 'react-icons/hi2';
 import { useAuth } from '../providers/AuthProvider';
 import ConfirmModal from '../components/ConfirmModal';
 import ResultsQuestionCard from '../components/feedback/ResultsQuestionCard';
+import { BUTTON } from '../components/feedback/buttons';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 import Timeline from '../components/feedback/charts/Timeline';
 import {
   ApiError,
@@ -40,6 +50,8 @@ const FeedbackResults: React.FC = () => {
   const [loading, setLoading] = useState(isBackendConfigured);
   const [error, setError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<string | null>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  useScrollReveal(pageRef, !loading && !authLoading && stats !== null);
   const [exporting, setExporting] = useState(false);
 
   const fetchStats = useCallback(async () => {
@@ -126,7 +138,10 @@ const FeedbackResults: React.FC = () => {
         <p className="error-message" role="alert">
           {isAuthenticated ? error : 'Sign in as an administrator to see feedback results.'}
         </p>
-        <Link to="/feedback">Back to feedback</Link>
+        <Link to="/feedback" className="back-link">
+          <HiOutlineArrowLeft aria-hidden="true" />
+          Back to feedback
+        </Link>
       </div>
     );
   }
@@ -135,7 +150,7 @@ const FeedbackResults: React.FC = () => {
   const pageCount = responses ? Math.max(Math.ceil(responses.total / responses.pageSize), 1) : 1;
 
   return (
-    <div className="feedback-page-container feedback-page-container--wide">
+    <div ref={pageRef} className="feedback-page-container feedback-page-container--wide">
       <ConfirmModal
         isOpen={toDelete !== null}
         onClose={() => setToDelete(null)}
@@ -146,16 +161,28 @@ const FeedbackResults: React.FC = () => {
       </ConfirmModal>
 
       <Link to="/feedback" className="back-link">
-        ← All forms
+        <HiOutlineArrowLeft aria-hidden="true" />
+        All forms
       </Link>
       <header className="page-header">
+        <p className="kicker">
+          <span className="kicker__sep">//</span> Results
+        </p>
         <h1 className="page-title">
           <span className="page-title__accent" aria-hidden="true">&gt;</span> {stats.form.title}
         </h1>
-        <p className="page-subtitle">Results</p>
         <div className="admin-controls feedback-actions">
-          <Link to={`/feedback/${stats.form.id}/edit`}>Questions</Link>
-          <button type="button" onClick={handleExport} disabled={exporting || !stats.totalResponses}>
+          <Link to={`/feedback/${stats.form.id}/edit`} className={BUTTON.action}>
+            <HiOutlinePencilSquare aria-hidden="true" />
+            Questions
+          </Link>
+          <button
+            type="button"
+            className={BUTTON.mainAction}
+            onClick={handleExport}
+            disabled={exporting || !stats.totalResponses}
+          >
+            <HiOutlineArrowDownTray aria-hidden="true" />
             {exporting ? 'Exporting...' : 'Export CSV'}
           </button>
         </div>
@@ -168,15 +195,15 @@ const FeedbackResults: React.FC = () => {
       )}
 
       <section className="feedback-summary" aria-label="Summary">
-        <div className="chamfer feedback-panel feedback-stat">
+        <div className="chamfer feedback-panel feedback-stat" data-reveal>
           <span className="chart-muted">Responses</span>
           <span className="feedback-stat__value">{stats.totalResponses}</span>
         </div>
-        <div className="chamfer feedback-panel feedback-stat">
+        <div className="chamfer feedback-panel feedback-stat" data-reveal>
           <span className="chart-muted">First response</span>
           <span className="feedback-stat__date">{formatDate(stats.firstResponseAt)}</span>
         </div>
-        <div className="chamfer feedback-panel feedback-stat">
+        <div className="chamfer feedback-panel feedback-stat" data-reveal>
           <span className="chart-muted">Latest response</span>
           <span className="feedback-stat__date">{formatDate(stats.lastResponseAt)}</span>
         </div>
@@ -184,7 +211,10 @@ const FeedbackResults: React.FC = () => {
 
       <Timeline perDay={stats.perDay} />
 
-      <h2 className="feedback-results-heading">Questions</h2>
+      <p className="kicker feedback-results-heading">
+        01 <span className="kicker__sep">//</span> Per question
+      </p>
+      <h2>Questions</h2>
       {stats.questions.length === 0 && <p>This form has no questions.</p>}
       <div className="feedback-results-grid">
         {stats.questions.map(({ question, stats: questionStats }) => (
@@ -197,7 +227,10 @@ const FeedbackResults: React.FC = () => {
         ))}
       </div>
 
-      <h2 className="feedback-results-heading">Individual responses</h2>
+      <p className="kicker feedback-results-heading">
+        02 <span className="kicker__sep">//</span> Raw answers
+      </p>
+      <h2>Individual responses</h2>
       {!responses || responses.total === 0 ? (
         <p>No responses yet.</p>
       ) : (
@@ -230,9 +263,10 @@ const FeedbackResults: React.FC = () => {
                     <td>
                       <button
                         type="button"
-                        className="secondary"
+                        className={BUTTON.danger}
                         onClick={() => setToDelete(response.id)}
                       >
+                        <HiOutlineTrash aria-hidden="true" />
                         Delete
                       </button>
                     </td>
@@ -245,10 +279,11 @@ const FeedbackResults: React.FC = () => {
             <nav className="feedback-pagination" aria-label="Responses pages">
               <button
                 type="button"
-                className="secondary"
+                className={BUTTON.action}
                 onClick={() => setPage(page - 1)}
                 disabled={page <= 1}
               >
+                <HiOutlineChevronLeft aria-hidden="true" />
                 Previous
               </button>
               <span>
@@ -256,11 +291,12 @@ const FeedbackResults: React.FC = () => {
               </span>
               <button
                 type="button"
-                className="secondary"
+                className={BUTTON.action}
                 onClick={() => setPage(page + 1)}
                 disabled={page >= pageCount}
               >
                 Next
+                <HiOutlineChevronRight aria-hidden="true" />
               </button>
             </nav>
           )}

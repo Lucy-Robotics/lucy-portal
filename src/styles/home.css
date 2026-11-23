@@ -1,7 +1,7 @@
 .home {
     /* The chapters beside the arm's box, and the features beside the arm: the same columns, so the arm
        stays put when the box lets go of it (robots/scene/track.ts). */
-    --home-columns: minmax(0, 65fr) minmax(0, 35fr);
+    --home-columns: minmax(0, 54fr) minmax(0, 46fr);
     --home-gap: clamp(2rem, 4vw, 4rem);
 
     flex: 1;
@@ -389,7 +389,17 @@ a.home__highlight:hover {
 /* Outside the layout grid, so the sticky box lets go before it. */
 .home__features {
     width: var(--page-width);
-    margin: clamp(5rem, 10vw, 9rem) auto 0;
+    margin: 0 auto;
+}
+
+/* A screen of its own, like the chapters, so each scroll after it lands on one whole feature. */
+.home__features-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    min-height: calc(100svh - var(--header-height));
+    padding: 4rem 0;
 }
 
 .home__features-title {
@@ -403,20 +413,20 @@ a.home__highlight:hover {
     line-height: 1.1;
 }
 
-/* The text over its illustration on the left, the arm on the right, where the box was; it stays put on screen from one feature to the next. */
+/* Exactly one screen: the text over its illustration on the left, which takes what height is left, and the arm on
+   the right, where the box was; it stays put on screen from one feature to the next. */
 .home__feature {
     display: grid;
     grid-template-columns: var(--home-columns);
     grid-template-areas:
         "body perch"
         "media perch";
-    grid-template-rows: auto auto;
-    align-content: center;
+    grid-template-rows: auto minmax(0, 1fr);
     column-gap: var(--home-gap);
-    row-gap: 3rem;
+    row-gap: clamp(1rem, 3.5svh, 2rem);
 
-    min-height: calc(100svh - var(--header-height));
-    padding: 4rem 0;
+    height: calc(100svh - var(--header-height));
+    padding: clamp(1.25rem, 5svh, 3rem) 0;
 }
 
 /* Above the robot layer (robot-showcase.css), so the arm passes behind it. */
@@ -433,39 +443,42 @@ a.home__highlight:hover {
     color: var(--color-highlight);
 
     font-family: var(--font-brand);
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-size: clamp(1.5rem, min(3.5vw, 5svh), 3rem);
     font-weight: var(--font-weight-bold);
     line-height: 1;
 }
 
 .home__feature-title {
-    margin: 1.5rem 0 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    margin: clamp(0.5rem, 1.5svh, 1rem) 0 0;
 
     color: var(--color-text-pri);
 
-    font-size: clamp(2rem, 4.5vw, 3.75rem);
+    font-size: clamp(1.375rem, min(3vw, 5svh), 2.75rem);
     font-weight: var(--font-weight-bold);
     line-height: 1.1;
 }
 
 .home__feature-icon {
-    display: block;
+    flex: none;
 
-    width: 2.75rem;
-    height: 2.75rem;
-    margin-bottom: 1rem;
+    width: 0.9em;
+    height: 0.9em;
 
     color: var(--color-highlight);
 }
 
 .home__feature-text {
-    max-width: 32rem;
-    margin: 1.5rem 0 0;
+    max-width: 40rem;
+    margin: clamp(0.5rem, 1.5svh, 1rem) 0 0;
 
     color: var(--color-text-sec);
 
-    font-size: 1.25rem;
-    line-height: 1.7;
+    font-size: clamp(0.9375rem, min(1.4vw, 2.3svh), 1.25rem);
+    line-height: 1.6;
 }
 
 .home__feature-media {
@@ -473,7 +486,7 @@ a.home__highlight:hover {
 
     grid-area: media;
 
-    aspect-ratio: 4 / 3;
+    min-height: 0;
 }
 
 .home__feature-media img {
@@ -483,6 +496,8 @@ a.home__highlight:hover {
     height: 100%;
 
     object-fit: contain;
+    /* Right under the text, however tall the screen. */
+    object-position: left top;
 }
 
 .home__feature-placeholder {
@@ -510,9 +525,41 @@ a.home__highlight:hover {
     color: var(--color-border);
 }
 
-/* A live component (LucyDiagram) instead of a picture: as tall as it needs. */
+/* A live component (LucyDiagram) instead of a picture: shrunk to the height left, like a picture. */
 .home__feature-media--live {
-    aspect-ratio: auto;
+    display: flex;
+}
+
+.home__feature-media--live > .diagram {
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    max-height: 100%;
+}
+
+.home__feature-media--live .diagram__svg {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* Short screens: the caption gives up its room to the diagram, then goes. */
+@media (max-height: 800px) {
+    .home__feature-media--live .diagram__caption {
+        min-height: 0;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+    }
+
+    .home__feature-media--live .diagram__hint {
+        display: none;
+    }
+}
+
+@media (min-width: 601px) and (max-height: 640px) {
+    .home__feature-media--live .diagram__caption {
+        display: none;
+    }
 }
 
 /* ─── Lucy architecture diagram (LucyDiagram.tsx) ─────────────────────── */
@@ -741,12 +788,73 @@ a.home__highlight:hover {
     }
 }
 
+/* In a feature's screen on phones, the stacked chips must fit the height left under the text: tighter, and without
+   the hover caption (the chips say it all). */
+@media (max-width: 600px) {
+    .home__feature-media--live .diagram {
+        padding: 1rem;
+    }
+
+    .home__feature-media--live .diagram__caption {
+        display: none;
+    }
+
+    .home__feature-media--live .diagram__group,
+    .home__feature-media--live .diagram__chips {
+        gap: 0.375rem;
+    }
+
+    .home__feature-media--live .diagram__group-label {
+        font-size: 0.6875rem;
+    }
+
+    .home__feature-media--live .diagram__chip {
+        padding: 0.3rem 0.55rem;
+
+        font-size: 0.75rem;
+    }
+
+    .home__feature-media--live .diagram__connector {
+        height: 0.75rem;
+        margin: 0.125rem 0;
+    }
+}
+
+/* The smallest phones: the groups already read top to bottom without their connectors. */
+@media (max-width: 600px) and (max-height: 620px) {
+    .home__feature-media--live .diagram__connector {
+        display: none;
+    }
+
+    .home__feature-media--live .diagram__chip {
+        padding: 0.2rem 0.45rem;
+
+        font-size: 0.6875rem;
+    }
+
+    .home__feature-text {
+        line-height: 1.5;
+    }
+}
+
 .diagram__caption {
     min-height: 8.5em;
     margin-top: 1.25rem;
     padding-top: 1.25rem;
 
     border-top: var(--border-width) solid var(--diagram-line);
+}
+
+.diagram__caption-slot {
+    display: grid;
+}
+
+.diagram__caption-slot > * {
+    grid-area: 1 / 1;
+}
+
+.diagram__caption-sizer {
+    visibility: hidden;
 }
 
 .diagram__caption-body {
@@ -868,17 +976,7 @@ a.home__highlight:hover {
 /* ─── Scroll reveal (see useScrollReveal) ─────────────────────────────── */
 
 /* Hidden only once the hook runs, so content never stays invisible. */
-.js-reveal [data-reveal] {
-    transition:
-        opacity 0.8s ease,
-        translate 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-.js-reveal [data-reveal]:not([data-revealed]) {
-    opacity: 0;
-    translate: 0 2.5rem;
-}
-
+/* The generic [data-reveal] fade and rise are in globals.css. */
 .js-reveal .home__feature-body[data-reveal]:not([data-revealed]) {
     translate: -3rem 0;
 }
@@ -985,22 +1083,22 @@ a.home__highlight:hover {
         max-width: 26rem;
     }
 
-    /* Stacked, the text first. */
+    /* Stacked, the text first and the illustration in the height left: still a screen each. */
     .home__feature {
         grid-template-columns: minmax(0, 1fr);
         grid-template-areas: "body" "media";
-        gap: 2.5rem;
+    }
 
-        min-height: 0;
-        padding: 4rem 0;
+    .home__feature-text {
+        font-size: clamp(0.875rem, 2.2svh, 1.0625rem);
+    }
+
+    .home__feature-media img {
+        object-position: center top;
     }
 }
 
 @media (max-width: 560px) {
-    .home__feature-text {
-        font-size: 1.0625rem;
-    }
-
     .home__feature-placeholder svg {
         width: 5rem;
         height: 5rem;
@@ -1021,5 +1119,29 @@ a.home__highlight:hover {
 
     .home__step-command {
         font-size: 0.8rem;
+    }
+}
+
+/* ─── Short screens ──────────────────────────────────────────────────── */
+
+/* Too short for a feature to fit (a phone on its side): each feature as tall as it needs. */
+@media (max-height: 539px) {
+    .home__features-header {
+        min-height: 0;
+    }
+
+    .home__feature {
+        grid-template-rows: auto auto;
+
+        height: auto;
+        padding: 3rem 0;
+    }
+
+    .home__feature-media {
+        aspect-ratio: 4 / 3;
+    }
+
+    .home__feature-media--live {
+        aspect-ratio: auto;
     }
 }

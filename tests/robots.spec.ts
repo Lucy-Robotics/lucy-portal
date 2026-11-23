@@ -42,6 +42,8 @@ async function settle(page: Page) {
 
 async function open(page: Page) {
     await page.goto("/");
+    // The tests scroll to spots between screens, which the page's scroll snapping (home.css) would move off.
+    await page.addStyleTag({ content: "html { scroll-snap-type: none !important; }" });
     await page.waitForFunction(() => {
         const s = (window as unknown as { __robotPage?: Hook }).__robotPage?.state();
         return s && Object.keys(s.plans).length > 0;
@@ -277,28 +279,54 @@ const scrollBetween = (page: Page, from: string, to: string, share: number) => p
     window.scrollBy(0, a + (b - a) * share - middle);
 }, { from, to, share });
 
-test("the arm stays put as its box scrolls away, the logo in the box", async ({ page, isMobile }) => {
+/* Scrolls the element's top to `offset` px below the header. */
+const scrollTopTo = (page: Page, selector: string, offset: number) => page.evaluate(({ selector, offset }) => {
+    const header = document.querySelector(".header")?.getBoundingClientRect().bottom ?? 0;
+    window.scrollBy(0, document.querySelector(selector)!.getBoundingClientRect().top - header - offset);
+}, { selector, offset });
+
+test("the arm leaves in its box, then comes up with the first feature", async ({ page, isMobile }) => {
     test.skip(isMobile, "phones keep the arm in its box");
     await open(page);
-    // From the first feature, so the box is no longer sticky and scrolls with the page.
-    await page.locator("article.home__feature").first().evaluate((feature) => feature.scrollIntoView({ block: "center" }));
-    await expect.poll(async () => (await state(page)).perch).toBe(0);
-    await scrollBetween(page, ".robot-showcase__frame", "article.home__feature", 0.3);
+    const box = page.locator(".robot-showcase__frame");
+
+    // Half its box scrolled away: still in it, the logo too.
+    await scrollTopTo(page, ".home__features-header", 0);
+    await page.evaluate(() => {
+        const header = document.querySelector(".header")?.getBoundingClientRect().bottom ?? 0;
+        const frame = document.querySelector(".robot-showcase__frame")!.getBoundingClientRect();
+        window.scrollBy(0, frame.bottom - header - frame.height / 2);
+    });
     await page.waitForTimeout(300);
-    const s = await state(page);
-    expect(s.drawn, "seen all the way").toBe(true);
-    const box = (await page.locator(".robot-showcase__frame").boundingBox())!;
-    expect(s.drawRect.top, "left behind by the box").toBeGreaterThan(box.y + 1);
-    // Right where the box was while sticky: lined up with the features' column, not moving.
-    const perch = (await page.locator("[data-robot-perch]").first().boundingBox())!;
-    expect(Math.abs(s.drawRect.left - perch.x)).toBeLessThan(2);
-    expect(Math.abs(s.drawRect.width - perch.width)).toBeLessThan(2);
+    let s = await state(page);
+    expect(s.drawn, "seen in its box").toBe(true);
+    const inBox = (await box.boundingBox())!;
+    expect(Math.abs(s.drawRect.top - inBox.y), "scrolling away with the box").toBeLessThan(2);
+    expect(s.perch).toBeNull();
     const logo = s.boxLogo!;
     expect(logo, "the logo stays in the box").not.toBeNull();
-    expect(logo.x).toBeGreaterThan(box.x);
-    expect(logo.x).toBeLessThan(box.x + box.width);
-    expect(logo.y).toBeGreaterThan(box.y);
-    expect(logo.y).toBeLessThan(box.y + box.height);
+    expect(logo.y).toBeGreaterThan(inBox.y);
+    expect(logo.y).toBeLessThan(inBox.y + inBox.height);
+
+    // The features' header alone on screen.
+    await scrollTopTo(page, ".home__features-header", 0);
+    await page.waitForTimeout(300);
+    const alone = await state(page);
+    expect(alone.perch).toBeNull();
+    expect(alone.so101.top, "the header has the screen to itself: the arm is all below it").toBeGreaterThanOrEqual(page.viewportSize()!.height);
+
+    // Coming up with the first feature, to its spot, lined up with the features' column.
+    await scrollTopTo(page, "article.home__feature", 0);
+    await expect.poll(async () => (await state(page)).perch).toBe(0);
+    const spot = (await state(page)).drawRect;
+    const perch = (await page.locator("[data-robot-perch]").first().boundingBox())!;
+    expect(Math.abs(spot.left - perch.x)).toBeLessThan(2);
+    expect(Math.abs(spot.width - perch.width)).toBeLessThan(2);
+    await scrollTopTo(page, "article.home__feature", 200);
+    await page.waitForTimeout(300);
+    s = await state(page);
+    expect(s.drawn, "rising into view").toBe(true);
+    expect(Math.abs(s.drawRect.top - spot.top - 200), "200px below its spot, with the feature").toBeLessThan(2);
 });
 
 test("the arm fades out, then InMoov rises into his frame, along the scroll", async ({ page, isMobile }) => {
