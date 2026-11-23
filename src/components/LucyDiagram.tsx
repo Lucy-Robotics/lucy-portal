@@ -1,4 +1,7 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
+
+import { chamferPoints, classes, CUT, delay } from "../lib/diagram.ts";
+import DiagramCaption from "./DiagramCaption.tsx";
 
 /*
  * Interactive architecture diagram of the Lucy stack: interfaces, the core, robots.
@@ -118,17 +121,9 @@ const EDGES = NODES.filter((n) => !inCore(n)).map((n) => {
         : { node: n.id, ghost: n.ghost, d: `M ${CORE.x + CORE.w} ${y} L ${n.x} ${y}` };
 });
 
-const CUT = 10;
-
-const chamferPoints = ({ x, y, w, h }: { x: number; y: number; w: number; h: number }, cut = CUT) =>
-    [[x, y], [x + w - cut, y], [x + w, y + cut], [x + w, y + h], [x + cut, y + h], [x, y + h - cut]]
-        .map((p) => p.join(","))
-        .join(" ");
-
 const isCorePart = (id: NodeId) => CORE_PARTS.has(id);
 
-const classes = (...names: (string | false)[]) => names.filter(Boolean).join(" ");
-const delay = (seconds: number) => ({ "--d": `${seconds}s` }) as CSSProperties;
+const CAPTIONS = Object.values(NODE_TEXT);
 
 export default function LucyDiagram() {
     const [active, setActive] = useState<NodeId>("core");
@@ -232,24 +227,7 @@ export default function LucyDiagram() {
                 ))}
             </div>
 
-            <figcaption className="diagram__caption" aria-live="polite">
-                {/* Every description is laid out, unseen, in the same cell, so the caption is always as tall as
-                    the longest one: the diagram above never resizes as the selection changes. */}
-                <div className="diagram__caption-slot">
-                    {(Object.keys(NODE_TEXT) as NodeId[]).map((id) => (
-                        <div key={id} className="diagram__caption-sizer" aria-hidden="true">
-                            <strong>{NODE_TEXT[id].title}</strong>
-                            <p>{NODE_TEXT[id].description}</p>
-                        </div>
-                    ))}
-                    {/* Re-mounted on change so the fade replays. */}
-                    <div key={active} className="diagram__caption-body">
-                        <strong>{NODE_TEXT[active].title}</strong>
-                        <p>{NODE_TEXT[active].description}</p>
-                    </div>
-                </div>
-                <p className="diagram__hint">Hover or select a block to learn more.</p>
-            </figcaption>
+            <DiagramCaption texts={CAPTIONS} shown={NODE_TEXT[active]} hint="Hover or select a block to learn more." />
         </figure>
     );
 }

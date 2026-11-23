@@ -706,6 +706,32 @@ a.home__highlight:hover {
     translate: 0 8px;
 }
 
+/* Two clients on one robot (MultiClientDiagram.tsx). */
+
+/* Few blocks, so big text: the diagram is drawn at about 0.85 of its size. */
+.diagram--clients .diagram__node text {
+    font-size: 19px;
+}
+
+.diagram--clients .diagram__node .diagram__core-title {
+    font-size: 21px;
+}
+
+.diagram--clients .diagram__node text.diagram__role {
+    fill: var(--color-text-sec);
+
+    font-size: 16px;
+}
+
+.diagram--clients .diagram__node text.diagram__role.is-driver,
+.diagram--clients .diagram__node.is-active text.diagram__role {
+    fill: var(--color-highlight);
+}
+
+.diagram__node.is-driver polygon {
+    stroke: var(--color-highlight);
+}
+
 /* Phones: the same nodes as stacked groups of chips. */
 .diagram__stack {
     display: none;

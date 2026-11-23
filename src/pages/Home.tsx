@@ -17,6 +17,7 @@ import { useScrollReveal } from "../hooks/useScrollReveal.ts";
 import ExternalLinkIcon from "../components/ExternalLinkIcon.tsx";
 import Logo from "../components/Logo.tsx";
 import LucyDiagram from "../components/LucyDiagram.tsx";
+import MultiClientDiagram from "../components/MultiClientDiagram.tsx";
 import RobotShowcase from "../components/RobotShowcase.tsx";
 import { DiscordIcon } from "../components/svg/index.ts";
 import { illustrationFor } from "../lib/featureIllustrations.ts";
@@ -71,6 +72,7 @@ const FEATURES: { slug: string; icon: Icon; title: string; description: string }
 
 /* Features shown with a live component instead of a picture. */
 const LIVE_MEDIA: Partial<Record<string, ComponentType>> = {
+    "multi-client": MultiClientDiagram,
     "open-portable": LucyDiagram,
 };
 
