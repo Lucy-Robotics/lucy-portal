@@ -155,7 +155,7 @@ export default function LucyDiagram() {
                 <g
                     className={classes("diagram__node", "diagram__node--core", active === "core" && "is-active", isCorePart(active) && "is-lit")}
                     aria-pressed={active === "core"}
-                    aria-label={NODE_TEXT.core.title}
+                    // Named by its text: the title and its notes (an aria-label of the title alone would hide them).
                     {...select("core")}
                 >
                     <polygon points={chamferPoints(CORE, 14)} />

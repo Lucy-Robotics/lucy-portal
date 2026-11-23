@@ -9,6 +9,8 @@ const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 // The decorative layers the robot scene draws into (see RobotShowcase.tsx).
 const ROBOT_LAYERS = ".robot-layer, .robot-glow";
 
+const DIAGRAM_TEXT = ".diagram__svg text";
+
 const ROUTES = [
     "/",
     "/download",
@@ -65,8 +67,9 @@ async function expectNoViolations(page: Page, builder: AxeBuilder, label: string
     const { violations, incomplete, passes } = await builder.withTags(WCAG_TAGS).analyze();
 
     const overRobotCanvas = await findNodesOverRobotCanvas(page, incomplete);
+    const diagramText = await findDiagramText(page, incomplete);
     const isUnresolvedContrast = (result: Result, node: NodeResult) =>
-        result.id === "color-contrast" && !overRobotCanvas.has(node);
+        result.id === "color-contrast" && !overRobotCanvas.has(node) && !diagramText.has(node);
 
     const failures = [
         ...violations.map((result) => toIssue(result, result.nodes)),
@@ -135,6 +138,17 @@ async function settleDecorations(page: Page) {
         `;
         document.head.append(style);
     });
+}
+
+/* Contrast nodes that are a diagram's SVG text (DIAGRAM_TEXT), checked by hand above. */
+async function findDiagramText(page: Page, incomplete: Result[]) {
+    const nodes = incomplete.filter((result) => result.id === "color-contrast").flatMap((result) => result.nodes);
+    const targets = nodes.map((node) => node.target.join(" "));
+    const isDiagramText = await page.evaluate(
+        ({ targets, selector }) => targets.map((target) => document.querySelector(target)?.matches(selector) ?? false),
+        { targets, selector: DIAGRAM_TEXT },
+    );
+    return new Set(nodes.filter((_, index) => isDiagramText[index]));
 }
 
 /* What axe's in-page API, left by the scan, tells about the elements over some text. Untyped in axe-core. */
