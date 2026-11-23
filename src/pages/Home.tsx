@@ -90,6 +90,19 @@ const STEPS = [
 
 const STACK = ["ROS 2", "Gazebo", "RViz", "Pixi", "Python"];
 
+/* The two calls to action, in the hero and again at the end of the page. */
+const HomeActions = ({ className = "", ...rest }: { className?: string; "data-reveal"?: boolean }) => (
+    <div className={`home__actions ${className}`.trim()} {...rest}>
+        <a href={EXTERNAL_LINKS.LIVE_DEMO} target="_blank" rel="noopener noreferrer" className="chamfer header__button header__button--primary">
+            Live Demo
+            <ExternalLinkIcon />
+        </a>
+        <a href="/download" className="chamfer header__button header__button--main">
+            Download
+        </a>
+    </div>
+);
+
 const Home = () => {
     const heroRef = useRef<HTMLDivElement>(null);
     const introRef = useRef<HTMLElement>(null);
@@ -134,29 +147,9 @@ const Home = () => {
                         <Logo />
                     </h1>
 
-                    <p className="home__tagline">
-                        <span className="home__tagline-accent"></span> One platform,{" "}
-                        <span className="home__tagline-accent"></span> any robot.
-                    </p>
+                    <p className="home__tagline">One platform, any robot.</p>
 
-                    <div className="home__actions">
-                        <a
-                            href={EXTERNAL_LINKS.LIVE_DEMO}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="chamfer header__button header__button--primary"
-                        >
-                            Live Demo
-                            <ExternalLinkIcon />
-                        </a>
-
-                        <a
-                            href="/download"
-                            className="chamfer header__button header__button--main"
-                        >
-                            Download
-                        </a>
-                    </div>
+                    <HomeActions />
 
                     <button
                         type="button"
@@ -183,7 +176,7 @@ const Home = () => {
                         </p>
                         <h2 id="home-about-title" className="home__chapter-title" data-reveal>
                             An open-source robotics framework, powered by{" "}
-                            <span className="home__accent">ROS&nbsp;2</span>.
+                            <span className="text-highlight">ROS&nbsp;2</span>.
                         </h2>
                         <p className="home__description" data-reveal>
                             Lucy controls and simulates robots and integrates with
@@ -234,7 +227,7 @@ const Home = () => {
                         </p>
                         <h2 id="home-quickstart-title" className="home__chapter-title" data-reveal>
                             Up and running in{" "}
-                            <span className="home__accent">three commands</span>.
+                            <span className="text-highlight">three commands</span>.
                         </h2>
 
                         <ol className="home__steps">
@@ -300,7 +293,7 @@ const Home = () => {
                     </p>
                     <h2 id="home-features-title" className="home__features-title" data-reveal>
                         Everything you need,{" "}
-                        <span className="home__accent">already in Lucy</span>.
+                        <span className="text-highlight">already in Lucy</span>.
                     </h2>
                 </header>
 
@@ -348,7 +341,7 @@ const Home = () => {
                     </p>
                     <h2 id="home-finale-title" className="home__chapter-title" data-reveal>
                         Lucy isn&apos;t built for one robot. It&apos;s built for{" "}
-                        <span className="home__accent">every robot</span>.
+                        <span className="text-highlight">every robot</span>.
                     </h2>
                     <p className="home__description" data-reveal>
                         Arms, mobile bases, full humanoids: Lucy speaks to them all the same way.
@@ -367,29 +360,12 @@ const Home = () => {
 
             <section className="home__outro" aria-labelledby="home-outro-title">
                 <h2 id="home-outro-title" className="home__outro-title" data-reveal>
-                    One platform. <span className="home__accent">Any robot.</span>
+                    One platform. <span className="text-highlight">Any robot.</span>
                 </h2>
                 <p className="home__outro-text" data-reveal>
                     Try the control panel in your browser, or install Lucy and drive your own robot.
                 </p>
-                <div className="home__actions home__outro-actions" data-reveal>
-                    <a
-                        href={EXTERNAL_LINKS.LIVE_DEMO}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="chamfer header__button header__button--primary"
-                    >
-                        Live Demo
-                        <ExternalLinkIcon />
-                    </a>
-
-                    <a
-                        href="/download"
-                        className="chamfer header__button header__button--main"
-                    >
-                        Download
-                    </a>
-                </div>
+                <HomeActions className="home__outro-actions" data-reveal />
             </section>
         </div>
     );

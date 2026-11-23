@@ -81,9 +81,7 @@ html.robot-over-header .robot-layer {
         --hint-x: -20px;
         --hint-y: -20px;
     }
-}
 
-@media (max-width: 959px) {
     .robot-layer,
     .robot-glow {
         position: absolute;

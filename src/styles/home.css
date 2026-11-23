@@ -122,10 +122,6 @@
     white-space: nowrap;
 }
 
-.home__tagline-accent {
-    color: var(--color-highlight);
-}
-
 /* Phones: as big as still fits the width on one line. */
 @media (max-width: 959px) {
     .home__tagline {
@@ -134,10 +130,6 @@
 }
 
 /* ─── Shared type ─────────────────────────────────────────────────────── */
-
-.home__accent {
-    color: var(--color-highlight);
-}
 
 .home .kicker {
     margin: 0;
@@ -225,7 +217,8 @@ a.home__highlight:hover {
     color: var(--color-highlight);
 }
 
-.home__point-title {
+.home__point-title,
+.home__step-title {
     margin: 0;
 
     color: var(--color-text-pri);
@@ -322,15 +315,6 @@ a.home__highlight:hover {
     font-size: 2rem;
     font-weight: var(--font-weight-bold);
     line-height: 1;
-}
-
-.home__step-title {
-    margin: 0;
-
-    color: var(--color-text-pri);
-
-    font-size: 1.125rem;
-    font-weight: var(--font-weight-bold);
 }
 
 .home__step-command {
@@ -797,11 +781,9 @@ a.home__highlight:hover {
         display: flex;
         flex-direction: column;
     }
-}
 
-/* In a feature's screen on phones, the stacked chips must fit the height left under the text: tighter, and without
-   the hover caption (the chips say it all). */
-@media (max-width: 600px) {
+    /* In a feature's screen, the stacked chips must fit the height left under the text: tighter, and without
+       the hover caption (the chips say it all). */
     .home__feature-media--live .diagram {
         padding: 1rem;
     }
@@ -1000,21 +982,6 @@ a.home__highlight:hover {
 .js-reveal .home__feature-media[data-reveal]:not([data-revealed]) {
     translate: none;
     scale: 0.96;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .js-reveal [data-reveal],
-    .js-reveal .home__feature-media[data-reveal] {
-        transition: none;
-    }
-
-    .js-reveal [data-reveal]:not([data-revealed]),
-    .js-reveal .home__feature-body[data-reveal]:not([data-revealed]),
-    .js-reveal .home__feature-media[data-reveal]:not([data-revealed]) {
-        opacity: 1;
-        translate: none;
-        scale: none;
-    }
 }
 
 /* ─── Narrower screens ────────────────────────────────────────────────── */

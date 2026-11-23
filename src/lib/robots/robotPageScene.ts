@@ -200,7 +200,7 @@ export async function createRobotPageScene(
         heroPayload,
         humanoid: () => inmoov?.humanoid ?? null,
         // Only once settled in a frame; perched or flying, the arm is free on screen.
-        shownIn: () => (trackFrame && trackFrame.close >= 0.99 ? trackFrame.clipRect : null),
+        shownIn: () => trackFrame?.clipRect ?? null,
         onChange: () => wake(),
     });
     const armEasing = new ArmEasing(so101);
@@ -506,7 +506,6 @@ export async function createRobotPageScene(
             view,
             active,
             perch,
-            station,
             drawn: painter.drawn,
             greeting: companion.busy,
             heroTarget: hero.target,

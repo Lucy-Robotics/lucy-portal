@@ -1003,17 +1003,6 @@ select:focus {
     translate: 0 2.5rem;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .js-reveal [data-reveal] {
-        transition: none;
-    }
-
-    .js-reveal [data-reveal]:not([data-revealed]) {
-        opacity: 1;
-        translate: none;
-    }
-}
-
 /* ==============================
    Utility States
    ============================== */

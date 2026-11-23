@@ -33,10 +33,8 @@ type TrackPage = {
 
 export type TrackFrame = {
     drawRect: Rect;
-    /* Where the drawing is clipped to, or null for the whole screen (a perched arm). */
+    /* Where the drawing is clipped to (its frame), or null for the whole screen (a perched arm). */
     clipRect: Rect | null;
-    /* How far the clip has closed onto `clipRect` (0 the screen, 1 the frame), for its chamfer. */
-    close: number;
     /* Which station it is ("perch:2"); a new one means the robot just arrived there. */
     station: string;
     /* It got to `station` along the scroll, so it needn't slide in. */
@@ -125,7 +123,6 @@ export function createTrack(page: TrackPage, compact: () => boolean, reduceMotio
                 const frame = {
                     drawRect: at.rect,
                     clipRect: framed ? at.rect : null,
-                    close: framed ? 1 : 0,
                     station: keyOf(at),
                     glided: true,
                     boxed: at.kind === "box",

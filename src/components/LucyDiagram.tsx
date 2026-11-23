@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { centerX, centerY, chamferPoints, classes, CUT, delay, selectable, type CaptionText } from "../lib/diagram.ts";
 import DiagramCaption from "./DiagramCaption.tsx";
+import DiagramStack from "./DiagramStack.tsx";
 
 /*
  * Interactive architecture diagram of the Lucy stack: interfaces, the core, robots.
@@ -107,7 +108,7 @@ const GHOSTS = new Set<NodeId>(NODES.filter((n) => n.ghost).map((n) => n.id));
 const CORE_PARTS = new Set<NodeId>(["core", ...NODES.filter(inCore).map((n) => n.id)]);
 
 const GROUPS = (Object.keys(COLUMNS) as Column[]).map((column) => ({
-    column,
+    label: COLUMNS[column],
     ids: [...(column === "core" ? ["core" as const] : []), ...NODES.filter((n) => n.column === column).map((n) => n.id)],
 }));
 
@@ -196,27 +197,11 @@ export default function LucyDiagram() {
             </svg>
 
             {/* Phones: the same nodes as a stacked list. */}
-            <div className="diagram__stack">
-                {GROUPS.map((group, gi) => (
-                    <div key={group.column} className="diagram__group">
-                        <span className="diagram__group-label">{COLUMNS[group.column]}</span>
-                        <div className="diagram__chips">
-                            {group.ids.map((id) => (
-                                <button
-                                    key={id}
-                                    type="button"
-                                    aria-pressed={active === id}
-                                    className={classes("diagram__chip", active === id && "is-active", GHOSTS.has(id) && "is-ghost")}
-                                    onClick={() => setActive(id)}
-                                >
-                                    {NODE_TEXT[id].title}
-                                </button>
-                            ))}
-                        </div>
-                        {gi < GROUPS.length - 1 && <span className="diagram__connector" aria-hidden="true" />}
-                    </div>
-                ))}
-            </div>
+            <DiagramStack
+                groups={GROUPS}
+                chip={(id) => ({ text: NODE_TEXT[id].title, on: active === id, ghost: GHOSTS.has(id) })}
+                choose={setActive}
+            />
 
             <DiagramCaption texts={CAPTIONS} shown={NODE_TEXT[active]} hint="Hover or select a block to learn more." />
         </figure>

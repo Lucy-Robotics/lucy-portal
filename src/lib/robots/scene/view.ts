@@ -148,9 +148,8 @@ export function createView(s: ViewScene) {
             const screen: Rect = { left: -1, top: -1, width: viewWidth() + 2, height: height + 2 };
             let clip = "none";
             if (track) {
-                // Perched, the arm has the whole screen below the header.
-                const target = track.clipRect ?? screen;
-                clip = chamferedClip(lerpRect(screen, target, track.close), track.close, f.chamferSize, headerBottom);
+                // Perched, the arm has the whole screen below the header; framed, it's clipped to the frame.
+                clip = chamferedClip(track.clipRect ?? screen, track.clipRect ? 1 : 0, f.chamferSize, headerBottom);
             } else if (enter > 0) {
                 const close = smoothstep(enter, CLOSE_FROM, 1);
                 clip = chamferedClip(lerpRect(screen, box, close), close, f.chamferSize, headerBottom);

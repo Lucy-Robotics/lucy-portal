@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { centerX, centerY, chamferPoints, classes, CUT, delay, selectable, type Box, type CaptionText } from "../lib/diagram.ts";
 import DiagramCaption from "./DiagramCaption.tsx";
+import DiagramStack from "./DiagramStack.tsx";
 
 /*
  * Two clients on one robot: the core's auth grants control to one of them, whose commands it passes on to the
@@ -147,25 +148,12 @@ export default function MultiClientDiagram() {
                 })}
             </svg>
 
-            {/* Phones: the same blocks as stacked groups of chips; a client's chip hands it the controls. */}
-            <div className="diagram__stack">
-                {GROUPS.map((group, gi) => (
-                    <div key={group.label} className="diagram__group">
-                        <span className="diagram__group-label">{group.label}</span>
-                        <div className="diagram__chips">
-                            {group.ids.map((id) => {
-                                const on = isClient(id) ? id === driver : id === active;
-                                return (
-                                    <button key={id} type="button" aria-pressed={on} className={classes("diagram__chip", on && "is-active")} onClick={() => choose(id)}>
-                                        {chipText(id)}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        {gi < GROUPS.length - 1 && <span className="diagram__connector" aria-hidden="true" />}
-                    </div>
-                ))}
-            </div>
+            {/* Phones: a client's chip hands it the controls. */}
+            <DiagramStack
+                groups={GROUPS}
+                chip={(id) => ({ text: chipText(id), on: isClient(id) ? id === driver : id === active })}
+                choose={choose}
+            />
 
             <DiagramCaption texts={CAPTIONS} shown={shown} hint="Hover a block to learn more, click a client to hand it the controls." />
         </figure>
