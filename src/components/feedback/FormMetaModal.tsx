@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAccessibleDialog } from '../../hooks/useAccessibleDialog';
-import { BUTTON } from './buttons';
+import { BUTTON } from '../../constants/Buttons.ts';
 import { STATUS_LABELS, type FeedbackForm, type FormInput } from '../../types/feedback';
 import '../../styles/roadmap-form.css';
 

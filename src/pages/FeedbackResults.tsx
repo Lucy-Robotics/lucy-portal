@@ -11,7 +11,7 @@ import {
 import { useAuth } from '../providers/AuthProvider';
 import ConfirmModal from '../components/ConfirmModal';
 import ResultsQuestionCard from '../components/feedback/ResultsQuestionCard';
-import { BUTTON } from '../components/feedback/buttons';
+import { BUTTON } from '../constants/Buttons.ts';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import Timeline from '../components/feedback/charts/Timeline';
 import {

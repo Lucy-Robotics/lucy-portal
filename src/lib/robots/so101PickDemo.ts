@@ -188,7 +188,6 @@ export class So101PickDemo {
         return { progress: this.progress, goal: this.goal, holding: this.holding };
     }
 
-    /* Gripper joint values with the jaws open and closed on the payload. */
     get jaws() {
         return { open: this.gripOpen, closed: this.gripClosed };
     }
@@ -258,7 +257,6 @@ export class So101PickDemo {
         this.pose(this.progress, 0);
     }
 
-    /* Strike the pose at `t` on the timeline without moving along it, to measure it; preview(state.progress) puts it back. */
     preview(t: number) {
         this.pose(t, 0);
         this.robot.updateMatrixWorld(true);

@@ -8,7 +8,7 @@ import {
   HiOutlinePencilSquare,
 } from 'react-icons/hi2';
 import QuestionField from '../components/feedback/QuestionField';
-import { BUTTON } from '../components/feedback/buttons';
+import { BUTTON } from '../constants/Buttons.ts';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { useAuth } from '../providers/AuthProvider';
 import { ApiError, getFeedbackForm, submitFeedback } from '../lib/api';

@@ -90,7 +90,6 @@ const STEPS = [
 
 const STACK = ["ROS 2", "Gazebo", "RViz", "Pixi", "Python"];
 
-/* The two calls to action, in the hero and again at the end of the page. */
 const HomeActions = ({ className = "", ...rest }: { className?: string; "data-reveal"?: boolean }) => (
     <div className={`home__actions ${className}`.trim()} {...rest}>
         <a href={EXTERNAL_LINKS.LIVE_DEMO} target="_blank" rel="noopener noreferrer" className="chamfer header__button header__button--primary">
@@ -119,7 +118,6 @@ const Home = () => {
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
-    // The outro and the footer fill the last screen together (home.css), so the outro needs the footer's height.
     useEffect(() => {
         const home = homeRef.current;
         const footer = document.querySelector<HTMLElement>(".footer");
@@ -236,7 +234,6 @@ const Home = () => {
                                     <span className="home__step-index" aria-hidden="true">{i + 1}</span>
                                     <div className="home__step-body">
                                         <h3 className="home__step-title">{title}</h3>
-                                        {/* Focusable so keyboard users can scroll a long command. */}
                                         <pre className="home__step-command" tabIndex={0}>
                                             <code>
                                                 <span className="home__terminal-prompt">$ </span>
@@ -326,8 +323,6 @@ const Home = () => {
                                 )}
                             </div>
 
-                            {/* The column the arm stands in, beside the text, while this feature is on screen; it stays put
-                                on screen from one feature to the next (robots/scene/track.ts). data-robot-gesture is what it acts out (robots/config.ts). */}
                             <div className="home__feature-perch" data-robot-perch data-robot-gesture={slug} aria-hidden="true" />
                         </article>
                     );
@@ -350,7 +345,6 @@ const Home = () => {
                     </p>
                 </div>
 
-                {/* The robots' scene draws InMoov in here (robots/scene/track.ts). */}
                 <figure ref={finaleRef} className="home__finale-frame chamfer" data-robot-finale>
                     <figcaption className="robot-showcase__caption">
                         InMoov <span className="robot-showcase__caption-sep">//</span> Humanoid

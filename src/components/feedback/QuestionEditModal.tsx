@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { HiOutlineArrowDown, HiOutlineArrowUp, HiOutlinePlus, HiOutlineXMark } from 'react-icons/hi2';
 import { useAccessibleDialog } from '../../hooks/useAccessibleDialog';
-import { BUTTON } from './buttons';
+import { BUTTON } from '../../constants/Buttons.ts';
 import QuestionField from './QuestionField';
 import {
   QUESTION_TYPE_LABELS,

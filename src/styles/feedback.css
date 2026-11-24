@@ -15,7 +15,6 @@
   max-width: 1100px;
 }
 
-/* Section titles as on the landing page, under their kicker. */
 .feedback-page-container h2 {
   margin: 0 0 16px;
   color: var(--color-text-pri);
@@ -38,7 +37,6 @@
   color: var(--color-highlight);
 }
 
-/* Icons in the call-to-action buttons (globals.css). */
 .feedback-page-container .header__button svg,
 .roadmap-form .header__button svg {
   flex: none;
@@ -52,7 +50,6 @@
   color: var(--color-alert);
 }
 
-/* A square button holding only an icon. */
 .roadmap-form .header__button.feedback-icon-button {
   width: 40px;
   padding: 0;
@@ -74,7 +71,6 @@
   padding: 24px;
 }
 
-/* The question's number, like the landing page's features. */
 .feedback-panel__index {
   display: block;
   margin-bottom: 8px;
@@ -386,7 +382,6 @@
   --chamfer-border: var(--color-highlight);
 }
 
-/* Number, title and description, then an arrow that nudges forward on hover. */
 .feedback-form-link .card-body {
   display: flex;
   align-items: center;

@@ -33,7 +33,7 @@ import { SortableItem } from '../components/SortableItem';
 import ConfirmModal from '../components/ConfirmModal';
 import FormMetaModal from '../components/feedback/FormMetaModal';
 import QuestionEditModal from '../components/feedback/QuestionEditModal';
-import { BUTTON } from '../components/feedback/buttons';
+import { BUTTON } from '../constants/Buttons.ts';
 import {
   ApiError,
   createFeedbackQuestion,

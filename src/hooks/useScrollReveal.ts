@@ -1,10 +1,5 @@
 import { useEffect, type RefObject } from "react";
 
-/*
- * Marks each [data-reveal] inside the container with data-revealed once it scrolls into view, including those
- * rendered later (content loaded after mount). The container gets .js-reveal first, so without JS (or with reduced
- * motion) nothing is ever hidden. `ready` is for a container rendered only once its page has loaded.
- */
 export function useScrollReveal(containerRef: RefObject<HTMLElement | null>, ready = true) {
     useEffect(() => {
         const container = containerRef.current;

@@ -1,27 +1,9 @@
-/*
- * Where the robots are drawn once the arm has landed in its box. The page lays
- * out stations top to bottom: the box (the arm, sticky beside the chapters), a
- * perch per feature (the arm, frameless, beside the feature) and the finale
- * (InMoov, framed).
- *
- * From one station to the next the robot follows the scroll: once the sticky box
- * lets go, the arm scrolls away in it, so the features' header has the screen to
- * itself. It comes back up with the first feature, standing (unclipped) where
- * the box was while sticky (the features' arm column lines up with it, home.css),
- * and stays there from one feature to the next, then fades out as InMoov fades
- * and rises in, in the finale's frame (FINALE_ENTRY).
- * Between stations that have no glide (phones: the box,
- * then the finale) the robot scrolls with its station like the page around it,
- * and only moves on to the station centred on screen once its own has left the
- * screen; it then slides in there (`station` changes without `glided`, see view.ts).
- */
 import { FINALE_ENTRY, PERCH_OVERFLOW } from "../config.ts";
 import { smoothstep } from "../math.ts";
 import { toRect, viewHeight, viewWidth, type Rect } from "./screen.ts";
 
 type Kind = "box" | "perch" | "finale";
 
-/* `rect` is where the robot is drawn; `anchor` is what has to reach the middle of the screen for it to be there. */
 type Station = { kind: Kind; rect: Rect; anchor: Rect; index: number };
 
 type TrackPage = {
@@ -33,29 +15,19 @@ type TrackPage = {
 
 export type TrackFrame = {
     drawRect: Rect;
-    /* Where the drawing is clipped to (its frame), or null for the whole screen (a perched arm). */
     clipRect: Rect | null;
-    /* Which station it is ("perch:2"); a new one means the robot just arrived there. */
     station: string;
-    /* It got to `station` along the scroll, so it needn't slide in. */
     glided: boolean;
-    /* The arm is all in its box (the box's infinity stays there when it isn't). */
     boxed: boolean;
-    /* Some of the drawing is on screen, so there is something to draw. */
     onScreen: boolean;
-    /* 0 -> 1 as the robot fades and rises in along the scroll (1 when it's simply there). */
     reveal: number;
-    /* 0 frames the arm, 1 InMoov. */
     view: number;
-    /* The feature the arm is perched by, if any. */
     perch: number | null;
 };
 
 const centerY = (rect: Rect) => rect.top + rect.height / 2;
 
 export function createTrack(page: TrackPage, compact: () => boolean, reduceMotion: boolean) {
-    /* Where the arm stands by the features: where the box is while it's sticky (its stage sticks right
-       below the header, home.css), in the perches' column. */
     const stage = page.frame.closest(".home__stage");
     const spot = (perch: HTMLElement, box: Rect, headerBottom: number): Rect => {
         const { left, width } = perch.getBoundingClientRect();
@@ -66,14 +38,12 @@ export function createTrack(page: TrackPage, compact: () => boolean, reduceMotio
     const stations = (headerBottom: number): Station[] => {
         const box = toRect(page.frame.getBoundingClientRect());
         const list: Station[] = [{ kind: "box", rect: box, anchor: box, index: 0 }];
-        // Hidden perches (display: none) have no size.
         const perches = compact() ? [] : page.perches
             .map((perch, index) => ({ perch, index }))
             .filter(({ perch }) => perch.getBoundingClientRect().width > 0);
         if (perches.length) {
             const rect = spot(perches[0].perch, box, headerBottom);
             for (const { perch, index } of perches) {
-                // The arm is by a feature while that feature (its screen) is centred.
                 const feature = perch.closest("article") ?? perch;
                 list.push({ kind: "perch", rect, anchor: toRect(feature.getBoundingClientRect()), index });
             }
@@ -92,7 +62,6 @@ export function createTrack(page: TrackPage, compact: () => boolean, reduceMotio
         read(): TrackFrame {
             const headerBottom = page.header?.getBoundingClientRect().bottom ?? 0;
             const list = stations(headerBottom);
-            // The sticky box sits centred in the screen below the header, so it's the first station there.
             const middle = headerBottom + (viewHeight() - headerBottom) / 2;
 
             let a = list[0];
@@ -110,14 +79,12 @@ export function createTrack(page: TrackPage, compact: () => boolean, reduceMotio
             const centred = t < 0.5 ? a : b;
 
             const visible = (rect: Rect, perched: boolean) => {
-                // A perched arm reaches a little past its spot.
                 const grow = perched ? PERCH_OVERFLOW : 0;
                 const { left, top, width, height } = rect;
                 return top + height * (1 + grow) > headerBottom && top - height * grow < viewHeight()
                     && left + width * (1 + grow) > 0 && left - width * grow < viewWidth();
             };
             const glide = (range: { from: number; to: number }) => (reduceMotion ? (t < 0.5 ? 0 : 1) : smoothstep(t, range.from, range.to));
-            /* The robot drawn at `at`'s station: a perched arm has the whole screen; framed, it's clipped to the frame. */
             const frameAt = (at: Station, overrides: Partial<TrackFrame> = {}): TrackFrame => {
                 const framed = at.kind !== "perch";
                 const frame = {
@@ -136,16 +103,12 @@ export function createTrack(page: TrackPage, compact: () => boolean, reduceMotio
                 return frame;
             };
 
-            // Out of the box to the features, with their header between: the arm scrolls away in its box,
-            // then comes up with the first feature, from below its spot to it (the feature then under the
-            // header). It's by that feature once the feature reaches the middle of the screen.
             if (a.kind === "box" && b.kind === "perch") {
                 if (a.rect.top + a.rect.height > headerBottom) return frameAt(a);
                 const below = Math.max(0, b.anchor.top - headerBottom);
                 const rising = { ...b, rect: { ...b.rect, top: b.rect.top + below } };
                 return frameAt(rising, { perch: b.anchor.top <= middle ? b.index : null });
             }
-            // From the features to the finale: the arm fades out at its spot, then InMoov fades and rises in, in his frame.
             if (a.kind === "perch" && b.kind === "finale") {
                 const armOut = glide(FINALE_ENTRY.armOut);
                 const inmoovIn = glide(FINALE_ENTRY.inmoovIn);
@@ -154,11 +117,8 @@ export function createTrack(page: TrackPage, compact: () => boolean, reduceMotio
                 frame.onScreen &&= arm || inmoovIn > 0;
                 return frame;
             }
-            // From one feature to the next, the arm stays put and takes up the next one halfway.
             if (a.kind === "perch" && b.kind === "perch") return frameAt(centred);
 
-            // Stay with the station until it's gone from the screen, so the robot never jumps in sight.
-            // Not the arm's spot by the features: it's fixed on screen, so it never goes.
             const current = list.find((station) => keyOf(station) === shown);
             const stay = current && current !== centred && current.kind !== "perch" && visible(current.rect, false);
             return frameAt(stay ? current : centred, { glided: false });

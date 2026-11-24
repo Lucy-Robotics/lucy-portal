@@ -1,6 +1,4 @@
 .home {
-    /* The chapters beside the arm's box, and the features beside the arm: the same columns, so the arm
-       stays put when the box lets go of it (robots/scene/track.ts). */
     --home-columns: minmax(0, 54fr) minmax(0, 46fr);
     --home-gap: clamp(2rem, 4vw, 4rem);
 
@@ -32,7 +30,6 @@
     container-type: inline-size;
 
     min-height: calc(100svh - var(--header-height));
-    /* The text keeps the left side; the arm stands on the right. The tagline may run past it. */
     padding: 3rem 55% 4rem 0;
 }
 
@@ -54,7 +51,6 @@
     flex: 1;
 }
 
-/* The two chapters, beside the arm's box. */
 .home__main {
     grid-column: 1;
     grid-row: 2;
@@ -122,7 +118,6 @@
     white-space: nowrap;
 }
 
-/* Phones: as big as still fits the width on one line. */
 @media (max-width: 959px) {
     .home__tagline {
         font-size: min(2.5rem, calc((100vw - 3rem) / 15.8));
@@ -289,7 +284,6 @@ a.home__highlight:hover {
     color: var(--color-highlight);
 }
 
-/* Quickstart: numbered steps, a command each. */
 .home__steps {
     display: grid;
     gap: 2rem;
@@ -358,13 +352,11 @@ a.home__highlight:hover {
 
 /* ─── Features: one screen each ───────────────────────────────────────── */
 
-/* Outside the layout grid, so the sticky box lets go before it. */
 .home__features {
     width: var(--page-width);
     margin: 0 auto;
 }
 
-/* A screen of its own, like the chapters, so each scroll after it lands on one whole feature. */
 .home__features-header {
     display: flex;
     flex-direction: column;
@@ -385,8 +377,6 @@ a.home__highlight:hover {
     line-height: 1.1;
 }
 
-/* Exactly one screen: the text over its illustration on the left, which takes what height is left, and the arm on
-   the right, where the box was; it stays put on screen from one feature to the next. */
 .home__feature {
     display: grid;
     grid-template-columns: var(--home-columns);
@@ -401,7 +391,6 @@ a.home__highlight:hover {
     padding: clamp(1.25rem, 5svh, 3rem) 0;
 }
 
-/* Above the robot layer (robot-showcase.css), so the arm passes behind it. */
 .home__feature-body {
     position: relative;
     z-index: 21;
@@ -468,7 +457,6 @@ a.home__highlight:hover {
     height: 100%;
 
     object-fit: contain;
-    /* Right under the text, however tall the screen. */
     object-position: left top;
 }
 
@@ -497,7 +485,6 @@ a.home__highlight:hover {
     color: var(--color-border);
 }
 
-/* A live component (LucyDiagram) instead of a picture: shrunk to the height left, like a picture. */
 .home__feature-media--live {
     display: flex;
 }
@@ -515,7 +502,6 @@ a.home__highlight:hover {
     min-height: 0;
 }
 
-/* Short screens: the caption gives up its room to the diagram, then goes. */
 @media (max-height: 800px) {
     .home__feature-media--live .diagram__caption {
         margin-top: 0.75rem;
@@ -645,7 +631,6 @@ a.home__highlight:hover {
     stroke: var(--color-text-pri);
 }
 
-/* Drawn in once the feature's media scrolls into view (data-revealed, useScrollReveal). */
 .js-reveal .home__feature-media .diagram__edge {
     transition:
         stroke-dashoffset 0.8s ease var(--d, 0s),
@@ -677,9 +662,6 @@ a.home__highlight:hover {
     translate: 0 8px;
 }
 
-/* Two clients on one robot (MultiClientDiagram.tsx). */
-
-/* Few blocks, so big text: the diagram is drawn at about 0.85 of its size. */
 .diagram--clients .diagram__node text {
     font-size: 19px;
 }
@@ -692,7 +674,6 @@ a.home__highlight:hover {
     font-size: 16px;
 }
 
-/* The client in control. */
 .diagram__node.is-driver polygon {
     stroke: var(--color-highlight);
 }
@@ -701,7 +682,6 @@ a.home__highlight:hover {
     fill: var(--color-highlight);
 }
 
-/* Phones: the same nodes as stacked groups of chips. */
 .diagram__stack {
     display: none;
 }
@@ -739,7 +719,6 @@ a.home__highlight:hover {
     cursor: pointer;
 }
 
-/* Beats the site-wide button:hover fill (globals.css). */
 .diagram__chip:hover:not(:disabled) {
     border-color: var(--color-highlight);
     background: var(--color-bg-raised);
@@ -782,8 +761,6 @@ a.home__highlight:hover {
         flex-direction: column;
     }
 
-    /* In a feature's screen, the stacked chips must fit the height left under the text: tighter, and without
-       the hover caption (the chips say it all). */
     .home__feature-media--live .diagram {
         padding: 1rem;
     }
@@ -813,7 +790,6 @@ a.home__highlight:hover {
     }
 }
 
-/* The smallest phones: the groups already read top to bottom without their connectors. */
 @media (max-width: 600px) and (max-height: 620px) {
     .home__feature-media--live .diagram__connector {
         display: none;
@@ -890,7 +866,6 @@ a.home__highlight:hover {
     }
 }
 
-/* The column the arm stands in while the feature is on screen (drawn where the box was). */
 .home__feature-perch {
     grid-area: perch;
 
@@ -925,7 +900,6 @@ a.home__highlight:hover {
 
 /* ─── Closing call to action ──────────────────────────────────────────── */
 
-/* With the footer below it, one whole screen under the header, like the hero (--footer-height: pages/Home.tsx). */
 .home__outro {
     display: flex;
     flex-direction: column;
@@ -967,8 +941,6 @@ a.home__highlight:hover {
 
 /* ─── Scroll reveal (see useScrollReveal) ─────────────────────────────── */
 
-/* Hidden only once the hook runs, so content never stays invisible. */
-/* The generic [data-reveal] fade and rise are in globals.css. */
 .js-reveal .home__feature-body[data-reveal]:not([data-revealed]) {
     translate: -3rem 0;
 }
@@ -1038,7 +1010,6 @@ a.home__highlight:hover {
         text-align: left;
     }
 
-    /* No companion on phones: the arm stays in its box. */
     .home__feature-perch {
         display: none;
     }
@@ -1060,7 +1031,6 @@ a.home__highlight:hover {
         max-width: 26rem;
     }
 
-    /* Stacked, the text first and the illustration in the height left: still a screen each. */
     .home__feature {
         grid-template-columns: minmax(0, 1fr);
         grid-template-areas: "body" "media";
@@ -1081,7 +1051,6 @@ a.home__highlight:hover {
         height: 5rem;
     }
 
-    /* Side by side, so the arm below keeps its room. */
     .home__actions {
         flex-wrap: nowrap;
         gap: 0.75rem;
@@ -1101,7 +1070,6 @@ a.home__highlight:hover {
 
 /* ─── Short screens ──────────────────────────────────────────────────── */
 
-/* Too short for a feature to fit (a phone on its side): each feature as tall as it needs. */
 @media (max-height: 539px) {
     .home__features-header {
         min-height: 0;

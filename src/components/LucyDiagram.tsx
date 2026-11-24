@@ -4,12 +4,6 @@ import { centerX, centerY, chamferPoints, classes, CUT, delay, selectable, type 
 import DiagramCaption from "./DiagramCaption.tsx";
 import DiagramStack from "./DiagramStack.tsx";
 
-/*
- * Interactive architecture diagram of the Lucy stack: interfaces, the core, robots.
- * Colours are set in home.css (.diagram), so they follow the theme tokens. The edges draw in
- * once the feature's media is revealed (data-revealed, useScrollReveal).
- */
-
 type NodeId =
     | "lcp" | "cli" | "huri" | "custom"
     | "core" | "packages" | "firmware" | "ws"
@@ -24,7 +18,6 @@ type DiagramNode = {
     y: number;
     w: number;
     h: number;
-    /* Dashed outline: an open slot, more to come. */
     ghost?: boolean;
 };
 
@@ -77,7 +70,6 @@ const NODE_TEXT: Record<NodeId, CaptionText> = {
     },
 };
 
-// Layout in SVG units: interfaces -> core -> robots, left to right.
 const COL = {
     interfaces: { x: 10, w: 170 },
     core: { x: 250, w: 260 },
@@ -113,7 +105,6 @@ const GROUPS = (Object.keys(COLUMNS) as Column[]).map((column) => ({
 }));
 
 
-// Every interface plugs into the core; the core drives every robot.
 const EDGES = NODES.filter((n) => !inCore(n)).map((n) => {
     const y = centerY(n);
     return n.column === "interfaces"
@@ -133,7 +124,7 @@ export default function LucyDiagram() {
 
     return (
         <figure className="diagram chamfer" aria-label="Architecture of the Lucy stack">
-            {/* Wide screens: the SVG diagram. */}
+            {/* Desktop mode */}
             <svg viewBox="0 0 760 370" className="diagram__svg" role="presentation">
                 {(Object.keys(COLUMNS) as Column[]).map((column) => (
                     <text key={column} x={COL[column].x} y={24} className="diagram__column">
@@ -145,7 +136,6 @@ export default function LucyDiagram() {
                     <path
                         key={edge.node}
                         d={edge.d}
-                        // Ghost edges fade in rather than draw in, so their dashes keep real units.
                         pathLength={edge.ghost ? undefined : 1}
                         className={classes("diagram__edge", !!edge.ghost && "diagram__edge--ghost", edgeLit(edge.node) && "is-lit")}
                         style={delay(0.3 + i * 0.08)}
@@ -155,7 +145,6 @@ export default function LucyDiagram() {
                 <g
                     className={classes("diagram__node", "diagram__node--core", active === "core" && "is-active", isCorePart(active) && "is-lit")}
                     aria-pressed={active === "core"}
-                    // Named by its text: the title and its notes (an aria-label of the title alone would hide them).
                     {...select("core")}
                 >
                     <polygon points={chamferPoints(CORE, 14)} />
@@ -196,7 +185,7 @@ export default function LucyDiagram() {
                 ))}
             </svg>
 
-            {/* Phones: the same nodes as a stacked list. */}
+            {/* Responsive mode */}
             <DiagramStack
                 groups={GROUPS}
                 chip={(id) => ({ text: NODE_TEXT[id].title, on: active === id, ghost: GHOSTS.has(id) })}

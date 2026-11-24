@@ -29,12 +29,9 @@ function hasWebGl() {
 type RobotShowcaseProps = {
     /* Its logo is what the arm takes on wide screens. */
     heroRef: RefObject<HTMLElement | null>;
-    /* Where InMoov stands at the end of the page. */
     finaleRef: RefObject<HTMLElement | null>;
 };
 
-/* The robots draw on a page-wide fixed canvas (see robotPageScene.ts): the arm settles into this box,
-   then stands by each feature's [data-robot-perch], and InMoov waits in the finale's frame. */
 export default function RobotShowcase({ heroRef, finaleRef }: RobotShowcaseProps) {
     const layerRef = useRef<HTMLDivElement>(null);
     const glowRef = useRef<HTMLDivElement>(null);
@@ -101,7 +98,6 @@ export default function RobotShowcase({ heroRef, finaleRef }: RobotShowcaseProps
             <figure
                 ref={frameRef}
                 className="robot-showcase__frame chamfer"
-                // Hidden until the arm lands, except to show the unavailable message.
                 data-live={status !== "unavailable" ? "" : undefined}
             >
                 {status !== "ready" && (
@@ -121,7 +117,6 @@ export default function RobotShowcase({ heroRef, finaleRef }: RobotShowcaseProps
                 )}
             </figure>
 
-            {/* Portaled out of the sticky column's stacking context, so the robots draw over the page. */}
             {createPortal(
                 <>
                     <div ref={glowRef} className="robot-glow" aria-hidden="true" />
@@ -132,7 +127,6 @@ export default function RobotShowcase({ heroRef, finaleRef }: RobotShowcaseProps
                         className="robot-click-hint"
                         tabIndex={-1}
                         aria-hidden="true"
-                        // Not focused by a click either: it would light up as keyboard focus at the next key.
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => sceneRef.current?.activate("so101")}
                     >

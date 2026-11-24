@@ -20,8 +20,6 @@
     flex-direction: column;
 }
 
-/* Focusable (tabindex="-1") only as the skip link's target, so a click anywhere on the page focuses it too:
-   no focus ring around the whole page, even once a key (a lone Cmd/Super) makes it "keyboard" focus. */
 .app-content:focus {
     outline: none;
 }
@@ -64,7 +62,6 @@
     top: 0;
 }
 
-/* Fills in green along the header's bottom border as the page goes down (Header.tsx). */
 .header__progress {
     position: absolute;
     inset: auto 0 calc(-1 * var(--border-width));
@@ -86,8 +83,6 @@
     }
 }
 
-/* Over the home features' text (z-index 21, home.css), which scrolls under it. Phones keep it under the
-   robot layer: the arm reaches its logo there. */
 @media (min-width: 960px) {
     .header {
         z-index: 22;
@@ -128,8 +123,6 @@
    Logo
    ============================== */
 
-/* Proportions follow the brand lockup: the mark dips just below the
-   baseline and is a bit taller than the x-height. */
 .logo {
     display: inline-flex;
     align-items: baseline;
@@ -181,9 +174,6 @@
 }
 
 
-/* Call-to-action buttons, site-wide. Colours go through the chamfer's custom
-   properties, so they work with or without the .chamfer class (doubled selectors
-   outrank .chamfer's own defaults). Sizes are on an 8px grid. */
 .header__button,
 .header__button.chamfer {
     --chamfer: 8px;
@@ -531,7 +521,6 @@
     cursor: pointer;
 }
 
-/* Beats the site-wide button:hover fill. */
 .footer__top-button:hover:not(:disabled) {
     background: none;
     color: var(--color-highlight);
@@ -877,7 +866,6 @@ select:focus {
     outline: none;
 }
 
-/* .chamfer's own transition would drop the button's colour fades. */
 .header__button.chamfer {
     transition:
         background-color 0.15s ease,
@@ -923,7 +911,6 @@ select:focus {
 }
 
 
-/* "Back to ..." above a page (blog posts, feedback forms); its arrow, if any, nudges back on hover. */
 .back-link {
     display: inline-flex;
     align-items: center;
@@ -948,7 +935,6 @@ select:focus {
     translate: -4px 0;
 }
 
-/* The small label over a section or page title ("03 // Features"), as on the landing page. */
 .kicker {
     margin: 0 0 16px;
 
@@ -965,7 +951,6 @@ select:focus {
     color: var(--color-highlight);
 }
 
-/* A smaller call-to-action, for rows of actions on a card. */
 .header__button--compact {
     min-height: 40px;
     padding: 0 16px;

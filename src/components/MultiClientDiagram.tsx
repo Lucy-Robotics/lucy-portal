@@ -4,12 +4,6 @@ import { centerX, centerY, chamferPoints, classes, CUT, delay, selectable, type 
 import DiagramCaption from "./DiagramCaption.tsx";
 import DiagramStack from "./DiagramStack.tsx";
 
-/*
- * Two clients on one robot: the core's auth grants control to one of them, whose commands it passes on to the
- * robot; the other only watches. Clicking a client hands it the controls. Same look as LucyDiagram (home.css,
- * .diagram).
- */
-
 type ClientId = "a" | "b";
 type PartId = "auth" | "robot";
 type NodeId = ClientId | PartId | "core";
@@ -40,23 +34,19 @@ const clientText = (id: ClientId, driving: boolean): CaptionText => ({
         : "Sees the robot live, 3D twin, camera and telemetry, with read-only controls. Click it to hand it the controls.",
 });
 
-// Layout in SVG units: clients -> core -> robot, left to right.
 const CLIENTS: (Box & { id: ClientId })[] = [
     { id: "a", x: 10, y: 20, w: 200, h: 84 },
     { id: "b", x: 10, y: 156, w: 200, h: 84 },
 ];
 const CORE: Box = { x: 290, y: 10, w: 210, h: 240 };
-/* The blocks with a single title: the auth inside the core, and the robot. */
 const PARTS: (Box & { id: PartId; inner?: boolean; at: number })[] = [
     { id: "auth", x: CORE.x + 20, y: 110, w: CORE.w - 40, h: 64, inner: true, at: 0.1 },
     { id: "robot", x: 580, y: 88, w: 170, h: 84, at: 0.3 },
 ];
 const ROBOT = PARTS[1];
 
-// Every text the caption can show, for its height (DiagramCaption).
 const CAPTIONS = [...Object.values(TEXT), ...CLIENTS.flatMap(({ id }) => [clientText(id, true), clientText(id, false)])];
 
-/* Phones: the same blocks as stacked groups of chips. */
 const GROUPS: { label: string; ids: NodeId[] }[] = [
     { label: "Clients", ids: ["a", "b"] },
     { label: "Lucy core", ids: ["auth"] },
@@ -71,7 +61,6 @@ export default function MultiClientDiagram() {
 
     const shown = isClient(active) ? clientText(active, active === driver) : TEXT[active];
 
-    /* Hovering or focusing a block explains it; choosing a client also hands it the controls. */
     const choose = (id: NodeId) => {
         setActive(id);
         if (isClient(id)) setDriver(id);
@@ -83,7 +72,7 @@ export default function MultiClientDiagram() {
 
     return (
         <figure className="diagram diagram--clients chamfer" aria-label="Two clients on one robot: the core grants control to one, the other only watches">
-            {/* Wide screens: the SVG diagram. */}
+            {/* Desktop mode */}
             <svg viewBox="0 0 760 260" className="diagram__svg" role="presentation">
                 {/* Lit from the client in control through the core to the robot. */}
                 {CLIENTS.map((box, i) => (
@@ -148,7 +137,7 @@ export default function MultiClientDiagram() {
                 })}
             </svg>
 
-            {/* Phones: a client's chip hands it the controls. */}
+            {/* Responsive mode */}
             <DiagramStack
                 groups={GROUPS}
                 chip={(id) => ({ text: chipText(id), on: isClient(id) ? id === driver : id === active })}

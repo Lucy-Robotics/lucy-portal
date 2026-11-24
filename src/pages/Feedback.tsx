@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../providers/AuthProvider';
 import ConfirmModal from '../components/ConfirmModal';
 import FormMetaModal from '../components/feedback/FormMetaModal';
-import { BUTTON } from '../components/feedback/buttons';
+import { BUTTON } from '../constants/Buttons.ts';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import {
   ApiError,

@@ -8,8 +8,6 @@
     pointer-events: none;
 }
 
-/* Going for the header's logo, the arm is drawn over the header (z-index 22 on wide screens, globals.css).
-   Only in the hero, so further down it still passes behind the features' text. */
 html.robot-over-header .robot-glow {
     z-index: 23;
 }

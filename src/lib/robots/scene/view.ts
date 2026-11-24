@@ -1,11 +1,3 @@
-/*
- * Draws the world into its rectangle on the page. As `enter` goes 0 -> 1 the arm
- * shrinks into the box (landed at 0.8), and the visible area closes in on the box
- * from 0.55, so it stays wider than the box while the arm flies in. Once landed,
- * the track (track.ts) keeps the drawing on the box, a perch or the finale, gliding
- * or fading it from one to the next, and nothing is drawn while it is off screen. The box's
- * infinity stays in the box when the arm leaves it.
- */
 import * as THREE from "three";
 
 import { ARRIVAL, BOX_SLIDE, CLOSE_FROM, FOV, RESTING_GLOW } from "../config.ts";
