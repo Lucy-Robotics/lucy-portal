@@ -7,7 +7,9 @@ import { AXE_ATTACHMENT, type ScanIssue, type ScanResult } from "./reporter.ts";
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 // The decorative layers the robot scene draws into (see RobotShowcase.tsx).
-const ROBOT_LAYERS = ".robot-layer, .robot-backdrop, .robot-glow";
+const ROBOT_LAYERS = ".robot-layer, .robot-glow";
+
+const DIAGRAM_TEXT = ".diagram__svg text";
 
 const ROUTES = [
     "/",
@@ -61,11 +63,13 @@ async function openPage(page: Page, route: string) {
 
 async function expectNoViolations(page: Page, builder: AxeBuilder, label: string) {
     await pinRobotCanvases(page);
+    await settleDecorations(page);
     const { violations, incomplete, passes } = await builder.withTags(WCAG_TAGS).analyze();
 
     const overRobotCanvas = await findNodesOverRobotCanvas(page, incomplete);
+    const diagramText = await findDiagramText(page, incomplete);
     const isUnresolvedContrast = (result: Result, node: NodeResult) =>
-        result.id === "color-contrast" && !overRobotCanvas.has(node);
+        result.id === "color-contrast" && !overRobotCanvas.has(node) && !diagramText.has(node);
 
     const failures = [
         ...violations.map((result) => toIssue(result, result.nodes)),
@@ -116,6 +120,35 @@ async function pinRobotCanvases(page: Page) {
             canvas.id ||= `a11y-robot-canvas-${index}`;
         });
     }, ROBOT_LAYERS);
+}
+
+/* Scans the page as it settles for the reader:
+   - The body's dot grid is a background gradient, which axe can't resolve a colour
+     from. It is decorative and faint (12% white at most: secondary text still has
+     6.6:1 on a dot), so text is checked against the plain page colour under it.
+   - Scroll-revealed blocks (useScrollReveal) are shown as they end up, not mid-fade. */
+async function settleDecorations(page: Page) {
+    await page.evaluate(() => {
+        if (document.getElementById("a11y-settled")) return;
+        const style = document.createElement("style");
+        style.id = "a11y-settled";
+        style.textContent = `
+            body { background-image: none !important; }
+            [data-reveal] { opacity: 1 !important; translate: none !important; transition: none !important; }
+        `;
+        document.head.append(style);
+    });
+}
+
+/* Contrast nodes that are a diagram's SVG text (DIAGRAM_TEXT), checked by hand above. */
+async function findDiagramText(page: Page, incomplete: Result[]) {
+    const nodes = incomplete.filter((result) => result.id === "color-contrast").flatMap((result) => result.nodes);
+    const targets = nodes.map((node) => node.target.join(" "));
+    const isDiagramText = await page.evaluate(
+        ({ targets, selector }) => targets.map((target) => document.querySelector(target)?.matches(selector) ?? false),
+        { targets, selector: DIAGRAM_TEXT },
+    );
+    return new Set(nodes.filter((_, index) => isDiagramText[index]));
 }
 
 /* What axe's in-page API, left by the scan, tells about the elements over some text. Untyped in axe-core. */

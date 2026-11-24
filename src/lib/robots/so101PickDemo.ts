@@ -188,6 +188,10 @@ export class So101PickDemo {
         return { progress: this.progress, goal: this.goal, holding: this.holding };
     }
 
+    get jaws() {
+        return { open: this.gripOpen, closed: this.gripClosed };
+    }
+
     get looking() {
         return { x: this.look.current.x, y: this.look.current.y };
     }
@@ -251,6 +255,11 @@ export class So101PickDemo {
         this.update(0, { instant: true });
         this.look.current.copy(look);
         this.pose(this.progress, 0);
+    }
+
+    preview(t: number) {
+        this.pose(t, 0);
+        this.robot.updateMatrixWorld(true);
     }
 
     /* Timeline target. 0 is rest, 0.5 at the grasp with jaws open, 1 holding. */

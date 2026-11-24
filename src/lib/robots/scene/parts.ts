@@ -59,7 +59,45 @@ export function createPayload(shape: InfinityShape, material: THREE.Material, ac
 }
 export type Payload = ReturnType<typeof createPayload>;
 
-/* InMoov comes in Blender units, so it's scaled to its real height and stood on the grid. */
+/* What the perched arm stands on, so it doesn't float: a contact shadow under its base and a thin ring in the
+   accent. Drawn flat on the floor (y = 0), so it follows the camera. */
+export function createGround(radius: number, accent: string) {
+    const size = 512;
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    const context = canvas.getContext("2d")!;
+    const middle = size / 2;
+    const at = (share: number) => share * middle;
+
+    const shadow = context.createRadialGradient(middle, middle, 0, middle, middle, at(0.45));
+    shadow.addColorStop(0, "rgba(0, 0, 0, 0.75)");
+    shadow.addColorStop(0.6, "rgba(0, 0, 0, 0.45)");
+    shadow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    context.fillStyle = shadow;
+    context.fillRect(0, 0, size, size);
+
+    context.strokeStyle = accent;
+    context.lineWidth = size / 160;
+    context.globalAlpha = 0.55;
+    context.beginPath();
+    context.arc(middle, middle, at(0.8), 0, Math.PI * 2);
+    context.stroke();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 8;
+    const ground = new THREE.Mesh(
+        new THREE.CircleGeometry(radius, 64),
+        new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, fog: false }),
+    );
+    ground.rotation.x = -Math.PI / 2;
+    // Just above the floor, so the base's own bottom faces don't fight it.
+    ground.position.y = 0.0005;
+    ground.renderOrder = -1;
+    return ground;
+}
+
+/* InMoov comes in Blender units, so it's scaled to its real height and stood on the floor. */
 export function standInMoov(inmoov: URDFRobot, materials: Materials, irisColor: string) {
     const eyes: THREE.Mesh[] = [];
     for (const [name, link] of Object.entries(inmoov.links)) {

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { HiOutlineArrowDown, HiOutlineArrowUp, HiOutlinePlus, HiOutlineXMark } from 'react-icons/hi2';
 import { useAccessibleDialog } from '../../hooks/useAccessibleDialog';
+import { BUTTON } from '../../constants/Buttons.ts';
 import QuestionField from './QuestionField';
 import {
   QUESTION_TYPE_LABELS,
@@ -172,38 +174,39 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
                     />
                     <button
                       type="button"
-                      className="secondary"
+                      className={`${BUTTON.action} feedback-icon-button`}
                       onClick={() => moveOption(index, -1)}
                       disabled={index === 0}
                       aria-label={`Move option ${index + 1} up`}
                     >
-                      ↑
+                      <HiOutlineArrowUp aria-hidden="true" />
                     </button>
                     <button
                       type="button"
-                      className="secondary"
+                      className={`${BUTTON.action} feedback-icon-button`}
                       onClick={() => moveOption(index, 1)}
                       disabled={index === options.length - 1}
                       aria-label={`Move option ${index + 1} down`}
                     >
-                      ↓
+                      <HiOutlineArrowDown aria-hidden="true" />
                     </button>
                     <button
                       type="button"
-                      className="secondary"
+                      className={`${BUTTON.action} feedback-icon-button`}
                       onClick={() => removeOption(option.id)}
                       aria-label={`Remove option ${index + 1}`}
                     >
-                      ✕
+                      <HiOutlineXMark aria-hidden="true" />
                     </button>
                   </li>
                 ))}
               </ol>
               <button
                 type="button"
-                className="secondary"
+                className={BUTTON.action}
                 onClick={() => setOptions((prev) => [...prev, newOption()])}
               >
+                <HiOutlinePlus aria-hidden="true" />
                 Add option
               </button>
             </fieldset>
@@ -256,9 +259,11 @@ const QuestionEditModal: React.FC<QuestionEditModalProps> = ({
             </p>
           )}
           <div className="form-buttons">
-            <button type="submit">Save</button>
-            <button type="button" className="secondary" onClick={onClose}>
+            <button type="button" className={BUTTON.secondary} onClick={onClose}>
               Cancel
+            </button>
+            <button type="submit" className={BUTTON.main}>
+              Save
             </button>
           </div>
         </form>

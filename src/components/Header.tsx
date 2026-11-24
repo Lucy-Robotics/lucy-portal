@@ -1,5 +1,6 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
+import ExternalLinkIcon from "./ExternalLinkIcon.tsx";
 import Logo from "./Logo.tsx";
 
 type HeaderProps = {
@@ -7,27 +8,6 @@ type HeaderProps = {
 };
 
 const MOBILE_NAV_QUERY = "(max-width: 900px)";
-
-function ExternalIcon() {
-    return (
-        <svg
-            className="external-link-icon"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-        >
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-        </svg>
-    );
-}
 
 function ExternalLink({
     href,
@@ -49,7 +29,7 @@ function ExternalLink({
             onClick={onClick}
         >
             {children}
-            <ExternalIcon />
+            <ExternalLinkIcon />
         </a>
     );
 }
@@ -57,6 +37,33 @@ function ExternalLink({
 export default function Header({ sticky = true }: HeaderProps) {
     const [menuOpen, setMenuOpen] = useState(false);
     const mobileNavId = useId();
+    const progressRef = useRef<HTMLDivElement>(null);
+
+    // How far down the page is, for the line along the header's bottom edge.
+    useEffect(() => {
+        const progress = progressRef.current;
+        if (!progress) return;
+        let frame = 0;
+        const update = () => {
+            frame = 0;
+            const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+            const ratio = scrollable > 0 ? Math.min(Math.max(window.scrollY / scrollable, 0), 1) : 0;
+            progress.style.setProperty("--scroll-progress", String(ratio));
+        };
+        const schedule = () => {
+            if (!frame) frame = requestAnimationFrame(update);
+        };
+        update();
+        window.addEventListener("scroll", schedule, { passive: true });
+        // The page grows as content loads, which moves the end.
+        const observer = new ResizeObserver(schedule);
+        observer.observe(document.body);
+        return () => {
+            cancelAnimationFrame(frame);
+            window.removeEventListener("scroll", schedule);
+            observer.disconnect();
+        };
+    }, []);
 
     useEffect(() => {
         if (!menuOpen) return;
@@ -115,14 +122,14 @@ export default function Header({ sticky = true }: HeaderProps) {
                 <nav className="header__right" aria-label="Actions">
                     <a
                         href="/download"
-                        className="header__button header__button--main"
+                        className="chamfer header__button header__button--main"
                     >
                         Download
                     </a>
 
                     <ExternalLink
                         href={EXTERNAL_LINKS.LIVE_DEMO}
-                        className="header__button header__button--primary"
+                        className="chamfer header__button header__button--primary"
                     >
                         Live Demo
                     </ExternalLink>
@@ -172,19 +179,21 @@ export default function Header({ sticky = true }: HeaderProps) {
                 </ExternalLink>
                 <a
                     href="/download"
-                    className="header__button header__button--main"
+                    className="chamfer header__button header__button--main"
                     onClick={closeMenu}
                 >
                     Download
                 </a>
                 <ExternalLink
                     href={EXTERNAL_LINKS.LIVE_DEMO}
-                    className="header__button header__button--primary"
+                    className="chamfer header__button header__button--primary"
                     onClick={closeMenu}
                 >
                     Live Demo
                 </ExternalLink>
             </nav>
+
+            <div ref={progressRef} className="header__progress" aria-hidden="true" />
         </header>
     );
 }

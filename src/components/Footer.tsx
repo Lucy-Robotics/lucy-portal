@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+import { HiOutlineArrowUp } from "react-icons/hi2";
 import { EXTERNAL_LINKS } from "../constants/Links.ts";
+import ExternalLinkIcon from "./ExternalLinkIcon.tsx";
 import Logo from "./Logo.tsx";
-import { FaGithub, FaLinkedin, FaDiscord } from "react-icons/fa";
+import { DiscordIcon, GithubIcon, LinkedinIcon } from "./svg/index.ts";
 import { useAuth } from "../hooks/useAuth.ts";
 import { isAuthConfigured } from "../config/env.ts";
 
@@ -82,37 +84,25 @@ const socials = [
     {
         label: "GitHub",
         href: EXTERNAL_LINKS.GITHUB,
-        icon: FaGithub,
+        icon: GithubIcon,
     },
     {
         label: "LinkedIn",
         href: EXTERNAL_LINKS.LINKEDIN,
-        icon: FaLinkedin,
+        icon: LinkedinIcon,
     },
     {
         label: "Discord",
         href: EXTERNAL_LINKS.DISCORD,
-        icon: FaDiscord,
+        icon: DiscordIcon,
     },
 ];
 
-function ExternalIcon() {
-    return (
-        <svg
-            className="footer__external-icon"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-        >
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-        </svg>
-    );
+/* Back to the top of the page, and keyboard focus with it (the skip link's target, layouts/MainLayout.tsx). */
+function backToTop() {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+    document.getElementById("main-content")?.focus({ preventScroll: true });
 }
 
 export default function Footer({ children }: FooterProps) {
@@ -154,7 +144,7 @@ export default function Footer({ children }: FooterProps) {
                                         }
                                     >
                                         {link.text}
-                                        {link.external && <ExternalIcon />}
+                                        {link.external && <ExternalLinkIcon className="footer__external-icon" />}
                                     </a>
                                 ))}
                             </nav>
@@ -168,6 +158,11 @@ export default function Footer({ children }: FooterProps) {
                         </p>
 
                         <div className="footer__bottom-right">
+                            <button type="button" className="footer__top-button" onClick={backToTop}>
+                                Back to top
+                                <HiOutlineArrowUp aria-hidden="true" />
+                            </button>
+
                             <div className="footer__admin">
                                 {isAuthenticated ? (
                                     <>
