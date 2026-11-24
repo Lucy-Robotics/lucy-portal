@@ -31,7 +31,7 @@ const FEATURES: { slug: string; icon: Icon; title: string; description: string }
         icon: HiOutlineAdjustmentsHorizontal,
         title: "Drive it your way",
         description:
-            "Precise sliders for every joint, or your own hand: MediaPipe reads it through the webcam and maps each finger to the robot. In Gazebo or on real hardware.",
+            "Precise sliders for every joint, or your own hand: MediaPipe reads it through the webcam and maps each finger to the robot. In Gazebo or on hardware.",
     },
     {
         slug: "live-view",
@@ -78,7 +78,7 @@ const LIVE_MEDIA: Partial<Record<string, ComponentType>> = {
 
 const POINTS: { icon: Icon; title: string; text: string }[] = [
     { icon: HiOutlineCodeBracketSquare, title: "Open source", text: "GPLv3, built in the open." },
-    { icon: HiOutlineCpuChip, title: "Simulation & real hardware", text: "Same code in Gazebo or on the robot." },
+    { icon: HiOutlineCpuChip, title: "Simulation & hardware", text: "Same code in Gazebo or on the robot." },
     { icon: HiOutlineComputerDesktop, title: "Multiplatform", text: "Runs on Linux, macOS and Windows." },
 ];
 

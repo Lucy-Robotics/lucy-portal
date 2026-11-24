@@ -21,7 +21,7 @@ const TEXT: Record<PartId | "core", CaptionText> = {
     },
     robot: {
         title: "Robot",
-        description: "In Gazebo or on real hardware: it only ever takes commands from the client in control.",
+        description: "In Gazebo or on hardware: it only ever takes commands from the client in control.",
     },
 };
 
